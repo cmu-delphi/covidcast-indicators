@@ -22,6 +22,41 @@ df_metric = pd.DataFrame.from_records(results_metric)
 #+RESULTS:
 
 #+begin_src jupyter-python :session *nwss
+df[df.date=="2023-12-11"]
+#+end_src
+
+#+RESULTS:
+#+begin_example
+                                              key_plot_id        date  \
+2019    CDC_BIOBOT_ca_495_Treatment plant_post grit re...  2023-12-11
+4403    CDC_BIOBOT_hi_1175_Treatment plant_raw wastewater  2023-12-11
+4667    CDC_BIOBOT_hi_710_Treatment plant_post grit re...  2023-12-11
+5991    CDC_BIOBOT_ks_807_Treatment plant_post grit re...  2023-12-11
+6554    CDC_BIOBOT_la_1615_Treatment plant_raw wastewater  2023-12-11
+...                                                   ...         ...
+687931      WWS_pa_1737_Treatment plant_post grit removal  2023-12-11
+688331      WWS_tn_2288_Treatment plant_post grit removal  2023-12-11
+688471      WWS_tn_2345_Treatment plant_post grit removal  2023-12-11
+688609      WWS_tx_1949_Treatment plant_post grit removal  2023-12-11
+688992      WWS_ut_1708_Treatment plant_post grit removal  2023-12-11
+
+       pcr_conc_smoothed normalization
+2019                 NaN           NaN
+4403                 NaN           NaN
+4667                 NaN           NaN
+5991                 NaN           NaN
+6554                 NaN           NaN
+...                  ...           ...
+687931               NaN           NaN
+688331               NaN           NaN
+688471               NaN           NaN
+688609               NaN           NaN
+688992               NaN           NaN
+
+[331 rows x 4 columns]
+#+end_example
+
+#+begin_src jupyter-python :session *nwss
 df_metric.wwtp_id = pd.to_numeric(df_metric.wwtp_id)
 df_metric.population_served = pd.to_numeric(df_metric.population_served)
 df_metric.detect_prop_15d = pd.to_numeric(df_metric.detect_prop_15d)
@@ -2865,9 +2900,26 @@ Columns available:
     keep_columns.extend(["timestamp", "state", "population_served"])
     return df[keep_columns]
 df_pull = pull_nwss_data(token)
+df_pull[df_pull.timestamp=="2023-12-13"]
 #+end_src
 
 #+RESULTS:
+#+begin_example
+        pcr_conc_smoothed  timestamp state  population_served
+1938                  NaN 2023-12-13    ca            60000.0
+4495                  NaN 2023-12-13    hi            52000.0
+4583                  NaN 2023-12-13    hi            10000.0
+6046                  NaN 2023-12-13    ks            27000.0
+6458                  NaN 2023-12-13    la            15000.0
+...                   ...        ...   ...                ...
+687932                NaN 2023-12-13    pa           220000.0
+688332                NaN 2023-12-13    tn           400000.0
+688395                NaN 2023-12-13    tn           300000.0
+688772                NaN 2023-12-13    tx            15000.0
+688993                NaN 2023-12-13    ut           115000.0
+
+[316 rows x 4 columns]
+#+end_example
 
 #+begin_src jupyter-python :session *nwss
 def add_nancodes(df):
@@ -2918,17 +2970,25 @@ start_date = min(df_pull["timestamp"])
 sensor = SIGNALS[0]
 geo = GEOS[1]
 df = df_pull.copy()
+def sum_all_nan(x):
+    """return a normal sum if at least one value is not a NaN, otherwise return NaN"""
+    sum_of = np.sum(x)
+    all_nan = np.isnan(x).all()
+    if all_nan:
+        return np.nan
+    else:
+        return sum_of
 # add weighed column
 df = generate_weights(df, sensor)
 if geo == "nation":
     agg_df = df.groupby("timestamp").agg(
-        {"population_served": "sum", f"weighted_{sensor}": "sum"}
+        {"population_served": "sum", f"weighted_{sensor}": sum_all_nan}
     )
     agg_df["val"] = agg_df[f"weighted_{sensor}"] / agg_df.population_served
     agg_df["geo_id"] = "us"
 else:
     agg_df = df.groupby(["timestamp", geo]).agg(
-        {"population_served": "sum", f"weighted_{sensor}": "sum"}
+        {"population_served": "sum", f"weighted_{sensor}": sum_all_nan}
     )
     agg_df["val"] = agg_df[f"weighted_{sensor}"] / agg_df.population_served
     agg_df = agg_df.rename({"state": "geo_id"})
@@ -2936,25 +2996,59 @@ else:
 agg_df = add_needed_columns(agg_df)
 agg_df = agg_df.reset_index()
 agg_df.rename(columns={"state" : "geo_id"})
-df[df.timestamp=="2020-04-22"]
-## log this indicator run
+agg_df[agg_df.timestamp=="2023-12-13"]
 #+end_src
 
 #+RESULTS:
 #+begin_example
-        pcr_conc_smoothed  timestamp state  population_served  \
-19921                 NaN 2020-04-22    az            88521.0
-21849                 NaN 2020-04-22    az            64521.0
-374520                NaN 2020-04-22    az            17280.0
-375820                NaN 2020-04-22    az             9430.0
-377777                NaN 2020-04-22    az             9848.0
-
-        relevant_pop_pcr_conc_smoothed  weighted_pcr_conc_smoothed
-19921                              0.0                         NaN
-21849                              0.0                         NaN
-374520                             0.0                         NaN
-375820                             0.0                         NaN
-377777                             0.0                         NaN
+       timestamp state  population_served  weighted_pcr_conc_smoothed  val
+29534 2023-12-13    ak           253036.0                         NaN  NaN
+29535 2023-12-13    al           640036.0                         NaN  NaN
+29536 2023-12-13    ar           106652.0                         NaN  NaN
+29537 2023-12-13    az           149260.0                         NaN  NaN
+29538 2023-12-13    ca         20673080.0                         NaN  NaN
+29539 2023-12-13    co            81429.0                         NaN  NaN
+29540 2023-12-13    ct           185878.0                         NaN  NaN
+29541 2023-12-13    dc          2000000.0                         NaN  NaN
+29542 2023-12-13    de            13172.0                         NaN  NaN
+29543 2023-12-13    fl          3790631.0                         NaN  NaN
+29544 2023-12-13    ga          1109425.0                         NaN  NaN
+29545 2023-12-13    hi           920257.0                         NaN  NaN
+29546 2023-12-13    ia           129629.0                         NaN  NaN
+29547 2023-12-13    id           345997.0                         NaN  NaN
+29548 2023-12-13    il          1791838.0                         NaN  NaN
+29549 2023-12-13    in           322090.0                         NaN  NaN
+29550 2023-12-13    ks           294000.0                         NaN  NaN
+29551 2023-12-13    ky           428913.0                         NaN  NaN
+29552 2023-12-13    la           898418.0                         NaN  NaN
+29553 2023-12-13    ma          2775070.0                         NaN  NaN
+29554 2023-12-13    md           242000.0                         NaN  NaN
+29555 2023-12-13    me           276250.0                         NaN  NaN
+29556 2023-12-13    mi           635659.0                         NaN  NaN
+29557 2023-12-13    mn           326000.0                         NaN  NaN
+29558 2023-12-13    mo            31722.0                         NaN  NaN
+29559 2023-12-13    ms            53341.0                         NaN  NaN
+29560 2023-12-13    nc           204952.0                         NaN  NaN
+29561 2023-12-13    ne           300000.0                         NaN  NaN
+29562 2023-12-13    nh            86000.0                         NaN  NaN
+29563 2023-12-13    nj          1882672.0                         NaN  NaN
+29564 2023-12-13    nv          1255000.0                         NaN  NaN
+29565 2023-12-13    ny           559652.0                         NaN  NaN
+29566 2023-12-13    oh           539000.0                         NaN  NaN
+29567 2023-12-13    ok          2093000.0                         NaN  NaN
+29568 2023-12-13    pa           583900.0                         NaN  NaN
+29569 2023-12-13    ri           480000.0                         NaN  NaN
+29570 2023-12-13    sc            48000.0                         NaN  NaN
+29571 2023-12-13    sd            20000.0                         NaN  NaN
+29572 2023-12-13    tn           745000.0                         NaN  NaN
+29573 2023-12-13    tx          3855276.0                         NaN  NaN
+29574 2023-12-13    ut           715000.0                         NaN  NaN
+29575 2023-12-13    va          1649426.0                         NaN  NaN
+29576 2023-12-13    vt            87100.0                         NaN  NaN
+29577 2023-12-13    wa           130150.0                         NaN  NaN
+29578 2023-12-13    wi            44000.0                         NaN  NaN
+29579 2023-12-13    wv           100000.0                         NaN  NaN
+29580 2023-12-13    wy            33000.0                         NaN  NaN
 #+end_example
 
 #+begin_src jupyter-python :session *nwss
@@ -2963,35 +3057,33 @@ agg_df
 
 #+RESULTS:
 #+begin_example
-            population_served  weighted_pcr_conc_smoothed           val  se  \
-timestamp
-2020-04-22           189600.0                0.000000e+00  0.000000e+00 NaN
-2020-04-23           189600.0                0.000000e+00  0.000000e+00 NaN
-2020-04-24           243178.0                0.000000e+00  0.000000e+00 NaN
-2020-04-25           249678.0                3.050359e+14  1.221717e+09 NaN
-2020-04-26           249678.0                2.899780e+14  1.161408e+09 NaN
-...                       ...                         ...           ...  ..
-2023-12-01         79077142.0                3.163871e+03  4.000993e-05 NaN
-2023-12-02         59565566.0                1.918134e+03  3.220206e-05 NaN
-2023-12-03         51679655.0                0.000000e+00  0.000000e+00 NaN
-2023-12-04         50814510.0                0.000000e+00  0.000000e+00 NaN
-2023-12-05         50786982.0                0.000000e+00  0.000000e+00 NaN
+       timestamp state  population_served  weighted_pcr_conc_smoothed  \
+0     2020-04-22    az           189600.0                         NaN
+1     2020-04-23    az           189600.0                         NaN
+2     2020-04-24    az           243178.0                         NaN
+3     2020-04-25    az           249678.0                3.026923e+14
+4     2020-04-26    az           249678.0                2.879296e+14
+...          ...   ...                ...                         ...
+29576 2023-12-13    vt            87100.0                         NaN
+29577 2023-12-13    wa           130150.0                         NaN
+29578 2023-12-13    wi            44000.0                         NaN
+29579 2023-12-13    wv           100000.0                         NaN
+29580 2023-12-13    wy            33000.0                         NaN
 
-            sample_size
-timestamp
-2020-04-22          NaN
-2020-04-23          NaN
-2020-04-24          NaN
-2020-04-25          NaN
-2020-04-26          NaN
-...                 ...
-2023-12-01          NaN
-2023-12-02          NaN
-2023-12-03          NaN
-2023-12-04          NaN
-2023-12-05          NaN
+                val
+0               NaN
+1               NaN
+2               NaN
+3      1.212331e+09
+4      1.153204e+09
+...             ...
+29576           NaN
+29577           NaN
+29578           NaN
+29579           NaN
+29580           NaN
 
-[1323 rows x 5 columns]
+[29581 rows x 5 columns]
 #+end_example
 
 ** Implementing a key_plot_id based table

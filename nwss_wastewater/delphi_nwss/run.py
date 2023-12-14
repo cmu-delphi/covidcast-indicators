@@ -46,6 +46,16 @@ def add_nancodes(df):
     return df
 
 
+def sum_all_nan(x):
+    """Return a normal sum unless everything is NaN, then return that."""
+    sum_of = np.sum(x)
+    all_nan = np.isnan(x).all()
+    if all_nan:
+        return np.nan
+    else:
+        return sum_of
+
+
 def generate_weights(df, column_aggregating="pcr_conc_smoothed"):
     """
     Weigh column_aggregating by population.
@@ -117,14 +127,14 @@ def run_module(params):
             logger.info("Generating signal and exporting to CSV", metric=sensor)
             if geo == "nation":
                 agg_df = df.groupby("timestamp").agg(
-                    {"population_served": "sum", f"weighted_{sensor}": "sum"}
+                    {"population_served": "sum", f"weighted_{sensor}": sum_all_nan}
                 )
                 agg_df["val"] = agg_df[f"weighted_{sensor}"] / agg_df.population_served
                 agg_df = agg_df.reset_index()
                 agg_df["geo_id"] = "us"
             else:
                 agg_df = df.groupby(["timestamp", geo]).agg(
-                    {"population_served": "sum", f"weighted_{sensor}": "sum"}
+                    {"population_served": "sum", f"weighted_{sensor}": sum_all_nan}
                 )
                 agg_df["val"] = agg_df[f"weighted_{sensor}"] / agg_df.population_served
                 agg_df = agg_df.reset_index()

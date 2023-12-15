@@ -50,8 +50,7 @@ def sum_all_nan(x):
     all_nan = np.isnan(x).all()
     if all_nan:
         return np.nan
-    else:
-        return sum_of
+    return sum_of
 
 
 def generate_weights(df, column_aggregating="pcr_conc_smoothed"):

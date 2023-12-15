@@ -10,7 +10,7 @@ steps below to create a MyAppToken.
 - Click the `Sign up for an app token` button in the linked website
 - Sign In or Sign Up with Socrata ID
 - Click the `Create New App Token` button
-- Fill in `Application Name` and `Description` (You can just use NCHS_Mortality
+- Fill in `Application Name` and `Description` (You can just use delphi_wastewater
   for both) and click `Save`
 - Copy the `App Token`
 

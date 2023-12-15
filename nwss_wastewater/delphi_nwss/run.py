@@ -6,8 +6,7 @@ when the module is run with `python -m MODULE_NAME`.  `run_module`'s lone argume
 nested dictionary of parameters loaded from the params.json file.  We expect the `params` to have
 the following structure:
     - "common":
-        - "daily_export_dir": str, directory to write daily output
-        - "weekly_export_dir": str, directory to write weekly output
+        - "export_dir": str, directory to write daily output
         - "log_filename": (optional) str, path to log file
         - "log_exceptions" (optional): bool, whether to log exceptions to file
     - "indicator": (optional)
@@ -20,8 +19,7 @@ the following structure:
     - "archive" (optional): if provided, output will be archived with S3
         - "aws_credentials": Dict[str, str], AWS login credentials (see S3 documentation)
         - "bucket_name: str, name of S3 bucket to read/write
-        - "daily_cache_dir": str, directory of locally cached daily data
-        - "weekly_cache_dir": str, directory of locally cached weekly data
+        - "cache_dir": str, directory of locally cached data
 """
 import time
 from datetime import datetime
@@ -48,7 +46,7 @@ def add_nancodes(df):
 
 def sum_all_nan(x):
     """Return a normal sum unless everything is NaN, then return that."""
-    sum_of = np.sum(x)
+    sum_of = np.nansum(x)
     all_nan = np.isnan(x).all()
     if all_nan:
         return np.nan
@@ -100,13 +98,13 @@ def run_module(params):
         filename=params["common"].get("log_filename"),
         log_exceptions=params["common"].get("log_exceptions", True),
     )
-    daily_export_dir = params["common"]["daily_export_dir"]
+    export_dir = params["common"]["export_dir"]
     token = params["indicator"]["token"]
     test_file = params["indicator"].get("test_file", None)
     if "archive" in params:
         daily_arch_diff = S3ArchiveDiffer(
-            params["archive"]["daily_cache_dir"],
-            daily_export_dir,
+            params["archive"]["cache_dir"],
+            export_dir,
             params["archive"]["bucket_name"],
             "nchs_mortality",
             params["archive"]["aws_credentials"],
@@ -143,7 +141,7 @@ def run_module(params):
             agg_df = add_needed_columns(agg_df)
             # actual export
             dates = create_export_csv(
-                agg_df, geo_res=geo, export_dir=daily_export_dir, sensor=sensor
+                agg_df, geo_res=geo, export_dir=export_dir, sensor=sensor
             )
             if len(dates) > 0:
                 run_stats.append((max(dates), len(dates)))

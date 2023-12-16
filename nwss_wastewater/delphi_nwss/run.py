@@ -25,23 +25,12 @@ import time
 from datetime import datetime
 
 import numpy as np
-from delphi_utils import S3ArchiveDiffer, get_structured_logger, create_export_csv, Nans
+import pandas as pd
+from delphi_utils import S3ArchiveDiffer, get_structured_logger, create_export_csv
+from delphi_utils.nancodes import add_default_nancodes
 
 from .constants import GEOS, SIGNALS
 from .pull import pull_nwss_data
-
-
-def add_nancodes(df):
-    """Add nancodes to the dataframe."""
-    # Default missingness codes
-    df["missing_val"] = Nans.NOT_MISSING
-    df["missing_se"] = Nans.NOT_APPLICABLE
-    df["missing_sample_size"] = Nans.NOT_APPLICABLE
-
-    # Mark any remaining nans with unknown
-    remaining_nans_mask = df["val"].isnull()
-    df.loc[remaining_nans_mask, "missing_val"] = Nans.OTHER
-    return df
 
 
 def sum_all_nan(x):
@@ -71,6 +60,28 @@ def generate_weights(df, column_aggregating="pcr_conc_smoothed"):
     return df
 
 
+def weighted_state_sum(df: pd.DataFrame, geo: str, sensor: str):
+    """Sum sensor, weighted by population for non NA's, grouped by state."""
+    agg_df = df.groupby(["timestamp", geo]).agg(
+        {f"relevant_pop_{sensor}": "sum", f"weighted_{sensor}": sum_all_nan}
+    )
+    agg_df["val"] = agg_df[f"weighted_{sensor}"] / agg_df[f"relevant_pop_{sensor}"]
+    agg_df = agg_df.reset_index()
+    agg_df = agg_df.rename(columns={"state": "geo_id"})
+    return agg_df
+
+
+def weighted_nation_sum(df: pd.DataFrame, sensor: str):
+    """Sum sensor, weighted by population for non NA's."""
+    agg_df = df.groupby("timestamp").agg(
+        {f"relevant_pop_{sensor}": "sum", f"weighted_{sensor}": sum_all_nan}
+    )
+    agg_df["val"] = agg_df[f"weighted_{sensor}"] / agg_df[f"relevant_pop_{sensor}"]
+    agg_df = agg_df.reset_index()
+    agg_df["geo_id"] = "us"
+    return agg_df
+
+
 def add_needed_columns(df, col_names=None):
     """Short util to add expected columns not found in the dataset."""
     if col_names is None:
@@ -78,8 +89,24 @@ def add_needed_columns(df, col_names=None):
 
     for col_name in col_names:
         df[col_name] = np.nan
-    df = add_nancodes(df)
+    df = add_default_nancodes(df)
     return df
+
+
+def logging(start_time, run_stats, logger):
+    """Boilerplate making logs."""
+    elapsed_time_in_seconds = round(time.time() - start_time, 2)
+    min_max_date = run_stats and min(s[0] for s in run_stats)
+    csv_export_count = sum(s[-1] for s in run_stats)
+    max_lag_in_days = min_max_date and (datetime.now() - min_max_date).days
+    formatted_min_max_date = min_max_date and min_max_date.strftime("%Y-%m-%d")
+    logger.info(
+        "Completed indicator run",
+        elapsed_time_in_seconds=elapsed_time_in_seconds,
+        csv_export_count=csv_export_count,
+        max_lag_in_days=max_lag_in_days,
+        oldest_final_export_date=formatted_min_max_date,
+    )
 
 
 def run_module(params):
@@ -123,19 +150,9 @@ def run_module(params):
         for geo in GEOS:
             logger.info("Generating signal and exporting to CSV", metric=sensor)
             if geo == "nation":
-                agg_df = df.groupby("timestamp").agg(
-                    {"population_served": "sum", f"weighted_{sensor}": sum_all_nan}
-                )
-                agg_df["val"] = agg_df[f"weighted_{sensor}"] / agg_df.population_served
-                agg_df = agg_df.reset_index()
-                agg_df["geo_id"] = "us"
+                agg_df = weighted_nation_sum(df, sensor)
             else:
-                agg_df = df.groupby(["timestamp", geo]).agg(
-                    {"population_served": "sum", f"weighted_{sensor}": sum_all_nan}
-                )
-                agg_df["val"] = agg_df[f"weighted_{sensor}"] / agg_df.population_served
-                agg_df = agg_df.reset_index()
-                agg_df = agg_df.rename(columns={"state": "geo_id"})
+                agg_df = weighted_state_sum(df, geo, sensor)
             # add se, sample_size, and na codes
             agg_df = add_needed_columns(agg_df)
             # actual export
@@ -145,15 +162,4 @@ def run_module(params):
             if len(dates) > 0:
                 run_stats.append((max(dates), len(dates)))
     ## log this indicator run
-    elapsed_time_in_seconds = round(time.time() - start_time, 2)
-    min_max_date = run_stats and min(s[0] for s in run_stats)
-    csv_export_count = sum(s[-1] for s in run_stats)
-    max_lag_in_days = min_max_date and (datetime.now() - min_max_date).days
-    formatted_min_max_date = min_max_date and min_max_date.strftime("%Y-%m-%d")
-    logger.info(
-        "Completed indicator run",
-        elapsed_time_in_seconds=elapsed_time_in_seconds,
-        csv_export_count=csv_export_count,
-        max_lag_in_days=max_lag_in_days,
-        oldest_final_export_date=formatted_min_max_date,
-    )
+    logging(start_time, run_stats, logger)

@@ -21,7 +21,10 @@ class Nans(IntEnum):
 def add_default_nancodes(df: pd.DataFrame):
     """Add some default nancodes to the dataframe.
 
-    This method sets the `"missing_val"` column to NOT_MISSING whenever the `"val"` column has `isnull()` as `False`; if `isnull()` is `True`, then it sets `"missing_val"` to `OTHER`. It also sets both the `"missing_se"` and `"missing_sample_size"` columns to `NOT_APPLICABLE`.
+    This method sets the `"missing_val"` column to NOT_MISSING whenever the
+    `"val"` column has `isnull()` as `False`; if `isnull()` is `True`, then it
+    sets `"missing_val"` to `OTHER`. It also sets both the `"missing_se"` and
+    `"missing_sample_size"` columns to `NOT_APPLICABLE`.
 
     Returns
     -------

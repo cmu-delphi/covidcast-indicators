@@ -126,7 +126,6 @@ def run_module(params):
     )
     export_dir = params["common"]["export_dir"]
     token = params["indicator"]["token"]
-    test_file = params["indicator"].get("test_file", None)
     if "archive" in params:
         daily_arch_diff = S3ArchiveDiffer(
             params["archive"]["cache_dir"],
@@ -140,7 +139,7 @@ def run_module(params):
     run_stats = []
     ## build the base version of the signal at the most detailed geo level you can get.
     ## compute stuff here or farm out to another function or file
-    df_pull = pull_nwss_data(token, test_file)
+    df_pull = pull_nwss_data(token)
     ## aggregate
     for sensor in SIGNALS:
         df = df_pull.copy()

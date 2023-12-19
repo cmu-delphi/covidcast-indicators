@@ -12,7 +12,6 @@ from pandas.testing import assert_frame_equal
 from delphi_utils import S3ArchiveDiffer, get_structured_logger, create_export_csv, Nans
 
 from delphi_nwss.constants import GEOS, SIGNALS
-from delphi_nwss.pull import pull_nwss_data
 from delphi_nwss.run import (
     generate_weights,
     sum_all_nan,

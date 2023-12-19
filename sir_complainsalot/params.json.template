@@ -43,7 +43,7 @@
       ]
     },
     "nchs-mortality": {
-      "max_age":16,
+      "max_age":19,
       "maintainers": []
     },
     "hhs": {

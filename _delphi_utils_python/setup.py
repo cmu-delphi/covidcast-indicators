@@ -11,6 +11,7 @@ required = [
     "epiweeks",
     "freezegun",
     "gitpython",
+    "importlib_resources==6.1.1",
     "mock",
     "moto",
     "numpy",

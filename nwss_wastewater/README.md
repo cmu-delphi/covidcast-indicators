@@ -1,8 +1,7 @@
-# NCHS Mortality Data
+# NWSS wastewater data
 
-We import the NCHS motality data from CDC website and export
-the state-level data as-is. For detailed information see the files 
-`DETAILS.md` contained in this directory.
+We import the wastewater data, currently only the smoothed concentration, from the CDC website, aggregate to the state and national level from the wastewater sample site level, and export the aggregated data.
+For details see the `DETAILS.md` file in this directory.
 
 ## Create a MyAppToken
 `MyAppToken` is required when fetching data from SODA Consumer API 
@@ -11,16 +10,17 @@ steps below to create a MyAppToken.
 - Click the `Sign up for an app token` button in the linked website
 - Sign In or Sign Up with Socrata ID
 - Click the `Create New App Token` button
-- Fill in `Application Name` and `Description` (You can just use NCHS_Mortality
+- Fill in `Application Name` and `Description` (You can just use delphi_wastewater
   for both) and click `Save`
 - Copy the `App Token`
+
 
 ## Running the Indicator
 
 The indicator is run by directly executing the Python module contained in this
 directory. The safest way to do this is to create a virtual environment,
 installed the common DELPHI tools, and then install the module and its
-dependencies. To do this, run the following code from this directory:
+dependencies. To do this, run the following command from this directory:
 
 ```
 make install
@@ -29,13 +29,12 @@ make install
 This command will install the package in editable mode, so you can make changes that
 will automatically propagate to the installed package. 
 
-All of the user-changable parameters are stored in `params.json`. (NOTE: In
-production we specify `"export_start_date": "latest",`). To execute the module
-and produce the output datasets (by default, in `receiving`), run the following.
-Fill in the `token` that you created.
+All of the user-changable parameters are stored in `params.json`. To execute
+the module and produce the output datasets (by default, in `receiving`), run
+the following:
 
 ```
-env/bin/python -m delphi_nchs_mortality
+env/bin/python -m delphi_nwss
 ```
 
 If you want to enter the virtual environment in your shell, 
@@ -66,7 +65,7 @@ make test
 To run individual tests, run the following:
 
 ```
-(cd tests && ../env/bin/pytest <your_test>.py --cov=delphi_nchs_mortality --cov-report=term-missing)
+(cd tests && ../env/bin/pytest <your_test>.py --cov=delphi_NAME --cov-report=term-missing)
 ```
 
 The output will show the number of unit tests that passed and failed, along

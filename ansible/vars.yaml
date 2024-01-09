@@ -28,7 +28,7 @@ safegraph_aws_secret_access_key: "{{ vault_safegraph_aws_secret_access_key }}"
 # Quidel
 quidel_aws_access_key_id: "{{ vault_quidel_aws_access_key_id }}"
 quidel_aws_secret_access_key: "{{ vault_quidel_aws_secret_access_key }}"
-quidel_aws_bucket_name: 'delphi-quidel-data'
+quidel_aws_bucket_name: "delphi-quidel-data"
 
 # Change Healthcare
 changehc_sftp_host: "{{ vault_changehc_sftp_host }}"
@@ -52,6 +52,9 @@ doctor_visits_midas_password: "{{ vault_doctor_visits_midas_password }}"
 
 # NCHS
 nchs_mortality_token: "{{ vault_nchs_mortality_token }}"
+
+# NWSS
+nwss_mortality_token: "{{ vault_nchs_mortality_token }}"
 
 # SirCAL
 sir_complainsalot_api_key: "{{ vault_sir_complainsalot_api_key }}"

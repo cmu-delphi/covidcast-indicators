@@ -16,7 +16,7 @@ from .constants import (
 
 
 def sig_digit_round(value, n_digits):
-    """Round the number of significant digits (x.xxe5 would be 3) to `N`."""
+    """Truncate precision of elements in `value` (a numpy array) to the specified number of significant digits (9.87e5 would be 3 sig digits)."""
     in_value = value
     value = np.asarray(value).copy()
     zero_mask = (value == 0) | np.isinf(value) | np.isnan(value)
@@ -33,8 +33,7 @@ def sig_digit_round(value, n_digits):
 def construct_typedicts():
     """Create the type conversion dictionary for both dataframes."""
     # basic type conversion
-    signals_dict = {key: float for key in SIGNALS}
-    type_dict = {**signals_dict}
+    type_dict = {key: float for key in SIGNALS}
     type_dict["timestamp"] = "datetime64[ns]"
     # metric type conversion
     signals_dict_metric = {key: float for key in METRIC_SIGNALS}
@@ -50,14 +49,14 @@ Expected column(s) missed, The dataset schema may
 have changed. Please investigate and amend the code.
 
 Columns needed:
-{NEWLINE.join(type_dict.keys())}
+{NEWLINE.join(sorted(type_dict.keys()))}
 
 Columns available:
-{NEWLINE.join(df.columns)}
+{NEWLINE.join(sorted(df.columns))}
 """
 
 
-def reformat(df, df_metric):
+def add_population(df, df_metric):
     """Add the population column from df_metric to df, and rename some columns."""
     # drop unused columns from df_metric
     df_population = df_metric.loc[:, ["key_plot_id", "date_start", "population_served"]]
@@ -92,8 +91,6 @@ def pull_nwss_data(token: str):
     pd.DataFrame
         Dataframe as described above.
     """
-    # Constants
-    keep_columns = SIGNALS.copy()
     # concentration key types
     type_dict, type_dict_metric = construct_typedicts()
 
@@ -102,13 +99,13 @@ def pull_nwss_data(token: str):
     results_concentration = client.get("g653-rqe2", limit=10**10)
     results_metric = client.get("2ew6-ywp6", limit=10**10)
     df_metric = pd.DataFrame.from_records(results_metric)
-    df = pd.DataFrame.from_records(results_concentration)
-    df = df.rename(columns={"date": "timestamp"})
+    df_concentration = pd.DataFrame.from_records(results_concentration)
+    df_concentration = df_concentration.rename(columns={"date": "timestamp"})
 
     try:
-        df = df.astype(type_dict)
+        df_concentration = df_concentration.astype(type_dict)
     except KeyError as exc:
-        raise ValueError(warn_string(df, type_dict)) from exc
+        raise ValueError(warn_string(df_concentration, type_dict)) from exc
 
     try:
         df_metric = df_metric.astype(type_dict_metric)
@@ -116,17 +113,18 @@ def pull_nwss_data(token: str):
         raise ValueError(warn_string(df_metric, type_dict_metric)) from exc
 
     # pull 2 letter state labels out of the key_plot_id labels
-    df["state"] = df.key_plot_id.str.extract(r"_(\w\w)_")
+    df_concentration["state"] = df_concentration.key_plot_id.str.extract(r"_(\w\w)_")
 
     # round out some of the numeric noise that comes from smoothing
-    for signal in SIGNALS:
-        df[signal] = sig_digit_round(df[signal], SIG_DIGITS)
+    df_concentration[SIGNALS[0]] = sig_digit_round(
+        df_concentration[SIGNALS[0]], SIG_DIGITS
+    )
 
-    df = reformat(df, df_metric)
+    df_concentration = add_population(df_concentration, df_metric)
     # if there are population NA's, assume the previous value is accurate (most
     # likely introduced by dates only present in one and not the other; even
     # otherwise, best to assume some value rather than break the data)
-    df.population_served = df.population_served.ffill()
+    df_concentration.population_served = df_concentration.population_served.ffill()
 
-    keep_columns.extend(["timestamp", "state", "population_served"])
-    return df[keep_columns]
+    keep_columns = ["timestamp", "state", "population_served"]
+    return df_concentration[SIGNALS + keep_columns]

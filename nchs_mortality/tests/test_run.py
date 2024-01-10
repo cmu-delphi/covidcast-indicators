@@ -70,21 +70,3 @@ class TestRun:
                     "missing_val", "missing_se", "missing_sample_size"
                 ]
                 assert (df.columns.values == expected_columns).all()
-
-    @pytest.mark.parametrize("date", ["2020-09-14", "2020-09-17", "2020-09-18"])
-    def test_nation_state_aggregation(self, run_as_module, date):
-        is_mon_or_thurs = dt.datetime.strptime(date, "%Y-%m-%d").weekday() == (0 or 3)
-
-        folders = ["daily_cache"]
-        if is_mon_or_thurs:
-            folders.append("receiving")
-
-        for output_folder in folders:
-            state = pd.read_csv(
-                join(output_folder, f"weekly_202026_state_deaths_covid_incidence_num.csv")
-            )
-            nation = pd.read_csv(
-                join(output_folder, f"weekly_202026_nation_deaths_covid_incidence_num.csv")
-            )
-            # Assert that the national value is the sum of state values
-            assert (state['val'].sum() == nation['val'].iloc[0])

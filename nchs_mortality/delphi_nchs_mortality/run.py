@@ -10,7 +10,6 @@ from typing import Dict, Any
 
 import numpy as np
 from delphi_utils import S3ArchiveDiffer, get_structured_logger, create_export_csv, Nans
-from delphi_utils.geomap import GeoMapper
 
 from .archive_diffs import arch_diffs
 from .constants import (METRICS, SENSOR_NAME_MAP,
@@ -28,21 +27,6 @@ def add_nancodes(df):
     # Mark any remaining nans with unknown
     remaining_nans_mask = df["val"].isnull()
     df.loc[remaining_nans_mask, "missing_val"] = Nans.OTHER
-    return df
-
-def state_to_nation(df):
-    """Aggregate state data to national data."""
-    gmpr = GeoMapper()
-
-    # Convert from state code (e.g. 'al', 'ca') to nation code
-    df = gmpr.add_geocode(df, "state_code", "nation", from_col="geo_id", new_col="nation")
-
-    # Replace old geo_id column with new nation column
-    df.drop(columns="geo_id", inplace=True)
-    df.rename(columns={"nation": "geo_id"}, inplace=True)
-
-    # Sum up numeric values, like incidence, deaths or population
-    df = df.groupby(["timestamp", "geo_id"]).sum(numeric_only=True).reset_index()
     return df
 
 def run_module(params: Dict[str, Any]):
@@ -92,6 +76,7 @@ def run_module(params: Dict[str, Any]):
             logger.info("Generating signal and exporting to CSV",
                         metric = metric)
             df = df_pull.copy()
+            df = df[df["geo_id"] != "us"]
             df["val"] = df[metric]
             df["se"] = np.nan
             df["sample_size"] = np.nan
@@ -116,7 +101,9 @@ def run_module(params: Dict[str, Any]):
                                 sensor=sensor)
                     df = df_pull.copy()
                     if geo == "nation":
-                        df = state_to_nation(df)
+                        df = df[df["geo_id"] == "us"]
+                    else:
+                        df = df[df["geo_id"] != "us"]
                     if sensor == "num":
                         df["val"] = df[metric]
                     else:

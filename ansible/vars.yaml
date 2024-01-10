@@ -16,6 +16,12 @@ pyenv_python_path: "/home/{{ runtime_user }}/.pyenv/versions/{{ python_version }
 #
 # Validation
 validation_api_key: "{{ vault_validator_api_key }}"
+
+# Archive differ S3 bucket
+archive_differ_bucket_user_access_key_id: "{{ vault_archive_differ_bucket_user_access_key_id }}"
+archive_differ_bucket_user_secret_access_key: "{{ vault_archive_differ_bucket_user_secret_access_key }}"
+archive_differ_bucket_name: 'delphi-covidcast-indicator-output-scsdr'
+
 # Google Health
 google_health_api_key: "{{ vault_google_health_api_key }}"
 delphi_aws_access_key_id: "{{ vault_delphi_aws_access_key_id }}"

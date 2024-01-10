@@ -25,10 +25,10 @@
   },
   "archive": {
     "aws_credentials": {
-      "aws_access_key_id": "{{ delphi_aws_access_key_id }}",
-      "aws_secret_access_key": "{{ delphi_aws_secret_access_key }}"
+      "aws_access_key_id": "{{ archive_differ_bucket_user_access_key_id }}",
+      "aws_secret_access_key": "{{ archive_differ_bucket_user_secret_access_key }}"
     },
-    "bucket_name": "delphi-covidcast-indicator-output",
+    "bucket_name": "{{ archive_differ_bucket_name }}",
     "cache_dir": "./archivediffer_cache",
     "indicator_prefix": "quidel"
   },

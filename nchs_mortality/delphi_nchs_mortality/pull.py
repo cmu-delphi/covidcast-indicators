@@ -123,8 +123,10 @@ Columns available:
     keep_columns.extend(["timestamp", "geo_id", "population"])
     gmpr = GeoMapper()
     # Map state to geo_id, but set dropna=False as we also have national data
-    df = gmpr.add_population_column(df, "state_name", geocode_col="state", dropna=False)
-    df = gmpr.add_geocode(df, "state_name", "state_id", from_col="state", new_col="geo_id", dropna=False)
+    df = gmpr.add_population_column(df, "state_name",
+                                    geocode_col="state", dropna=False)
+    df = gmpr.add_geocode(df, "state_name", "state_id",
+                          from_col="state", new_col="geo_id", dropna=False)
     # Manually set geo_id for national data
     df.loc[df["state"] == "United States", "geo_id"] = "us"
     return df[keep_columns]

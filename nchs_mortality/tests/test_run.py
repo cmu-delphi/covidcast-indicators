@@ -43,8 +43,7 @@ class TestRun:
                 for d in dates:
                     for metric in metrics:
                         if metric == "deaths_percent_of_expected":
-                            # No nation aggregation for this metric
-                            expected_files += [f"weekly_{d}_state_{metric}.csv"]
+                            expected_files += [f"weekly_{d}_{geo}_{metric}.csv"]
                         else:
                             for sensor in sensors:
                                 expected_files += [f"weekly_{d}_{geo}_{metric}_{sensor}.csv"]

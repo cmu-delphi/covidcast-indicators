@@ -35,11 +35,10 @@ from .pull import pull_nwss_data
 
 def sum_all_nan(x):
     """Return a normal sum unless everything is NaN, then return that."""
-    sum_of = np.nansum(x)
     all_nan = np.isnan(x).all()
     if all_nan:
         return np.nan
-    return sum_of
+    return np.nansum(x)
 
 
 def generate_weights(df, column_aggregating="pcr_conc_smoothed"):
@@ -125,7 +124,7 @@ def run_module(params):
         log_exceptions=params["common"].get("log_exceptions", True),
     )
     export_dir = params["common"]["export_dir"]
-    token = params["indicator"]["token"]
+    token = params["indicator"]["socrata_token"]
     if "archive" in params:
         daily_arch_diff = S3ArchiveDiffer(
             params["archive"]["cache_dir"],

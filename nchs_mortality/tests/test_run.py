@@ -19,6 +19,7 @@ class TestRun:
         for output_folder in folders:
             csv_files = listdir(output_folder)
 
+            geos = ["nation", "state"]
             dates = [
                 "202030",
                 "202031",
@@ -38,15 +39,14 @@ class TestRun:
             sensors = ["num", "prop"]
 
             expected_files = []
-            for d in dates:
-                for metric in metrics:
-                    if metric == "deaths_percent_of_expected":
-                        expected_files += ["weekly_" + d + "_state_" \
-                                           + metric + ".csv"]
-                    else:
-                        for sensor in sensors:
-                            expected_files += ["weekly_" + d + "_state_" \
-                                               + metric + "_" + sensor + ".csv"]
+            for geo in geos:
+                for d in dates:
+                    for metric in metrics:
+                        if metric == "deaths_percent_of_expected":
+                            expected_files += [f"weekly_{d}_{geo}_{metric}.csv"]
+                        else:
+                            for sensor in sensors:
+                                expected_files += [f"weekly_{d}_{geo}_{metric}_{sensor}.csv"]
             assert set(expected_files).issubset(set(csv_files))
 
     # the 14th was a Monday
@@ -58,12 +58,14 @@ class TestRun:
         if is_mon_or_thurs:
             folders.append("receiving")
 
-        for output_folder in folders:
-            df = pd.read_csv(
-                join(output_folder, "weekly_202026_state_deaths_covid_incidence_prop.csv")
-            )
-            expected_columns = [
-                "geo_id", "val", "se", "sample_size",
-                "missing_val", "missing_se", "missing_sample_size"
-            ]
-            assert (df.columns.values == expected_columns).all()
+        geos = ["nation", "state"]
+        for geo in geos:
+            for output_folder in folders:
+                df = pd.read_csv(
+                    join(output_folder, f"weekly_202026_{geo}_deaths_covid_incidence_prop.csv")
+                )
+                expected_columns = [
+                    "geo_id", "val", "se", "sample_size",
+                    "missing_val", "missing_se", "missing_sample_size"
+                ]
+                assert (df.columns.values == expected_columns).all()

@@ -70,7 +70,7 @@ def add_population(df, df_metric):
     return df
 
 
-def pull_nwss_data(token: str):
+def pull_nwss_data(socrata_token: str):
     """Pull the latest NWSS Wastewater data, and conforms it into a dataset.
 
     The output dataset has:
@@ -81,7 +81,7 @@ def pull_nwss_data(token: str):
 
     Parameters
     ----------
-    token: str
+    socrata_token: str
         My App Token for pulling the NWSS data (could be the same as the nchs data)
     test_file: Optional[str]
         When not null, name of file from which to read test data
@@ -95,7 +95,7 @@ def pull_nwss_data(token: str):
     type_dict, type_dict_metric = construct_typedicts()
 
     # Pull data from Socrata API
-    client = Socrata("data.cdc.gov", token)
+    client = Socrata("data.cdc.gov", socrata_token)
     results_concentration = client.get("g653-rqe2", limit=10**10)
     results_metric = client.get("2ew6-ywp6", limit=10**10)
     df_metric = pd.DataFrame.from_records(results_metric)

@@ -5,10 +5,10 @@ name: Python package
 
 on:
   push:
-    branches: [ main, prod ]
+    branches: [main, prod]
   pull_request:
-    types: [ opened, synchronize, reopened, ready_for_review ]
-    branches: [ main, prod ]
+    types: [opened, synchronize, reopened, ready_for_review]
+    branches: [main, prod]
 
 jobs:
   build:
@@ -16,26 +16,38 @@ jobs:
     if: github.event.pull_request.draft == false
     strategy:
       matrix:
-        packages: [_delphi_utils_python, changehc, claims_hosp, doctor_visits, google_symptoms, hhs_hosp, nchs_mortality, quidel_covidtest, sir_complainsalot]
+        packages:
+          [
+            _delphi_utils_python,
+            changehc,
+            claims_hosp,
+            doctor_visits,
+            google_symptoms,
+            hhs_hosp,
+            nchs_mortality,
+            nwss_wastewater,
+            quidel_covidtest,
+            sir_complainsalot,
+          ]
     defaults:
       run:
         working-directory: ${{ matrix.packages }}
     steps:
-    - uses: actions/checkout@v2
-    - name: Set up Python 3.8
-      uses: actions/setup-python@v2
-      with:
-        python-version: 3.8
-    - name: Install testing dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install pylint pytest pydocstyle wheel
-    - name: Install
-      run: |
-        make install-ci
-    - name: Lint
-      run: |
-        make lint
-    - name: Test
-      run: |
-        make test
+      - uses: actions/checkout@v2
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+      - name: Install testing dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pylint pytest pydocstyle wheel
+      - name: Install
+        run: |
+          make install-ci
+      - name: Lint
+        run: |
+          make lint
+      - name: Test
+        run: |
+          make test

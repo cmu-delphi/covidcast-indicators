@@ -4,8 +4,6 @@
 disable=logging-format-interpolation,
     too-many-locals,
     too-many-arguments,
-    too-many-branches,
-    too-many-statements,
     # Allow pytest functions to be part of a class.
     no-self-use,
     # Allow pytest classes to have one test.

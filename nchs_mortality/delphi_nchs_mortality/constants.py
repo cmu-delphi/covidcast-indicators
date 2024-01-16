@@ -25,7 +25,6 @@ SENSORS = [
         "prop"
 ]
 INCIDENCE_BASE = 100000
-GEO_RES = "state"
 
 # this is necessary as a delimiter in the f-string expressions we use to
 # construct detailed error reports

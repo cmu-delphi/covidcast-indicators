@@ -13,7 +13,7 @@ END_DATE = datetime.strptime(params["patch"]["end_date"])
 
 DELTA = 45
 
-PATCH_DIR = params["patch"]["end_date"]
+PATCH_DIR = params["patch"]["patch_dir"]
 INDICATOR_PREFIX = "quidel"
 
 

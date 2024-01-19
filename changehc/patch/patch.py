@@ -2,16 +2,22 @@ from datetime import datetime, timedelta
 import json
 import subprocess
 from os import makedirs
+from delphi_utils import read_params
 
-with open('params.json', 'r') as file:
-        data = json.load(file)
+from delphi_changehc.run import run_module
+
+params = read_params()
 
 SOURCE = "chng"
-export_dir = data['common']['export_dir']
-makedirs(export_dir, exist_ok=True)
+PATCH_DIR = params["patch"]["patch_dir"]
+makedirs(PATCH_DIR, exist_ok=True)
 
-START_DATE = datetime(2022, 12, 29)#20230220
-END_DATE = datetime(2022, 12, 29)
+START_DATE = datetime.strptime(params["patch"]["start_date"]) #yyyy-mm-dd
+END_DATE = datetime.strptime(params["patch"]["end_date"])
+
+params["common"]["log_filename"] = f"{PATCH_DIR}/{SOURCE}.log"
+if "archive" in params:
+    params.pop("archive")
 
 current_date = START_DATE
 while current_date <= END_DATE:
@@ -19,12 +25,15 @@ while current_date <= END_DATE:
         print(date_str)
 
         issue_dir = "issue_%s" % date_str
-        makedirs(f"{export_dir}/{issue_dir}/{SOURCE}", exist_ok=True) #create issue & source dir
+        makedirs(f"{PATCH_DIR}/{issue_dir}/{SOURCE}", exist_ok=True) #create issue & source dir
 
         drop_date = current_date - timedelta(days=1)
-        data['indicator']['drop_date'] = str(drop_date.strftime("%Y-%m-%d"))
-        data['common']['export_dir'] = export_dir + "/" + issue_dir + "/" + SOURCE
-        with open('params.json', 'w') as file:
-            json.dump(data, file, indent=4)
-        subprocess.run("env/bin/python -m delphi_changehc", shell=True)
+        params['indicator']['drop_date'] = str(drop_date.strftime("%Y-%m-%d"))
+        params['common']['export_dir'] = PATCH_DIR + "/" + issue_dir + "/" + SOURCE
+        makedirs(params["common"]["export_dir"], exist_ok=True)
+        
+        run_module(params)
+
+        print(f"completed run for issue_{issue_dir}")
+
         current_date += timedelta(days=1)

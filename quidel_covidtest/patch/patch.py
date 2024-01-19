@@ -5,19 +5,24 @@ from datetime import datetime, timedelta
 #Manually set before running Script
 from delphi_quidel_covidtest.run import run_module
 
-START_DATE = datetime(2023, 4, 2)#20230220
-END_DATE = datetime(2023, 4, 10)
+# Common parameter setup
+params = read_params()
+
+START_DATE = datetime.strptime(params["patch"]["start_date"]) #yyyy-mm-dd
+END_DATE = datetime.strptime(params["patch"]["end_date"])
 
 DELTA = 45
 
-PATCH_DIR = ""
+PATCH_DIR = params["patch"]["end_date"]
 INDICATOR_PREFIX = "quidel"
 
-# Common parameter setup
-params = read_params()
+
 params["common"]["log_filename"] = f"{PATCH_DIR}/{INDICATOR_PREFIX}.log"
 params["indicator"]["input_cache_dir"] = f"{PATCH_DIR}/input_cache"
 params["indicator"]["generate_backfill_files"] = False
+
+if "archive" in params:
+    params.pop("archive")
 
 #Make common patch directories and create log file
 makedirs(PATCH_DIR, exist_ok=True)

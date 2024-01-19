@@ -1,10 +1,9 @@
 #!/bin/sh
 
-# Create backup directory if it doesn't exist.
-mkdir -p vault_backup
-
-# Make a copy of vault_plain.yaml if it exists.
+# Create backup directory and copy vault_plain.yaml if it exists.
 if [ -f vault_plain.yaml ]; then
+    echo "Creating backup of vault_plain.yaml..."
+    mkdir -p vault_backup
     cp -Rvp vault_plain.yaml \
     "vault_backup/vault_plain.yaml.backup-$(date -u +%Y-%m-%d_T%H-%M-%S_%Z)"
 fi

@@ -129,6 +129,8 @@ venv.bak/
 .retry
 .indicators-ansible-vault-pass
 indicators-ansible-vault-pass
+vault_plain*
+vault_backup*
 
 # testing_utils
 testing_utils/cache

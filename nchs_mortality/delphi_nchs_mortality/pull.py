@@ -127,6 +127,9 @@ Columns available:
                                     geocode_col="state", dropna=False)
     df = gmpr.add_geocode(df, "state_name", "state_id",
                           from_col="state", new_col="geo_id", dropna=False)
-    # Manually set geo_id for national data
+    # Manually set geo_id and population for national data
+    national_pop = gmpr.get_crosswalk("nation", "pop")
+    us_pop = national_pop.loc[national_pop["nation"] == "us"]["pop"][0]
+    df.loc[df["state"] == "United States", "population"] = us_pop
     df.loc[df["state"] == "United States", "geo_id"] = "us"
     return df[keep_columns]

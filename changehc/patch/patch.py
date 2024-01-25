@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 import json
 import subprocess
 from os import makedirs
-from delphi_utils import read_params
+from delphi_utils import read_params, get_structured_logger
 import argparse
 
 from delphi_changehc.run import run_module
@@ -30,26 +30,29 @@ if __name__ == "__main__":
 
         # Set log filename
         params["common"]["log_filename"] = f"{PATCH_DIR}/{SOURCE}.log"
+        params["indicator"]["generate_backfill_files"] = False
 
         # Remove 'archive' key from params if it exists
         if "archive" in params:
                 params.pop("archive")
 
+        logger = get_structured_logger(
+                __file__, filename=params["common"].get("log_filename"),
+                log_exceptions=params["common"].get("log_exceptions", True))
+        logger.info(f"Starting patch script for {SOURCE} from {START_DATE} to {END_DATE}")
+
         current_date = START_DATE
         while current_date <= END_DATE:
                 date_str = str(current_date.strftime("%Y%m%d"))
-                print(date_str)
-
-                issue_dir = "issue_%s" % date_str
-                makedirs(f"{PATCH_DIR}/{issue_dir}/{SOURCE}", exist_ok=True) #create issue & source dir
+                issue_name = f"issue_{date_str}"
+                logger.info(f"Starting indicator run for {issue_name}")
 
                 drop_date = current_date - timedelta(days=1)
                 params['indicator']['drop_date'] = str(drop_date.strftime("%Y-%m-%d"))
-                params['common']['export_dir'] = f"{PATCH_DIR}/{issue_dir}/{SOURCE}"
+                params['common']['export_dir'] = f"{PATCH_DIR}/{issue_name}/{SOURCE}"
                 makedirs(params["common"]["export_dir"], exist_ok=True)
                 
                 run_module(params)
-
-                print(f"completed run for issue_{issue_dir}")
+                logger.info(f"Completed indicator run for {issue_name}")
 
                 current_date += timedelta(days=1)

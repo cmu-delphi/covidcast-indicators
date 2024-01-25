@@ -61,6 +61,6 @@ if __name__ == "__main__":
 
         run_module(params)
 
-        logger.info(f"completed indicator run for {issue_name}")
+        logger.info(f"Completed indicator run for {issue_name}")
 
         current_issue += timedelta(days=1)

@@ -1,4 +1,4 @@
-from delphi_utils import read_params
+from delphi_utils import read_params, get_structured_logger
 from os import makedirs
 from datetime import datetime, timedelta
 import argparse
@@ -32,14 +32,19 @@ if __name__ == "__main__":
     #Make common patch directories and create log file
     makedirs(PATCH_DIR, exist_ok=True)
     makedirs(params['indicator']['input_cache_dir'], exist_ok=True)
-    with open(params["common"]["log_filename"], "w") as log_file:
-        log_file.write(f"Starting patch script for {INDICATOR_PREFIX}")
+
+    logger = get_structured_logger(
+        __file__, filename=params["common"].get("log_filename"),
+        log_exceptions=params["common"].get("log_exceptions", True))
+    logger.info(f"Starting patch script for {INDICATOR_PREFIX} from {START_DATE} to {END_DATE}")
 
 
     #Loop through each issue date
     current_issue = START_DATE
     while current_issue <= END_DATE:
         issue_name = "issue_" + str(current_issue.strftime("%Y%m%d"))
+        logger.info(f"Starting indicator run for {issue_name}")
+
         params["common"]["export_dir"] = f"{PATCH_DIR}/{issue_name}/{INDICATOR_PREFIX}"
         
         end_date = str(current_issue.strftime("%Y-%m-%d"))
@@ -56,5 +61,6 @@ if __name__ == "__main__":
 
         run_module(params)
 
-        print(f"completed run for issue_{issue_name}")
+        logger.info(f"completed indicator run for {issue_name}")
+
         current_issue += timedelta(days=1)

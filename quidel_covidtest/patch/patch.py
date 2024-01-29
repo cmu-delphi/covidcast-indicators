@@ -2,7 +2,6 @@ from delphi_utils import read_params, get_structured_logger, params_run
 from os import makedirs
 import sys
 from datetime import datetime, timedelta
-import argparse
 from delphi_quidel_covidtest.run import run_module
 
 if __name__ == "__main__":

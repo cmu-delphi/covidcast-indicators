@@ -1,26 +1,33 @@
-from delphi_utils import read_params, get_structured_logger
+from delphi_utils import read_params, get_structured_logger, params_run
 from os import makedirs
+import sys
 from datetime import datetime, timedelta
 import argparse
 from delphi_quidel_covidtest.run import run_module
 
 if __name__ == "__main__":
-
-    # Read parameters from cmd line or params.json
-    parser = argparse.ArgumentParser(description='Run patch script for changehc')
-    parser.add_argument('--patch_dir', default=None, help='Patch directory')
-    parser.add_argument('--start_date', default=None, help='Start date in yyyy-mm-dd format')
-    parser.add_argument('--end_date', default=None, help='End date in yyyy-mm-dd format')
-    args = parser.parse_args()
-
+    # Read parameters from cmd line or params.json. cmd line configuration takes precedence over params.json
+    # Example cmd: python3 patch.py set patch.patch_dir patch_jan_13_14 patch.start_date 2024-01-13 patch.end_date 2024-01-14
     params = read_params()
+    json_patch_conf = "patch" in params and "start_date" in params["patch"] and "end_date" in params["patch"]
+    cmd_patch_conf = len(sys.argv) > 1 and sys.argv[1] == "set"
 
-    PATCH_DIR = args.patch_dir if args.patch_dir else params["patch"]["patch_dir"]  # Directory for patches
-    START_DATE = datetime.strptime(args.start_date if args.start_date else params["patch"]["start_date"], "%Y-%m-%d")  # Start date (yyyy-mm-dd)
-    END_DATE = datetime.strptime(args.end_date if args.end_date else params["patch"]["end_date"], "%Y-%m-%d")  # End date
+    logger = get_structured_logger(
+        __file__, filename=params["common"].get("log_filename"),
+        log_exceptions=params["common"].get("log_exceptions", True))
+
+    if json_patch_conf == False and cmd_patch_conf == False:
+        logger.error("Please add 'start_date' and 'end_date' to params.json under 'patch' or specify in cmd line.")
+        sys.exit(1)
+    elif cmd_patch_conf == True:
+        params_run() #set start_date and end_date from cmd line
+        params = read_params()
+
+    START_DATE = datetime.strptime(params["patch"]["start_date"], "%Y-%m-%d")  # Start date (yyyy-mm-dd)
+    END_DATE = datetime.strptime(params["patch"]["end_date"], "%Y-%m-%d")  # End date
+    PATCH_DIR = params["patch"].get("patch_dir", f"patch_{START_DATE}_{END_DATE}")  # Directory for issues 
     DELTA = 45
     INDICATOR_PREFIX = "quidel"
-
 
     params["common"]["log_filename"] = f"{PATCH_DIR}/{INDICATOR_PREFIX}.log"
     params["indicator"]["input_cache_dir"] = f"{PATCH_DIR}/input_cache"
@@ -33,11 +40,7 @@ if __name__ == "__main__":
     makedirs(PATCH_DIR, exist_ok=True)
     makedirs(params['indicator']['input_cache_dir'], exist_ok=True)
 
-    logger = get_structured_logger(
-        __file__, filename=params["common"].get("log_filename"),
-        log_exceptions=params["common"].get("log_exceptions", True))
     logger.info(f"Starting patch script for {INDICATOR_PREFIX} from {START_DATE} to {END_DATE}")
-
 
     #Loop through each issue date
     current_issue = START_DATE

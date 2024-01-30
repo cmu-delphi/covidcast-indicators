@@ -12,7 +12,7 @@ required = [
     "delphi-utils",
     "covidcast",
     "boto3",
-    "moto~=~4.2.14",
+    "moto~=4.2.14",
     "paramiko"
 ]
 

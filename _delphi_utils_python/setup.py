@@ -12,7 +12,7 @@ required = [
     "freezegun",
     "gitpython",
     "mock",
-    "moto",
+    "moto~=4.2.14",
     "numpy",
     "pandas>=1.1.0",
     "pydocstyle",

@@ -5,6 +5,7 @@ import pytest
 
 import pandas as pd
 
+from delphi_utils.geomap import GeoMapper
 
 class TestRun:
     # the 14th was a Monday
@@ -69,3 +70,27 @@ class TestRun:
                     "missing_val", "missing_se", "missing_sample_size"
                 ]
                 assert (df.columns.values == expected_columns).all()
+
+    # the 14th was a Monday
+    @pytest.mark.parametrize("date", ["2020-09-14", "2020-09-17", "2020-09-18"])
+    def test_national_prop(self, run_as_module, date):
+        is_mon_or_thurs = dt.datetime.strptime(date, "%Y-%m-%d").weekday() == (0 or 3)
+
+        folders = ["daily_cache"]
+        if is_mon_or_thurs:
+            folders.append("receiving")
+
+        for output_folder in folders:
+            num = pd.read_csv(
+                join(output_folder, f"weekly_202026_nation_deaths_covid_incidence_num.csv")
+            )
+            prop = pd.read_csv(
+                join(output_folder, f"weekly_202026_nation_deaths_covid_incidence_prop.csv")
+            )
+            gmpr = GeoMapper()
+            national_pop = gmpr.get_crosswalk("nation", "pop")
+            us_pop = national_pop.loc[national_pop["nation"] == "us"]["pop"][0]
+            # "assert almost equal" due to rounding down'
+            prop_value = pytest.approx(prop.iloc[0]["val"], 0.0001)
+            INCIDENCE_BASE = 100000
+            assert(prop_value == num.iloc[0]["val"] / us_pop * INCIDENCE_BASE)

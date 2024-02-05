@@ -87,10 +87,9 @@ class TestRun:
             prop = pd.read_csv(
                 join(output_folder, f"weekly_202026_nation_deaths_covid_incidence_prop.csv")
             )
-            gmpr = GeoMapper()
-            national_pop = gmpr.get_crosswalk("nation", "pop")
-            us_pop = national_pop.loc[national_pop["nation"] == "us"]["pop"][0]
-            # "assert almost equal" due to rounding down'
-            prop_value = pytest.approx(prop.iloc[0]["val"], 0.0001)
+            # hardcoded value from the geomapper CSV
+            US_POPULATION = 334103109
             INCIDENCE_BASE = 100000
-            assert(prop_value == num.iloc[0]["val"] / us_pop * INCIDENCE_BASE)
+            numeric_value = num.iloc[0]["val"] / US_POPULATION * INCIDENCE_BASE
+            assert(numeric_value > 0)
+            assert(prop.iloc[0]["val"] == round(numeric_value, 7))

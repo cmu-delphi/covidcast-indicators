@@ -5,7 +5,6 @@ import pytest
 
 import pandas as pd
 
-from delphi_utils.geomap import GeoMapper
 
 class TestRun:
     # the 14th was a Monday

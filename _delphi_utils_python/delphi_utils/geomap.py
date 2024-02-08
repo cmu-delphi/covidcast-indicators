@@ -12,7 +12,7 @@ from os.path import join
 from collections import defaultdict
 
 import pandas as pd
-import pkg_resources
+import importlib_resources
 from pandas.api.types import is_string_dtype
 
 
@@ -138,7 +138,7 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
             self._geo_sets[geo_type] = self._load_geo_values(geo_type)
 
     def _load_crosswalk_from_file(self, from_code, to_code, data_path):
-        stream = pkg_resources.resource_stream(__name__, data_path)
+        stream = importlib_resources.files(__name__).joinpath(data_path)
         dtype = {
             from_code: str,
             to_code: str,

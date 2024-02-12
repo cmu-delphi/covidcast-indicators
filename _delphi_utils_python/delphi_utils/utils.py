@@ -56,13 +56,15 @@ def params_set(path, value, params):
     """
     path = path.split(".")
     for p in path[:-1]:
+        if p not in params:
+            params[p] = {}
         params = params[p] # stick the 'params' handle on the innermost dict/list
     if value.startswith("/dev/fd/"): # explicitly handle process substitutions
         with open(value) as f:
             value = f.read().strip()
     if value in {"true","false"}:
         value = value == "true"
-    elif isinstance(params[path[-1]],list) or value.find(",")>0:
+    elif path[-1] in params and isinstance(params[path[-1]],list) or value.find(",")>0:
         value = value.split(",")
     params[path[-1]] = value
 

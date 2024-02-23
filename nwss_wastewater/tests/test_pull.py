@@ -10,9 +10,11 @@ import pandas as pd
 import pandas.api.types as ptypes
 
 from delphi_nwss.pull import (
+    add_identifier_columns,
+    check_endpoints,
     construct_typedicts,
     sig_digit_round,
-    add_population,
+    reformat,
     warn_string,
 )
 import numpy as np
@@ -111,6 +113,15 @@ def test_column_conversions_metric():
     assert all(ptypes.is_numeric_dtype(converted[flo].dtype) for flo in float_typed)
 
 
+def test_warn_string():
+    type_dict, type_dict_metric = construct_typedicts()
+    df_conc = pd.read_csv("test_data/conc_data.csv")
+    assert (
+        warn_string(df_conc, type_dict)
+        == "\nExpected column(s) missed, The dataset schema may\nhave changed. Please investigate and amend the code.\n\nColumns needed:\npcr_conc_smoothed\ntimestamp\n\nColumns available:\nUnnamed: 0\nkey_plot_id\ndate\npcr_conc_smoothed\nnormalization\n"
+    )
+
+
 def test_formatting():
     type_dict, type_dict_metric = construct_typedicts()
     df_metric = pd.read_csv("test_data/metric_data.csv", index_col=0)
@@ -132,6 +143,28 @@ def test_formatting():
                 "pcr_conc_smoothed",
                 "normalization",
                 "population_served",
+                "detect_prop_15d",
+                "percentile",
+                "ptc_15d",
             ]
         )
+    )
+
+
+def test_identifier_colnames():
+    test_df = pd.read_csv("test_data/conc_data.csv", index_col=0)
+    add_identifier_columns(test_df)
+    assert all(test_df.state.unique() == ["ak", "tn"])
+    assert all(test_df.provider.unique() == ["CDC_BIOBOT", "WWS"])
+    # the only cases where the signal name is wrong is when normalization isn't defined
+    assert all(
+        (test_df.signal_name == test_df.provider + "_" + test_df.normalization)
+        | (test_df.normalization.isna())
+    )
+    assert all(
+        (
+            test_df.signal_name.unique()
+            == ["CDC_BIOBOT_flow-population", np.nan, "WWS_microbial"]
+        )
+        | (pd.isna(test_df.signal_name.unique()))
     )

@@ -7,6 +7,7 @@ from sodapy import Socrata
 
 from .constants import (
     SIGNALS,
+    PROVIDER_NORMS,
     METRIC_SIGNALS,
     METRIC_DATES,
     SAMPLE_SITE_NAMES,
@@ -28,7 +29,7 @@ def sig_digit_round(value, n_digits):
     sign_mask = value < 0
     value[sign_mask] *= -1
     exponent = np.ceil(np.log10(value))
-    result = 10**exponent * np.round(value * 10 ** (-exponent), n_digits)
+    result = 10 ** exponent * np.round(value * 10 ** (-exponent), n_digits)
     result[sign_mask] *= -1
     result[zero_mask] = in_value[zero_mask]
     return result
@@ -60,21 +61,66 @@ Columns available:
 """
 
 
-def add_population(df, df_metric):
-    """Add the population column from df_metric to df, and rename some columns."""
+def reformat(df, df_metric):
+    """Add  columns from df_metric to df, and rename some columns.
+
+    Specifically the population and METRIC_SIGNAL columns, and renames date_start to timestamp.
+    """
     # drop unused columns from df_metric
-    df_population = df_metric.loc[:, ["key_plot_id", "date_start", "population_served"]]
+    df_metric_core = df_metric.loc[
+        :, ["key_plot_id", "date_start", "population_served", *METRIC_SIGNALS]
+    ]
     # get matching keys
-    df_population = df_population.rename(columns={"date_start": "timestamp"})
-    df_population = df_population.set_index(["key_plot_id", "timestamp"])
+    df_metric_core = df_metric_core.rename(columns={"date_start": "timestamp"})
+    df_metric_core = df_metric_core.set_index(["key_plot_id", "timestamp"])
     df = df.set_index(["key_plot_id", "timestamp"])
 
-    df = df.join(df_population)
+    df = df.join(df_metric_core)
     df = df.reset_index()
     return df
 
 
-def pull_nwss_data(socrata_token: str):
+def drop_unnormalized(df):
+    """Drop unnormalized.
+
+    mutate `df` to no longer have rows where the normalization scheme isn't actually identified,
+    as we can't classify the kind of signal
+    """
+    return df[~df["normalization"].isna()]
+
+
+def add_identifier_columns(df):
+    """Add identifier columns.
+
+    Add columns to get more detail than key_plot_id gives;
+    specifically, state, and `provider_normalization`, which gives the signal identifier
+    """
+    df["state"] = df.key_plot_id.str.extract(
+        r"_(\w\w)_"
+    )  # a pair of alphanumerics surrounded by _
+    df["provider"] = df.key_plot_id.str.extract(
+        r"(.*)_[a-z]{2}_"
+    )  # anything followed by state ^
+    df["signal_name"] = df.provider + "_" + df.normalization
+
+
+def check_endpoints(df):
+    """Make sure that there aren't any new signals that we need to add."""
+    # compare with existing column name checker
+    # also add a note about handling errors
+    unique_provider_norms = (
+        df[["provider", "normalization"]]
+        .drop_duplicates()
+        .sort_values(["provider", "normalization"])
+        .reset_index(drop=True)
+    )
+    if not unique_provider_norms.equals(pd.DataFrame(PROVIDER_NORMS)):
+        raise ValueError(
+            f"There are new providers and/or norms. They are\n{unique_provider_norms}"
+        )
+
+
+def pull_nwss_data(token: str):
     """Pull the latest NWSS Wastewater data, and conforms it into a dataset.
 
     The output dataset has:
@@ -95,13 +141,15 @@ def pull_nwss_data(socrata_token: str):
     pd.DataFrame
         Dataframe as described above.
     """
+    # Constants
+    keep_columns = [*SIGNALS, *METRIC_SIGNALS]
     # concentration key types
     type_dict, type_dict_metric = construct_typedicts()
 
     # Pull data from Socrata API
-    client = Socrata("data.cdc.gov", socrata_token)
-    results_concentration = client.get("g653-rqe2", limit=10**10)
-    results_metric = client.get("2ew6-ywp6", limit=10**10)
+    client = Socrata("data.cdc.gov", token)
+    results_concentration = client.get("g653-rqe2", limit=10 ** 10)
+    results_metric = client.get("2ew6-ywp6", limit=10 ** 10)
     df_metric = pd.DataFrame.from_records(results_metric)
     df_concentration = pd.DataFrame.from_records(results_concentration)
     df_concentration = df_concentration.rename(columns={"date": "timestamp"})
@@ -116,19 +164,29 @@ def pull_nwss_data(socrata_token: str):
     except KeyError as exc:
         raise ValueError(warn_string(df_metric, type_dict_metric)) from exc
 
+    # if the normalization scheme isn't recorded, why is it even included as a sample site?
+    df = drop_unnormalized(df_concentration)
     # pull 2 letter state labels out of the key_plot_id labels
-    df_concentration["state"] = df_concentration.key_plot_id.str.extract(r"_(\w\w)_")
+    add_identifier_columns(df)
 
+    # move population and metric signals over to df
+    df = reformat(df, df_metric)
     # round out some of the numeric noise that comes from smoothing
-    df_concentration[SIGNALS[0]] = sig_digit_round(
-        df_concentration[SIGNALS[0]], SIG_DIGITS
-    )
+    for signal in [*SIGNALS, *METRIC_SIGNALS]:
+        df[signal] = sig_digit_round(df[signal], SIG_DIGITS)
 
-    df_concentration = add_population(df_concentration, df_metric)
     # if there are population NA's, assume the previous value is accurate (most
     # likely introduced by dates only present in one and not the other; even
     # otherwise, best to assume some value rather than break the data)
-    df_concentration.population_served = df_concentration.population_served.ffill()
-
-    keep_columns = ["timestamp", "state", "population_served"]
-    return df_concentration[SIGNALS + keep_columns]
+    df.population_served = df.population_served.ffill()
+    check_endpoints(df)
+    keep_columns.extend(
+        [
+            "timestamp",
+            "state",
+            "population_served",
+            "normalization",
+            "provider",
+        ]
+    )
+    return df[keep_columns]

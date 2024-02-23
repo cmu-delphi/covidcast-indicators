@@ -29,7 +29,7 @@ import pandas as pd
 from delphi_utils import S3ArchiveDiffer, get_structured_logger, create_export_csv
 from delphi_utils.nancodes import add_default_nancodes
 
-from .constants import GEOS, SIGNALS
+from .constants import GEOS, METRIC_SIGNALS, PROVIDER_NORMS, SIGNALS
 from .pull import pull_nwss_data
 
 
@@ -50,7 +50,7 @@ def generate_weights(df, column_aggregating="pcr_conc_smoothed"):
     """
     # set the weight of places with na's to zero
     df[f"relevant_pop_{column_aggregating}"] = (
-        df["population_served"] * df[column_aggregating].notna()
+        df["population_served"] * np.abs(df[column_aggregating]).notna()
     )
     # generate the weighted version
     df[f"weighted_{column_aggregating}"] = (
@@ -126,38 +126,60 @@ def run_module(params):
     export_dir = params["common"]["export_dir"]
     socrata_token = params["indicator"]["socrata_token"]
     if "archive" in params:
-        daily_arch_diff = S3ArchiveDiffer(
+        arch_diff = S3ArchiveDiffer(
             params["archive"]["cache_dir"],
             export_dir,
             params["archive"]["bucket_name"],
-            "nchs_mortality",
+            "nwss_wastewater",
             params["archive"]["aws_credentials"],
         )
-        daily_arch_diff.update_cache()
+        arch_diff.update_cache()
 
     run_stats = []
     ## build the base version of the signal at the most detailed geo level you can get.
     ## compute stuff here or farm out to another function or file
     df_pull = pull_nwss_data(socrata_token)
     ## aggregate
-    for sensor in SIGNALS:
-        df = df_pull.copy()
-        # add weighed column
-        df = generate_weights(df, sensor)
-
-        for geo in GEOS:
-            logger.info("Generating signal and exporting to CSV", metric=sensor)
-            if geo == "nation":
-                agg_df = weighted_nation_sum(df, sensor)
-            else:
-                agg_df = weighted_state_sum(df, geo, sensor)
-            # add se, sample_size, and na codes
-            agg_df = add_needed_columns(agg_df)
-            # actual export
-            dates = create_export_csv(
-                agg_df, geo_res=geo, export_dir=export_dir, sensor=sensor
-            )
-            if len(dates) > 0:
-                run_stats.append((max(dates), len(dates)))
+    # iterate over the providers and the normalizations that they specifically provide
+    for (provider, normalization) in zip(
+        PROVIDER_NORMS["provider"], PROVIDER_NORMS["normalization"]
+    ):
+        # copy by only taking the relevant subsection
+        df_prov_norm = df_pull[
+            (df_pull.provider == provider) & (df_pull.normalization == normalization)
+        ]
+        df_prov_norm = df_prov_norm.drop(["provider", "normalization"], axis=1)
+        for sensor in [*SIGNALS, *METRIC_SIGNALS]:
+            full_sensor_name = sensor + "_" + provider + "_" + normalization
+            df_prov_norm = df_prov_norm.rename(columns={sensor: full_sensor_name})
+            # add weighed column
+            df = generate_weights(df_prov_norm, full_sensor_name)
+            for geo in GEOS:
+                logger.info(
+                    "Generating signal and exporting to CSV", metric=full_sensor_name
+                )
+                if geo == "nation":
+                    agg_df = weighted_nation_sum(df, full_sensor_name)
+                else:
+                    agg_df = weighted_state_sum(df, geo, full_sensor_name)
+                # add se, sample_size, and na codes
+                agg_df = add_needed_columns(agg_df)
+                # actual export
+                dates = create_export_csv(
+                    agg_df, geo_res=geo, export_dir=export_dir, sensor=full_sensor_name
+                )
+                if "archive" in params:
+                    _, common_diffs, new_files = arch_diff.diff_exports()
+                    to_archive = [
+                        f for f, diff in common_diffs.items() if diff is not None
+                    ]
+                    to_archive += new_files
+                    _, fails = arch_diff.archive_exports(to_archive)
+                    succ_common_diffs = {
+                        f: diff for f, diff in common_diffs.items() if f not in fails
+                    }
+                    arch_diff.filter_exports(succ_common_diffs)
+                if len(dates) > 0:
+                    run_stats.append((max(dates), len(dates)))
     ## log this indicator run
     logging(start_time, run_stats, logger)

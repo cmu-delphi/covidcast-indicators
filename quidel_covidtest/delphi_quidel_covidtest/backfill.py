@@ -45,7 +45,10 @@ def store_backfill_file(df, _end_date, backfill_dir):
                         "totalTest_age_0_17": "den_age_0_17"},
                         axis=1, inplace=True)
     #Store one year's backfill data
-    _start_date = _end_date.replace(year=_end_date.year-1)
+    if _end_date.day == 29 and _end_date.month == 2:
+        _start_date = datetime(_end_date.year-1, 2, 28)
+    else:
+        _start_date = _end_date.replace(year=_end_date.year-1)
     selected_columns = ['time_value', 'fips', 'state_id',
                         'den_total', 'num_total',
                         'num_age_0_4', 'den_age_0_4',

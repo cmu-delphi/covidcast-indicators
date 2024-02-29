@@ -44,7 +44,10 @@ def store_backfill_file(claims_filepath, _end_date, backfill_dir):
     backfilldata = gmpr.add_geocode(backfilldata, from_code="fips", new_code="state_id",
                            from_col="fips", new_col="state_id")
     #Store one year's backfill data
-    _start_date = _end_date.replace(year=_end_date.year-1)
+    if _end_date.day == 29 and _end_date.month == 2:
+        _start_date = datetime(_end_date.year-1, 2, 28)
+    else:
+        _start_date = _end_date.replace(year=_end_date.year-1)
     selected_columns = ['time_value', 'fips', 'state_id',
                         'den', 'num']
     backfilldata = backfilldata.loc[(backfilldata["time_value"] >= _start_date)

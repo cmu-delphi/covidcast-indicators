@@ -69,3 +69,26 @@ class TestRun:
                     "missing_val", "missing_se", "missing_sample_size"
                 ]
                 assert (df.columns.values == expected_columns).all()
+
+    # the 14th was a Monday
+    @pytest.mark.parametrize("date", ["2020-09-14", "2020-09-17", "2020-09-18"])
+    def test_national_prop(self, run_as_module, date):
+        is_mon_or_thurs = dt.datetime.strptime(date, "%Y-%m-%d").weekday() == (0 or 3)
+
+        folders = ["daily_cache"]
+        if is_mon_or_thurs:
+            folders.append("receiving")
+
+        for output_folder in folders:
+            num = pd.read_csv(
+                join(output_folder, f"weekly_202026_nation_deaths_covid_incidence_num.csv")
+            )
+            prop = pd.read_csv(
+                join(output_folder, f"weekly_202026_nation_deaths_covid_incidence_prop.csv")
+            )
+            # hardcoded value from the geomapper CSV
+            US_POPULATION = 334103109
+            INCIDENCE_BASE = 100000
+            numeric_value = num.iloc[0]["val"] / US_POPULATION * INCIDENCE_BASE
+            assert(numeric_value > 0)
+            assert(prop.iloc[0]["val"] == round(numeric_value, 7))

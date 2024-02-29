@@ -12,7 +12,7 @@ required = [
     "freezegun",
     "gitpython",
     "mock",
-    "moto",
+    "moto~=4.2.14",
     "numpy",
     "pandas>=1.1.0",
     "pydocstyle",
@@ -27,7 +27,7 @@ required = [
 
 setup(
     name="delphi_utils",
-    version="0.3.22",
+    version="0.3.23",
     description="Shared Utility Functions for Indicators",
     long_description=long_description,
     long_description_content_type="text/markdown",

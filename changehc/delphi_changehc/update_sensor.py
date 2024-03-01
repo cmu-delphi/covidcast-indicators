@@ -16,7 +16,7 @@ from delphi_utils import GeoMapper, add_prefix, create_export_csv, Weekday
 # first party
 from .config import Config
 from .constants import SMOOTHED, SMOOTHED_ADJ, SMOOTHED_CLI, SMOOTHED_ADJ_CLI,\
-                       SMOOTHED_FLU, SMOOTHED_ADJ_FLU, NA
+                       SMOOTHED_FLU, SMOOTHED_ADJ_FLU, SMOOTHED_ILI, SMOOTHED_ADJ_ILI, NA
 from .sensor import CHCSensor
 
 
@@ -117,6 +117,8 @@ class CHCSensorUpdater:  # pylint: disable=too-many-instance-attributes
             signal_name = SMOOTHED_ADJ_CLI if self.weekday else SMOOTHED_CLI
         elif self.numtype == "flu":
             signal_name = SMOOTHED_ADJ_FLU if self.weekday else SMOOTHED_FLU
+        elif self.numtype == "ili":
+            signal_name = SMOOTHED_ADJ_ILI if self.weekday else SMOOTHED_ILI
         else:
             raise ValueError(f'Unsupported numtype received "{numtype}",'
                              f' must be one of ["covid", "cli", "flu"]')

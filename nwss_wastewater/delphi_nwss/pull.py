@@ -16,7 +16,11 @@ from .constants import (
 
 
 def sig_digit_round(value, n_digits):
-    """Truncate precision of elements in `value` (a numpy array) to the specified number of significant digits (9.87e5 would be 3 sig digits)."""
+    """Truncate value to only n_digits.
+
+    Truncate precision of elements in `value` (a numpy array) to the specified number of
+    significant digits (9.87e5 would be 3 sig digits).
+    """
     in_value = value
     value = np.asarray(value).copy()
     zero_mask = (value == 0) | np.isinf(value) | np.isnan(value)

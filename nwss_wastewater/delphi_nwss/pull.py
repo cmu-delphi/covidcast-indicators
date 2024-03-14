@@ -29,7 +29,7 @@ def sig_digit_round(value, n_digits):
     sign_mask = value < 0
     value[sign_mask] *= -1
     exponent = np.ceil(np.log10(value))
-    result = 10 ** exponent * np.round(value * 10 ** (-exponent), n_digits)
+    result = 10**exponent * np.round(value * 10 ** (-exponent), n_digits)
     result[sign_mask] *= -1
     result[zero_mask] = in_value[zero_mask]
     return result
@@ -71,7 +71,7 @@ def reformat(df, df_metric):
         :, ["key_plot_id", "date_start", "population_served", *METRIC_SIGNALS]
     ]
     # get matching keys
-    df_metric_core = df_metric_core.rename(columns={"date_start": "timestamp"})
+    df_metric_core = df_metric_core.rename(columns={"date_end": "timestamp"})
     df_metric_core = df_metric_core.set_index(["key_plot_id", "timestamp"])
     df = df.set_index(["key_plot_id", "timestamp"])
 
@@ -148,8 +148,8 @@ def pull_nwss_data(token: str):
 
     # Pull data from Socrata API
     client = Socrata("data.cdc.gov", token)
-    results_concentration = client.get("g653-rqe2", limit=10 ** 10)
-    results_metric = client.get("2ew6-ywp6", limit=10 ** 10)
+    results_concentration = client.get("g653-rqe2", limit=10**10)
+    results_metric = client.get("2ew6-ywp6", limit=10**10)
     df_metric = pd.DataFrame.from_records(results_metric)
     df_concentration = pd.DataFrame.from_records(results_concentration)
     df_concentration = df_concentration.rename(columns={"date": "timestamp"})

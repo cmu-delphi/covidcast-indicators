@@ -10,18 +10,6 @@ GEOS = [
     # "wwss",  # wastewater sample site, name will probably need to change
 ]
 
-## example:
-#
-# FULL_TIME = "full_time_work_prop"
-# PART_TIME = "part_time_work_prop"
-# COVIDNET = "covidnet"
-#
-# SIGNALS = [
-#     FULL_TIME,
-#     PART_TIME,
-#     COVIDNET
-# ]
-
 SIGNALS = ["pcr_conc_smoothed"]
 METRIC_SIGNALS = ["detect_prop_15d", "percentile", "ptc_15d"]
 METRIC_DATES = ["date_start", "date_end"]
@@ -37,13 +25,5 @@ SAMPLE_SITE_NAMES = {
     "sample_location_specify": float,
 }
 SIG_DIGITS = 7
-
-## example:
-# SMOOTHERS = [
-#    (Smoother("identity", impute_method=None), ""),
-#    (Smoother("moving_average", window_length=7), "_7dav"),
-# ]
-
-SMOOTHERS = []
 
 NEWLINE = "\n"

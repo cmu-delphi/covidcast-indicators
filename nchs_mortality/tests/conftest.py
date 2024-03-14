@@ -21,7 +21,7 @@ PARAMS = {
     "export_start_date": "2020-04-11",
     "static_file_dir": "../static",
     "test_file": "test_data.csv",
-    "token": ""
+    "socrata_token": ""
   },
   "archive": {
     "aws_credentials": {

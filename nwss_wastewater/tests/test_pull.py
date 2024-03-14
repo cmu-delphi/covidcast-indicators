@@ -9,7 +9,12 @@ from datetime import datetime
 import pandas as pd
 import pandas.api.types as ptypes
 
-from delphi_nwss.pull import construct_typedicts, sig_digit_round, reformat, warn_string
+from delphi_nwss.pull import (
+    construct_typedicts,
+    sig_digit_round,
+    add_population,
+    warn_string,
+)
 import numpy as np
 
 
@@ -116,7 +121,7 @@ def test_formatting():
     df = df.rename(columns={"date": "timestamp"})
     df = df.astype(type_dict)
 
-    df_formatted = reformat(df, df_metric)
+    df_formatted = add_population(df, df_metric)
 
     assert all(
         df_formatted.columns

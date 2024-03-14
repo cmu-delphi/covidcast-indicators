@@ -1,13 +1,13 @@
 {
   "common": {
-    "export_dir": "./receiving",
-    "log_filename": "./nwss_wastewater.log",
+    "export_dir": "/common/covidcast/receiving/nwss_wastewater",
+    "log_filename": "/var/log/indicators/nwss_wastewater.log",
     "log_exceptions": false
   },
   "indicator": {
     "wip_signal": true,
     "export_start_date": "2020-02-01",
     "static_file_dir": "./static",
-    "token": ""
+    "socrata_token": "{{ nwss_wastewater_token }}"
   }
 }

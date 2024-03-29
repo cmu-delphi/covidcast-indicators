@@ -118,7 +118,7 @@ def test_warn_string():
     df_conc = pd.read_csv("test_data/conc_data.csv")
     assert (
         warn_string(df_conc, type_dict)
-        == "\nExpected column(s) missed, The dataset schema may\nhave changed. Please investigate and amend the code.\n\nColumns needed:\npcr_conc_smoothed\ntimestamp\n\nColumns available:\nUnnamed: 0\nkey_plot_id\ndate\npcr_conc_smoothed\nnormalization\n"
+        == "\nExpected column(s) missed, The dataset schema may\nhave changed. Please investigate and amend the code.\n\nColumns needed:\npcr_conc_smoothed\ntimestamp\n\nColumns available:\nUnnamed: 0\ndate\nkey_plot_id\nnormalization\npcr_conc_smoothed\n"
     )
 
 
@@ -132,7 +132,7 @@ def test_formatting():
     df = df.rename(columns={"date": "timestamp"})
     df = df.astype(type_dict)
 
-    df_formatted = add_population(df, df_metric)
+    df_formatted = reformat(df, df_metric)
 
     assert all(
         df_formatted.columns

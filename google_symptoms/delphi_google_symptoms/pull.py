@@ -11,8 +11,17 @@ from .constants import DC_FIPS, METRICS, COMBINED_METRIC, SYMPTOM_SETS, DTYPE_CO
 
 
 # Create map of BigQuery symptom column names to desired column names.
-colname_map = {"symptom_" +
+colname_map_county = {"symptom_" +
                metric.replace(" ", "_"): metric for metric in METRICS}
+# Google-provided column names for the county table are in the format
+# "sypmtom_Abdominal_pain", while state table names are in the format
+# "sypmtom_abdominal_pain". Make different mappings between raw and desired
+# column names for state and county tables. Values (desired column names)
+# are the same for both geo types.
+colname_map_by_level = {
+    "county": colname_map_county,
+    "state": {key.lower(): value for (key, value) in colname_map_county.items()}
+}
 
 
 def preprocess(df, level):
@@ -41,7 +50,7 @@ def preprocess(df, level):
     # Constants
     KEEP_COLUMNS = ["geo_id", "date"] + METRICS + COMBINED_METRIC
 
-    df.rename(colname_map, axis=1, inplace=True)
+    df.rename(colname_map_by_level[level], axis=1, inplace=True)
     df["geo_id"] = df["open_covid_region_code"].apply(
         lambda x: x.split("-")[-1].lower())
 
@@ -185,7 +194,7 @@ def produce_query(level, date_range):
 
     # Add custom values to base_query
     query = base_query.format(
-        symptom_cols=", ".join(colname_map.keys()),
+        symptom_cols=", ".join(colname_map_by_level[level].keys()),
         symptom_table=base_level_table[level],
         start_date=date_range[0],
         end_date=date_range[1])
@@ -223,12 +232,21 @@ def pull_gs_data_one_geolevel(level, date_range):
     """
     query = produce_query(level, date_range)
 
-    df = pandas_gbq.read_gbq(query, progress_bar_type=None, dtypes = DTYPE_CONVERSIONS)
+    # Google-provided column names for the county table are in the format
+    # "sypmtom_Abdominal_pain", while state table names are in the format
+    # "sypmtom_abdominal_pain". Make different mappings between raw column names
+    # and desired dtype for state and county tables. For the state table,
+    # modify DTYPE_CONVERSIONS to use all lowercase column names.
+    if level == "state":
+        dtypes_map = {key.lower(): value for (key, value) in DTYPE_CONVERSIONS.items()}
+    else:
+        dtypes_map = DTYPE_CONVERSIONS
+    df = pandas_gbq.read_gbq(query, progress_bar_type=None, dtypes = dtypes_map)
 
     if len(df) == 0:
         df = pd.DataFrame(
             columns=["open_covid_region_code", "date"] +
-            list(colname_map.keys())
+            list(colname_map_by_level[level].keys())
         )
 
     df = preprocess(df, level)

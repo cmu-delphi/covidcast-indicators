@@ -1,0 +1,13 @@
+{
+  "common": {
+    "export_dir": "./receiving",
+    "log_filename": "./nssp.log",
+    "log_exceptions": false
+  },
+  "indicator": {
+    "wip_signal": true,
+    "export_start_date": "",
+    "static_file_dir": "./static",
+    "socrata_token": ""
+  }
+}

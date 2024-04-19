@@ -23,7 +23,6 @@ the following structure:
 """
 import time
 from datetime import datetime
-import pdb
 import numpy as np
 import pandas as pd
 from delphi_utils import S3ArchiveDiffer, get_structured_logger, create_export_csv

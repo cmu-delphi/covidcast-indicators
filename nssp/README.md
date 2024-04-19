@@ -1,4 +1,4 @@
-# NWSS wastewater data
+# NSSP Emergency Room data
 
 We import the wastewater data, currently only the smoothed concentration, from the CDC website, aggregate to the state and national level from the wastewater sample site level, and export the aggregated data.
 For details see the `DETAILS.md` file in this directory.

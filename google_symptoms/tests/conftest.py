@@ -45,8 +45,9 @@ good_input = {
 symptom_names = ["symptom_" +
                  metric.replace(" ", "_") for metric in METRICS]
 keep_cols = ["open_covid_region_code", "date"] + symptom_names
+keep_cols_lower = [col.lower() for col in keep_cols]
 
-state_data = pd.read_csv(good_input["state"], parse_dates=["date"])[keep_cols]
+state_data = pd.read_csv(good_input["state"], parse_dates=["date"])[keep_cols_lower]
 county_data = pd.read_csv(
     good_input["county"], parse_dates=["date"])[keep_cols]
 

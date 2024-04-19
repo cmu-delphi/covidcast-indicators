@@ -22,7 +22,8 @@ bad_input = {
 
 symptom_names = ["symptom_" +
                  metric.replace(" ", "_") for metric in METRICS]
-keep_cols = ["open_covid_region_code", "date"] + symptom_names
+keep_cols_upper = ["open_covid_region_code", "date"] + symptom_names
+keep_cols_lower = [col.lower() for col in keep_cols_upper]
 new_keep_cols = ["geo_id", "timestamp"] + METRICS + COMBINED_METRIC
 
 
@@ -33,9 +34,9 @@ class TestPullGoogleSymptoms:
     def test_good_file(self, mock_credentials, mock_read_gbq):
         # Set up fake data.
         state_data = pd.read_csv(
-            good_input["state"], parse_dates=["date"])[keep_cols]
+            good_input["state"], parse_dates=["date"])[keep_cols_lower]
         county_data = pd.read_csv(
-            good_input["county"], parse_dates=["date"])[keep_cols]
+            good_input["county"], parse_dates=["date"])[keep_cols_upper]
 
         # Mocks
         mock_read_gbq.side_effect = [state_data, county_data]
@@ -142,7 +143,15 @@ class TestPullHelperFuncs:
         expected = pd.DataFrame(columns=new_keep_cols)
         assert_frame_equal(output, expected, check_dtype = False)
 
+        output = pull_gs_data_one_geolevel("county", ["", ""])
+        expected = pd.DataFrame(columns=new_keep_cols)
+        assert_frame_equal(output, expected, check_dtype = False)
+
     def test_preprocess_no_data(self):
-        output = preprocess(pd.DataFrame(columns=keep_cols), "state")
+        output = preprocess(pd.DataFrame(columns=keep_cols_lower), "state")
+        expected = pd.DataFrame(columns=new_keep_cols)
+        assert_frame_equal(output, expected, check_dtype = False)
+
+        output = preprocess(pd.DataFrame(columns=keep_cols_upper), "county")
         expected = pd.DataFrame(columns=new_keep_cols)
         assert_frame_equal(output, expected, check_dtype = False)

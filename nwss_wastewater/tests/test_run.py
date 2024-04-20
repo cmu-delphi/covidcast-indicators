@@ -1,17 +1,7 @@
-from datetime import datetime, date
-import json
-from unittest.mock import patch
-import tempfile
-import os
-import time
-from datetime import datetime
-
 import numpy as np
 import pandas as pd
 from pandas.testing import assert_frame_equal
-from delphi_utils import S3ArchiveDiffer, get_structured_logger, create_export_csv, Nans
 
-from delphi_nwss.constants import GEOS, SIGNALS
 from delphi_nwss.run import (
     add_needed_columns,
     generate_weights,
@@ -23,13 +13,9 @@ from delphi_nwss.run import (
 
 def test_sum_all_nan():
     """Check that sum_all_nan returns NaN iff everything is a NaN"""
-    no_nans = np.array([3, 5])
-    assert sum_all_nan(no_nans) == 8
-    partial_nan = np.array([np.nan, 3, 5])
+    assert sum_all_nan(np.array([3, 5])) == 8
     assert np.isclose(sum_all_nan([np.nan, 3, 5]), 8)
-
-    oops_all_nans = np.array([np.nan, np.nan])
-    assert np.isnan(oops_all_nans).all()
+    assert np.isnan(np.array([np.nan, np.nan])).all()
 
 
 def test_weight_generation():

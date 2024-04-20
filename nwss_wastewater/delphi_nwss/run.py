@@ -21,6 +21,7 @@ the following structure:
         - "bucket_name: str, name of S3 bucket to read/write
         - "cache_dir": str, directory of locally cached data
 """
+
 import time
 from datetime import datetime
 
@@ -138,10 +139,10 @@ def run_module(params):
     run_stats = []
     ## build the base version of the signal at the most detailed geo level you can get.
     ## compute stuff here or farm out to another function or file
-    df_pull = pull_nwss_data(socrata_token)
+    df_pull = pull_nwss_data(socrata_token, logger)
     ## aggregate
     # iterate over the providers and the normalizations that they specifically provide
-    for (provider, normalization) in zip(
+    for provider, normalization in zip(
         PROVIDER_NORMS["provider"], PROVIDER_NORMS["normalization"]
     ):
         # copy by only taking the relevant subsection

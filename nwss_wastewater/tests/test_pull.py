@@ -1,22 +1,12 @@
-from datetime import datetime, date
-import json
-from unittest.mock import patch
-import tempfile
-import os
-import time
-from datetime import datetime
-
 import pandas as pd
 import pandas.api.types as ptypes
 
 from delphi_nwss.pull import (
     add_identifier_columns,
-    check_endpoints,
-    construct_typedicts,
     sig_digit_round,
     reformat,
-    warn_string,
 )
+from delphi_nwss.constants import TYPE_DICT, TYPE_DICT_METRIC
 import numpy as np
 
 
@@ -31,32 +21,10 @@ def test_sig_digit():
     ).all()
 
 
-def test_column_type_dicts():
-    type_dict, type_dict_metric = construct_typedicts()
-    assert type_dict == {"pcr_conc_smoothed": float, "timestamp": "datetime64[ns]"}
-    assert type_dict_metric == {
-        "date_start": "datetime64[ns]",
-        "date_end": "datetime64[ns]",
-        "detect_prop_15d": float,
-        "percentile": float,
-        "ptc_15d": float,
-        "wwtp_jurisdiction": "category",
-        "wwtp_id": int,
-        "reporting_jurisdiction": "category",
-        "sample_location": "category",
-        "county_names": "category",
-        "county_fips": "category",
-        "population_served": float,
-        "sampling_prior": bool,
-        "sample_location_specify": float,
-    }
-
-
 def test_column_conversions_concentration():
-    type_dict, type_dict_metric = construct_typedicts()
     df = pd.read_csv("test_data/conc_data.csv", index_col=0)
     df = df.rename(columns={"date": "timestamp"})
-    converted = df.astype(type_dict)
+    converted = df.astype(TYPE_DICT)
     assert all(
         converted.columns
         == pd.Index(["key_plot_id", "timestamp", "pcr_conc_smoothed", "normalization"])
@@ -66,9 +34,8 @@ def test_column_conversions_concentration():
 
 
 def test_column_conversions_metric():
-    type_dict, type_dict_metric = construct_typedicts()
     df = pd.read_csv("test_data/metric_data.csv", index_col=0)
-    converted = df.astype(type_dict_metric)
+    converted = df.astype(TYPE_DICT_METRIC)
     assert all(
         converted.columns
         == pd.Index(
@@ -113,24 +80,13 @@ def test_column_conversions_metric():
     assert all(ptypes.is_numeric_dtype(converted[flo].dtype) for flo in float_typed)
 
 
-def test_warn_string():
-    type_dict, type_dict_metric = construct_typedicts()
-    df_conc = pd.read_csv("test_data/conc_data.csv")
-    assert (
-        warn_string(df_conc, type_dict)
-        == "\nExpected column(s) missed, The dataset schema may\nhave changed. Please investigate and amend the code.\n\nColumns needed:\npcr_conc_smoothed\ntimestamp\n\nColumns available:\nUnnamed: 0\ndate\nkey_plot_id\nnormalization\npcr_conc_smoothed\n"
-    )
-
-
 def test_formatting():
-    type_dict, type_dict_metric = construct_typedicts()
     df_metric = pd.read_csv("test_data/metric_data.csv", index_col=0)
-    df_metric = df_metric.astype(type_dict_metric)
+    df_metric = df_metric.astype(TYPE_DICT_METRIC)
 
-    type_dict, type_dict_metric = construct_typedicts()
     df = pd.read_csv("test_data/conc_data.csv", index_col=0)
     df = df.rename(columns={"date": "timestamp"})
-    df = df.astype(type_dict)
+    df = df.astype(TYPE_DICT)
 
     df_formatted = reformat(df, df_metric)
 

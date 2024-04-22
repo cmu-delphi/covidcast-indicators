@@ -1,6 +1,6 @@
-# NSSP Emergency Room data
+# NSSP Emergency Department Visit data
 
-We import the wastewater data, currently only the smoothed concentration, from the CDC website, aggregate to the state and national level from the wastewater sample site level, and export the aggregated data.
+We import the NSSP Emergency Department Visit data, currently only the smoothed concentration, from the CDC website, aggregate to the state and national level from the wastewater sample site level, and export the aggregated data.
 For details see the `DETAILS.md` file in this directory.
 
 ## Create a MyAppToken
@@ -34,7 +34,7 @@ the module and produce the output datasets (by default, in `receiving`), run
 the following:
 
 ```
-env/bin/python -m delphi_nwss
+env/bin/python -m delphi_nssp
 ```
 
 If you want to enter the virtual environment in your shell, 

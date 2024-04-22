@@ -28,7 +28,7 @@ import pandas as pd
 from delphi_utils import S3ArchiveDiffer, get_structured_logger, create_export_csv
 from delphi_utils.nancodes import add_default_nancodes
 
-from .constants import GEOS, METRICS, CSV_COLS, SENSORS
+from .constants import GEOS, SIGNALS, CSV_COLS
 from .pull import pull_nssp_data
 
 import us
@@ -101,14 +101,13 @@ def run_module(params):
     df_pull = pull_nssp_data(socrata_token)
     sensor_i = 0
     ## aggregate
-    for metric in METRICS:
-
+    for signal in SIGNALS:
         for geo in GEOS:
             df = df_pull.copy()
-            df["val"] = df[metric]
+            df["val"] = df[signal]
             missing_cols = set(CSV_COLS) - set(df.columns)
             df = add_needed_columns(df, col_names=list(missing_cols))
-            logger.info("Generating signal and exporting to CSV", metric=metric)
+            logger.info("Generating signal and exporting to CSV", metric=signal)
             if geo == "nation":
                 df = df[df["geography"] == "United States"]
                 df["geo_id"] = "us"
@@ -123,7 +122,7 @@ def run_module(params):
             # print(df_csv.columns)
             # actual export
             dates = create_export_csv(
-                df_csv, geo_res=geo, export_dir=export_dir, sensor=SENSORS[sensor_i], weekly_dates=True
+                df_csv, geo_res=geo, export_dir=export_dir, sensor=SIGNALS[sensor_i], weekly_dates=True
             )
             if len(dates) > 0:
                 run_stats.append((max(dates), len(dates)))

@@ -6,15 +6,16 @@ import pandas as pd
 from sodapy import Socrata
 
 from .constants import (
-    METRICS,
+    SIGNALS,
     NEWLINE,
+    SIGNALS_MAP,
 )
 
 
 def construct_typedicts():
     """Create the type conversion dictionary for dataframe."""
     # basic type conversion
-    type_dict = {key: float for key in METRICS}
+    type_dict = {key: float for key in SIGNALS}
     type_dict["timestamp"] = "datetime64[ns]"
     type_dict["geography"] = str 
     type_dict["county"] = str
@@ -42,7 +43,7 @@ def pull_nssp_data(socrata_token: str):
     The output dataset has:
 
     - Each row corresponds to a single observation
-    - Each row additionally has columns for the signals in METRICS
+    - Each row additionally has columns for the signals in SIGNALS
 
     Parameters
     ----------
@@ -70,9 +71,9 @@ def pull_nssp_data(socrata_token: str):
         results.extend(page)
         offset += limit
     df_ervisits = pd.DataFrame.from_records(results)
-    df_ervisits = df_ervisits.rename(columns={"week_end": "timestamp", 
-                                              "percent_visits_smoothed":"percent_visits_smoothed_combined",
-                                              "percent_visits_smoothed_1":"percent_visits_smoothed_influenza",})
+    print(df_ervisits.columns)
+    df_ervisits = df_ervisits.rename(columns={"week_end": "timestamp"})
+    df_ervisits = df_ervisits.rename(columns=SIGNALS_MAP)
 
     try:
         df_ervisits = df_ervisits.astype(type_dict)
@@ -80,4 +81,4 @@ def pull_nssp_data(socrata_token: str):
         raise ValueError(warn_string(df_ervisits, type_dict)) from exc
 
     keep_columns = ["timestamp", "geography", "county", "fips"]
-    return df_ervisits[METRICS + keep_columns]
+    return df_ervisits[SIGNALS + keep_columns]

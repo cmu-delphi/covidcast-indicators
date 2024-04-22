@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Functions for pulling NCHS mortality data API."""
+"""Functions for pulling NSSP ER data."""
 
 import numpy as np
 import pandas as pd

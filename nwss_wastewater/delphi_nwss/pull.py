@@ -34,6 +34,26 @@ def sig_digit_round(value, n_digits):
     return result
 
 
+def convert_df_type(df, logger):
+    """convert types and warn if there are unexpected columns"""
+    try:
+        df = df.astype(TYPE_DICT)
+    except KeyError as exc:
+        raise KeyError(
+            f"""
+Expected column(s) missed, The dataset schema may
+have changed. Please investigate and amend the code.
+
+expected={NEWLINE.join(sorted(type_dict.keys()))}
+
+received={NEWLINE.join(sorted(df.columns))}
+"""
+        ) from exc
+    if new_columns := set(df.columns) - set(TYPE_DICT.keys()):
+        logger.info("New columns found in NWSS dataset.", new_columns=new_columns)
+    return df
+
+
 def reformat(df, df_metric):
     """Add columns from df_metric to df, and rename some columns.
 
@@ -112,25 +132,8 @@ def pull_nwss_data(token: str, logger):
     df_concentration = df_concentration.rename(columns={"date": "timestamp"})
 
     # Schema checks.
-    try:
-        df_concentration = df_concentration.astype(TYPE_DICT)
-    except KeyError as exc:
-        raise KeyError(
-            f"Expected column(s) missed. Schema may have changed. expected={sorted(TYPE_DICT.keys())} received={sorted(df_concentration.columns)}"
-        ) from exc
-
-    if new_columns := set(df_concentration.columns) - set(TYPE_DICT.keys()):
-        logger.info("New columns found in NWSS dataset.", new_columns=new_columns)
-
-    try:
-        df_metric = df_metric.astype(TYPE_DICT_METRIC)
-    except KeyError as exc:
-        raise KeyError(
-            f"Expected column(s) missed. Schema may have changed. expected={sorted(TYPE_DICT_METRIC.keys())} received={sorted(df_metric.columns)}"
-        ) from exc
-
-    if new_columns := set(df_metric.columns) - set(TYPE_DICT_METRIC.keys()):
-        logger.info("New columns found in NWSS dataset.", new_columns=new_columns)
+    df_concentration = convert_df_type(df_concentration, logger)
+    df_metric = convert_df_type(df_metric, logger)
 
     # Drop sites without a normalization scheme.
     df = df_concentration[~df_concentration["normalization"].isna()]

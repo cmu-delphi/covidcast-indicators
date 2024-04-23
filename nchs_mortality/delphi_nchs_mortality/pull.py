@@ -9,7 +9,7 @@ from sodapy import Socrata
 
 from delphi_utils.geomap import GeoMapper
 
-from .constants import METRICS, RENAME, NEWLINE
+from .constants import METRICS, RENAME
 
 def standardize_columns(df):
     """Rename columns to comply with a standard set.
@@ -90,10 +90,10 @@ Expected column(s) missed, The dataset schema may
 have changed. Please investigate and amend the code.
 
 Columns needed:
-{NEWLINE.join(type_dict.keys())}
+{'\n'.join(type_dict.keys())}
 
 Columns available:
-{NEWLINE.join(df.columns)}
+{'\n'.join(df.columns)}
 """) from exc
 
     df = df[keep_columns + ["timestamp", "state"]].set_index("timestamp")

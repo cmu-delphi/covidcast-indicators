@@ -28,28 +28,29 @@ def sig_digit_round(value, n_digits):
     sign_mask = value < 0
     value[sign_mask] *= -1
     exponent = np.ceil(np.log10(value))
-    result = 10**exponent * np.round(value * 10 ** (-exponent), n_digits)
+    result = 10 ** exponent * np.round(value * 10 ** (-exponent), n_digits)
     result[sign_mask] *= -1
     result[zero_mask] = in_value[zero_mask]
     return result
 
 
-def convert_df_type(df, logger):
-    """convert types and warn if there are unexpected columns"""
+def convert_df_type(df, type_dict, logger):
+    """Convert types and warn if there are unexpected columns."""
     try:
-        df = df.astype(TYPE_DICT)
+        df = df.astype(type_dict)
     except KeyError as exc:
+        newline = "\n"
         raise KeyError(
             f"""
 Expected column(s) missed, The dataset schema may
 have changed. Please investigate and amend the code.
 
-expected={NEWLINE.join(sorted(type_dict.keys()))}
+expected={newline.join(sorted(type_dict.keys()))}
 
-received={NEWLINE.join(sorted(df.columns))}
+received={newline.join(sorted(df.columns))}
 """
         ) from exc
-    if new_columns := set(df.columns) - set(TYPE_DICT.keys()):
+    if new_columns := set(df.columns) - set(type_dict.keys()):
         logger.info("New columns found in NWSS dataset.", new_columns=new_columns)
     return df
 
@@ -125,15 +126,15 @@ def pull_nwss_data(token: str, logger):
     """
     # Pull data from Socrata API
     client = Socrata("data.cdc.gov", token)
-    results_concentration = client.get("g653-rqe2", limit=10**10)
-    results_metric = client.get("2ew6-ywp6", limit=10**10)
+    results_concentration = client.get("g653-rqe2", limit=10 ** 10)
+    results_metric = client.get("2ew6-ywp6", limit=10 ** 10)
     df_metric = pd.DataFrame.from_records(results_metric)
     df_concentration = pd.DataFrame.from_records(results_concentration)
     df_concentration = df_concentration.rename(columns={"date": "timestamp"})
 
     # Schema checks.
-    df_concentration = convert_df_type(df_concentration, logger)
-    df_metric = convert_df_type(df_metric, logger)
+    df_concentration = convert_df_type(df_concentration, TYPE_DICT, logger)
+    df_metric = convert_df_type(df_metric, TYPE_DICT_METRIC, logger)
 
     # Drop sites without a normalization scheme.
     df = df_concentration[~df_concentration["normalization"].isna()]

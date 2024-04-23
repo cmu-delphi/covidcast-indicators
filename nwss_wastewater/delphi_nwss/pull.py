@@ -39,15 +39,13 @@ def convert_df_type(df, type_dict, logger):
     try:
         df = df.astype(type_dict)
     except KeyError as exc:
-        newline = "\n"
         raise KeyError(
             f"""
 Expected column(s) missed, The dataset schema may
 have changed. Please investigate and amend the code.
 
-expected={newline.join(sorted(type_dict.keys()))}
-
-received={newline.join(sorted(df.columns))}
+expected={''.join(sorted(type_dict.keys()))}
+received={''.join(sorted(df.columns))}
 """
         ) from exc
     if new_columns := set(df.columns) - set(type_dict.keys()):

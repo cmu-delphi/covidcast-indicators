@@ -22,18 +22,23 @@ PROVIDER_NORMS = {
         "microbial",
     ],
 }
-METRIC_DATES = ["date_start", "date_end"]
-SAMPLE_SITE_NAMES = {
-    "wwtp_jurisdiction": "category",
-    "wwtp_id": int,
-    "reporting_jurisdiction": "category",
-    "sample_location": "category",
-    "county_names": "category",
-    "county_fips": "category",
-    "population_served": float,
-    "sampling_prior": bool,
-    "sample_location_specify": float,
-}
 SIG_DIGITS = 4
 
-NEWLINE = "\n"
+TYPE_DICT = {key: float for key in SIGNALS}
+TYPE_DICT.update({"timestamp": "datetime64[ns]"})
+TYPE_DICT_METRIC = {key: float for key in METRIC_SIGNALS}
+TYPE_DICT_METRIC.update({key: "datetime64[ns]" for key in ["date_start", "date_end"]})
+# Sample site names
+TYPE_DICT_METRIC.update(
+    {
+        "wwtp_jurisdiction": "category",
+        "wwtp_id": int,
+        "reporting_jurisdiction": "category",
+        "sample_location": "category",
+        "county_names": "category",
+        "county_fips": "category",
+        "population_served": float,
+        "sampling_prior": bool,
+        "sample_location_specify": float,
+    }
+)

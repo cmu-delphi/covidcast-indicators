@@ -9,10 +9,9 @@ from .constants import (
     SIGNALS,
     PROVIDER_NORMS,
     METRIC_SIGNALS,
-    METRIC_DATES,
-    SAMPLE_SITE_NAMES,
     SIG_DIGITS,
-    NEWLINE,
+    TYPE_DICT,
+    TYPE_DICT_METRIC,
 )
 
 
@@ -35,34 +34,29 @@ def sig_digit_round(value, n_digits):
     return result
 
 
-def construct_typedicts():
-    """Create the type conversion dictionary for both dataframes."""
-    # basic type conversion
-    type_dict = {key: float for key in SIGNALS}
-    type_dict["timestamp"] = "datetime64[ns]"
-    # metric type conversion
-    signals_dict_metric = {key: float for key in METRIC_SIGNALS}
-    metric_dates_dict = {key: "datetime64[ns]" for key in METRIC_DATES}
-    type_dict_metric = {**metric_dates_dict, **signals_dict_metric, **SAMPLE_SITE_NAMES}
-    return type_dict, type_dict_metric
-
-
-def warn_string(df, type_dict):
-    """Format the warning string."""
-    return f"""
+def convert_df_type(df, type_dict, logger):
+    """Convert types and warn if there are unexpected columns."""
+    try:
+        df = df.astype(type_dict)
+    except KeyError as exc:
+        newline = "\n"
+        raise KeyError(
+            f"""
 Expected column(s) missed, The dataset schema may
 have changed. Please investigate and amend the code.
 
-Columns needed:
-{NEWLINE.join(sorted(type_dict.keys()))}
+expected={newline.join(sorted(type_dict.keys()))}
 
-Columns available:
-{NEWLINE.join(sorted(df.columns))}
+received={newline.join(sorted(df.columns))}
 """
+        ) from exc
+    if new_columns := set(df.columns) - set(type_dict.keys()):
+        logger.info("New columns found in NWSS dataset.", new_columns=new_columns)
+    return df
 
 
 def reformat(df, df_metric):
-    """Add  columns from df_metric to df, and rename some columns.
+    """Add columns from df_metric to df, and rename some columns.
 
     Specifically the population and METRIC_SIGNAL columns, and renames date_start to timestamp.
     """
@@ -80,27 +74,16 @@ def reformat(df, df_metric):
     return df
 
 
-def drop_unnormalized(df):
-    """Drop unnormalized.
-
-    mutate `df` to no longer have rows where the normalization scheme isn't actually identified,
-    as we can't classify the kind of signal
-    """
-    return df[~df["normalization"].isna()]
-
-
 def add_identifier_columns(df):
     """Add identifier columns.
 
     Add columns to get more detail than key_plot_id gives;
     specifically, state, and `provider_normalization`, which gives the signal identifier
     """
-    df["state"] = df.key_plot_id.str.extract(
-        r"_(\w\w)_"
-    )  # a pair of alphanumerics surrounded by _
-    df["provider"] = df.key_plot_id.str.extract(
-        r"(.*)_[a-z]{2}_"
-    )  # anything followed by state ^
+    # a pair of alphanumerics surrounded by _
+    df["state"] = df.key_plot_id.str.extract(r"_(\w\w)_")
+    # anything followed by state ^
+    df["provider"] = df.key_plot_id.str.extract(r"(.*)_[a-z]{2}_")
     df["signal_name"] = df.provider + "_" + df.normalization
 
 
@@ -120,7 +103,7 @@ def check_endpoints(df):
         )
 
 
-def pull_nwss_data(token: str):
+def pull_nwss_data(token: str, logger):
     """Pull the latest NWSS Wastewater data, and conforms it into a dataset.
 
     The output dataset has:
@@ -141,11 +124,6 @@ def pull_nwss_data(token: str):
     pd.DataFrame
         Dataframe as described above.
     """
-    # Constants
-    keep_columns = [*SIGNALS, *METRIC_SIGNALS]
-    # concentration key types
-    type_dict, type_dict_metric = construct_typedicts()
-
     # Pull data from Socrata API
     client = Socrata("data.cdc.gov", token)
     results_concentration = client.get("g653-rqe2", limit=10 ** 10)
@@ -154,19 +132,14 @@ def pull_nwss_data(token: str):
     df_concentration = pd.DataFrame.from_records(results_concentration)
     df_concentration = df_concentration.rename(columns={"date": "timestamp"})
 
-    try:
-        df_concentration = df_concentration.astype(type_dict)
-    except KeyError as exc:
-        raise ValueError(warn_string(df_concentration, type_dict)) from exc
+    # Schema checks.
+    df_concentration = convert_df_type(df_concentration, TYPE_DICT, logger)
+    df_metric = convert_df_type(df_metric, TYPE_DICT_METRIC, logger)
 
-    try:
-        df_metric = df_metric.astype(type_dict_metric)
-    except KeyError as exc:
-        raise ValueError(warn_string(df_metric, type_dict_metric)) from exc
+    # Drop sites without a normalization scheme.
+    df = df_concentration[~df_concentration["normalization"].isna()]
 
-    # if the normalization scheme isn't recorded, why is it even included as a sample site?
-    df = drop_unnormalized(df_concentration)
-    # pull 2 letter state labels out of the key_plot_id labels
+    # Pull 2 letter state labels out of the key_plot_id labels.
     add_identifier_columns(df)
 
     # move population and metric signals over to df
@@ -180,13 +153,14 @@ def pull_nwss_data(token: str):
     # otherwise, best to assume some value rather than break the data)
     df.population_served = df.population_served.ffill()
     check_endpoints(df)
-    keep_columns.extend(
-        [
-            "timestamp",
-            "state",
-            "population_served",
-            "normalization",
-            "provider",
-        ]
-    )
+
+    keep_columns = [
+        *SIGNALS,
+        *METRIC_SIGNALS,
+        "timestamp",
+        "state",
+        "population_served",
+        "normalization",
+        "provider",
+    ]
     return df[keep_columns]

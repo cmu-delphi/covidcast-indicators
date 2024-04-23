@@ -89,8 +89,8 @@ def pull_nchs_mortality_data(socrata_token: str, test_file: Optional[str] = None
 Expected column(s) missed, The dataset schema may
 have changed. Please investigate and amend the code.
 
-received={''.join(type_dict.keys())}
-expected={''.join(df.columns)}
+expected={''.join(type_dict.keys())}
+received={''.join(df.columns)}
 """) from exc
 
     df = df[keep_columns + ["timestamp", "state"]].set_index("timestamp")

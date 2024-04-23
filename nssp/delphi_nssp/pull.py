@@ -4,6 +4,7 @@
 import numpy as np
 import pandas as pd
 from sodapy import Socrata
+import textwrap
 
 from .constants import (
     SIGNALS,
@@ -25,20 +26,23 @@ def construct_typedicts():
 
 def warn_string(df, type_dict):
     """Format the warning string."""
-    return f"""
-Expected column(s) missed, The dataset schema may
-have changed. Please investigate and amend the code.
 
-Columns needed:
-{NEWLINE.join(sorted(type_dict.keys()))}
+    warn_string = textwrap.dedent(f"""
+        Expected column(s) missed, The dataset schema may
+        have changed. Please investigate and amend the code.
 
-Columns available:
-{NEWLINE.join(sorted(df.columns))}
-"""
+        Columns needed:
+        {NEWLINE.join(sorted(type_dict.keys()))}
+
+        Columns available:
+        {NEWLINE.join(sorted(df.columns))}
+    """)
+
+    return warn_string
 
 
 def pull_nssp_data(socrata_token: str):
-    """Pull the latest NWSS Wastewater data, and conforms it into a dataset.
+    """Pull the latest NSSP ER visits data, and conforms it into a dataset.
 
     The output dataset has:
 
@@ -71,7 +75,6 @@ def pull_nssp_data(socrata_token: str):
         results.extend(page)
         offset += limit
     df_ervisits = pd.DataFrame.from_records(results)
-    print(df_ervisits.columns)
     df_ervisits = df_ervisits.rename(columns={"week_end": "timestamp"})
     df_ervisits = df_ervisits.rename(columns=SIGNALS_MAP)
 

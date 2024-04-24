@@ -15,7 +15,7 @@ the following structure:
             in progress, or False if only unpublished signals are.  See
             `delphi_utils.add_prefix()`
         - "test_file" (optional): str, name of file from which to read test data
-        - "token": str, authentication for upstream data pull
+        - "socrata_token": str, authentication for upstream data pull
     - "archive" (optional): if provided, output will be archived with S3
         - "aws_credentials": Dict[str, str], AWS login credentials (see S3 documentation)
         - "bucket_name: str, name of S3 bucket to read/write
@@ -35,11 +35,10 @@ from .pull import pull_nwss_data
 
 def sum_all_nan(x):
     """Return a normal sum unless everything is NaN, then return that."""
-    sum_of = np.nansum(x)
     all_nan = np.isnan(x).all()
     if all_nan:
         return np.nan
-    return sum_of
+    return np.nansum(x)
 
 
 def generate_weights(df, column_aggregating="pcr_conc_smoothed"):
@@ -125,7 +124,7 @@ def run_module(params):
         log_exceptions=params["common"].get("log_exceptions", True),
     )
     export_dir = params["common"]["export_dir"]
-    token = params["indicator"]["token"]
+    socrata_token = params["indicator"]["socrata_token"]
     if "archive" in params:
         daily_arch_diff = S3ArchiveDiffer(
             params["archive"]["cache_dir"],
@@ -139,7 +138,7 @@ def run_module(params):
     run_stats = []
     ## build the base version of the signal at the most detailed geo level you can get.
     ## compute stuff here or farm out to another function or file
-    df_pull = pull_nwss_data(token)
+    df_pull = pull_nwss_data(socrata_token)
     ## aggregate
     for sensor in SIGNALS:
         df = df_pull.copy()

@@ -22,7 +22,7 @@ def standardize_columns(df):
     return df.rename(columns=dict(rename_pairs))
 
 
-def pull_nchs_mortality_data(token: str, test_file: Optional[str]=None):
+def pull_nchs_mortality_data(socrata_token: str, test_file: Optional[str] = None):
     """Pull the latest NCHS Mortality data, and conforms it into a dataset.
 
     The output dataset has:
@@ -38,7 +38,7 @@ def pull_nchs_mortality_data(token: str, test_file: Optional[str]=None):
 
     Parameters
     ----------
-    token: str
+    socrata_token: str
         My App Token for pulling the NCHS mortality data
     test_file: Optional[str]
         When not null, name of file from which to read test data
@@ -57,7 +57,7 @@ def pull_nchs_mortality_data(token: str, test_file: Optional[str]=None):
         df = pd.read_csv("./test_data/%s"%test_file)
     else:
         # Pull data from Socrata API
-        client = Socrata("data.cdc.gov", token)
+        client = Socrata("data.cdc.gov", socrata_token)
         results = client.get("r8kw-7aab", limit=10**10)
         df = pd.DataFrame.from_records(results)
         # drop "By Total" rows

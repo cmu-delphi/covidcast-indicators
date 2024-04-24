@@ -16,6 +16,7 @@
       "span_length": 14,
       "min_expected_lag": {"all": "3"},
       "max_expected_lag": {"all": "4"},
+      "dry_run": true,
       "suppressed_errors": [
         {"signal": "ageusia_raw_search"},
         {"signal": "ageusia_smoothed_search"},

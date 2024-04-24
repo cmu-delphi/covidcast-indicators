@@ -42,7 +42,7 @@ def run_module(params: Dict[str, Any]):
         - "export_start_date": str, date from which to export data in YYYY-MM-DD format
         - "static_file_dir": str, directory containing population csv files
         - "test_file" (optional): str, name of file from which to read test data
-        - "token": str, authentication for upstream data pull
+        - "socrata_token": str, authentication for upstream data pull
     - "archive" (optional): if provided, output will be archived with S3
         - "aws_credentials": Dict[str, str], AWS login credentials (see S3 documentation)
         - "bucket_name: str, name of S3 bucket to read/write
@@ -59,7 +59,7 @@ def run_module(params: Dict[str, Any]):
                 days=date.today().weekday() + 2)
         export_start_date = export_start_date.strftime('%Y-%m-%d')
     daily_export_dir = params["common"]["daily_export_dir"]
-    token = params["indicator"]["token"]
+    socrata_token = params["indicator"]["socrata_token"]
     test_file = params["indicator"].get("test_file", None)
 
     if "archive" in params:
@@ -70,7 +70,7 @@ def run_module(params: Dict[str, Any]):
         daily_arch_diff.update_cache()
 
     stats = []
-    df_pull = pull_nchs_mortality_data(token, test_file)
+    df_pull = pull_nchs_mortality_data(socrata_token, test_file)
     for metric in METRICS:
         for geo in ["state", "nation"]:
             if metric == 'percent_of_expected_deaths':

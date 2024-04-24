@@ -32,3 +32,9 @@ CSV_COLS = [
             "missing_se",
             "missing_sample_size"
         ]
+
+TYPE_DICT = {key: float for key in SIGNALS}
+TYPE_DICT.update({"timestamp": "datetime64[ns]",
+                   "geography": str,
+                   "county": str,
+                   "fips": int})

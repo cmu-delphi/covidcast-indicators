@@ -10,18 +10,9 @@ from .constants import (
     SIGNALS,
     NEWLINE,
     SIGNALS_MAP,
+    TYPE_DICT
 )
 
-
-def construct_typedicts():
-    """Create the type conversion dictionary for dataframe."""
-    # basic type conversion
-    type_dict = {key: float for key in SIGNALS}
-    type_dict["timestamp"] = "datetime64[ns]"
-    type_dict["geography"] = str 
-    type_dict["county"] = str
-    type_dict["fips"] = int
-    return type_dict
 
 
 def warn_string(df, type_dict):
@@ -61,7 +52,6 @@ def pull_nssp_data(socrata_token: str):
     pd.DataFrame
         Dataframe as described above.
     """
-    type_dict = construct_typedicts()
 
     # Pull data from Socrata API
     client = Socrata("data.cdc.gov", socrata_token)
@@ -79,9 +69,9 @@ def pull_nssp_data(socrata_token: str):
     df_ervisits = df_ervisits.rename(columns=SIGNALS_MAP)
 
     try:
-        df_ervisits = df_ervisits.astype(type_dict)
+        df_ervisits = df_ervisits.astype(TYPE_DICT)
     except KeyError as exc:
-        raise ValueError(warn_string(df_ervisits, type_dict)) from exc
+        raise ValueError(warn_string(df_ervisits, TYPE_DICT)) from exc
 
     keep_columns = ["timestamp", "geography", "county", "fips"]
     return df_ervisits[SIGNALS + keep_columns]

@@ -1,6 +1,8 @@
 """Registry for variations."""
 
 GEOS = [
+    "hrr",
+    "msa",
     "nation",
     "state",
     "county",

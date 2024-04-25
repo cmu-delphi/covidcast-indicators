@@ -31,10 +31,41 @@ from delphi_utils.nancodes import add_default_nancodes
 from .constants import GEOS, SIGNALS, CSV_COLS
 from .pull import pull_nssp_data
 
+from delphi_utils.geomap import GeoMapper
 import us
 
+def sum_all_nan(x):
+    """Return a normal sum unless everything is NaN, then return that."""
+    all_nan = np.isnan(x).all()
+    if all_nan:
+        return np.nan
+    return np.nansum(x)
 
+def weighted_geo_sum(df: pd.DataFrame, geo: str, sensor: str):
+    """Sum sensor, weighted by population for non NA's, grouped by state."""
+    agg_df = df.groupby(["timestamp", geo]).agg(
+        {f"relevant_pop_{sensor}": "sum", f"weighted_{sensor}": sum_all_nan}
+    )
+    agg_df["val"] = agg_df[f"weighted_{sensor}"] / agg_df[f"relevant_pop_{sensor}"]
+    agg_df = agg_df.reset_index()
+    return agg_df
 
+def generate_weights(df, column_aggregating="val"):
+    """
+    Weigh column_aggregating by population.
+
+    generate the relevant population amounts, and create a weighted but
+    unnormalized column, derived from `column_aggregating`
+    """
+    # set the weight of places with na's to zero
+    df[f"relevant_pop_{column_aggregating}"] = (
+        df["population"] * np.abs(df[column_aggregating]).notna()
+    )
+    # generate the weighted version
+    df[f"weighted_{column_aggregating}"] = (
+        df[column_aggregating] * df[f"relevant_pop_{column_aggregating}"]
+    )
+    return df
 
 def add_needed_columns(df, col_names=None):
     """Short util to add expected columns not found in the dataset."""
@@ -101,12 +132,11 @@ def run_module(params):
     df_pull = pull_nssp_data(socrata_token)
     sensor_i = 0
     ## aggregate
+    geo_mapper = GeoMapper()
     for signal in SIGNALS:
         for geo in GEOS:
             df = df_pull.copy()
             df["val"] = df[signal]
-            missing_cols = set(CSV_COLS) - set(df.columns)
-            df = add_needed_columns(df, col_names=list(missing_cols))
             logger.info("Generating signal and exporting to CSV", metric=signal)
             if geo == "nation":
                 df = df[df["geography"] == "United States"]
@@ -114,12 +144,20 @@ def run_module(params):
             elif geo == "state":
                 df = df[(df['county'] == "All") & (df["geography"] != "United States")]
                 df["geo_id"] = df["geography"].apply(lambda x: us.states.lookup(x).abbr.lower() if us.states.lookup(x) else 'dc')
+            elif geo == "hrr" or geo == "msa":
+                df = df[['fips', 'val', 'timestamp']]
+                df = geo_mapper.add_population_column(df, geocode_type="fips", geocode_col="fips")
+                df = geo_mapper.add_geocode(df, "fips", geo, from_col="fips", new_col="geo_id")
+                df = generate_weights(df, "val")
+                df = weighted_geo_sum(df, "geo_id", "val")
+                df = df.groupby(["timestamp","geo_id", "val"]).sum(numeric_only=True).reset_index()
             else:
                 df = df[df['county'] != "All"]
                 df["geo_id"] = df["fips"]
             # add se, sample_size, and na codes
+            missing_cols = set(CSV_COLS) - set(df.columns)
+            df = add_needed_columns(df, col_names=list(missing_cols))
             df_csv = df[CSV_COLS+["timestamp"]]
-            # print(df_csv.columns)
             # actual export
             dates = create_export_csv(
                 df_csv, geo_res=geo, export_dir=export_dir, sensor=SIGNALS[sensor_i], weekly_dates=True

@@ -130,10 +130,9 @@ def run_module(params):
     ## build the base version of the signal at the most detailed geo level you can get.
     ## compute stuff here or farm out to another function or file
     df_pull = pull_nssp_data(socrata_token)
-    sensor_i = 0
     ## aggregate
     geo_mapper = GeoMapper()
-    for signal in SIGNALS:
+    for signal_i, signal in enumerate(SIGNALS):
         for geo in GEOS:
             df = df_pull.copy()
             df["val"] = df[signal]
@@ -160,10 +159,10 @@ def run_module(params):
             df_csv = df[CSV_COLS+["timestamp"]]
             # actual export
             dates = create_export_csv(
-                df_csv, geo_res=geo, export_dir=export_dir, sensor=SIGNALS[sensor_i], weekly_dates=True
+                df_csv, geo_res=geo, export_dir=export_dir, sensor=SIGNALS[signal_i], weekly_dates=True
             )
             if len(dates) > 0:
                 run_stats.append((max(dates), len(dates)))
-        sensor_i += 1
+
     ## log this indicator run
     logging(start_time, run_stats, logger)

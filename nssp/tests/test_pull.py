@@ -1,16 +1,17 @@
 from datetime import datetime, date
 import json
-from unittest.mock import patch
+import unittest
+from unittest.mock import patch, MagicMock
 import tempfile
 import os
 import time
 from datetime import datetime
-
+import pdb
 import pandas as pd
 import pandas.api.types as ptypes
 
 from delphi_nssp.pull import (
-    warn_string,
+    pull_nssp_data,
 )
 from delphi_nssp.constants import (
     SIGNALS,
@@ -18,22 +19,37 @@ from delphi_nssp.constants import (
     SIGNALS_MAP,
     TYPE_DICT
 )
-import numpy as np
+class TestPullNSSPData(unittest.TestCase):
+    @patch('delphi_nssp.pull.Socrata')
+    def test_pull_nssp_data(self, mock_socrata):
+        # Load test data
+        with open('test_data/page.txt', 'r') as f:
+            test_data = json.load(f)
+        
+        # Mock Socrata client and its get method
+        mock_client = MagicMock()
+        mock_client.get.side_effect = [test_data, []]  # Return test data on first call, empty list on second call
+        mock_socrata.return_value = mock_client
 
+        # Call function with test token
+        test_token = 'test_token'
+        result = pull_nssp_data(test_token)
+        print(result)
 
+        # Check that Socrata client was initialized with correct arguments
+        mock_socrata.assert_called_once_with("data.cdc.gov", test_token)
 
-def test_column_type_dicts():
-    type_dict = TYPE_DICT
-    assert type_dict == {'timestamp': 'datetime64[ns]',
-                         'percent_visits_covid': float,
-                         'percent_visits_influenza': float,
-                         'percent_visits_rsv': float,
-                         'percent_visits_combined': float,
-                         'percent_visits_smoothed_covid': float,
-                         'percent_visits_smoothed_influenza': float,
-                         'percent_visits_smoothed_rsv': float,
-                         'percent_visits_smoothed_combined': float,
-                         'geography': str,
-                         'county': str,
-                         'fips': int}
+        # Check that get method was called with correct arguments
+        mock_client.get.assert_any_call("rdmq-nq56", limit=50000, offset=0)
 
+        # Check result
+        assert result['timestamp'].notnull().all(), "timestamp has rogue NaN"
+        assert result['geography'].notnull().all(), "geography has rogue NaN"
+        assert result['county'].notnull().all(), "county has rogue NaN"
+        assert result['fips'].notnull().all(), "fips has rogue NaN"
+
+        # Check for each signal in SIGNALS
+        for signal in SIGNALS:
+            assert result[signal].notnull().all(), f"{signal} has rogue NaN"
+if __name__ == '__main__':
+    unittest.main()

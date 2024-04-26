@@ -1,6 +1,6 @@
 # NSSP data
 
-We import the NSSP Emergency Department Visit data, including percentage and smoothed percentage data, from the CDC website. The data is available in county level, state level and national level.
+We import the NSSP Emergency Department Visit data, including percentage and smoothed percentage of ER visits attributable to a given pathogen, from the CDC website. The data is provided at the county level, state level and national level; we do a population-weighted mean to aggregate from county data up to the HRR and MSA levels.
 
 ## Geographical Levels
 * `state`: reported using two-letter postal code

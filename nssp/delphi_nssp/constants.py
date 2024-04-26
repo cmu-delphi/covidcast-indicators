@@ -19,10 +19,7 @@ SIGNALS_MAP = {
     "percent_visits_smoothed": "smoothed_pct_visits_combined",
 }
 
-SIGNALS = ["pct_visits_covid", "pct_visits_influenza", "pct_visits_rsv", "pct_visits_combined",
-            "smoothed_pct_visits_covid", "smoothed_pct_visits_influenza",
-            "smoothed_pct_visits_rsv", "smoothed_pct_visits_combined"]
-
+SIGNALS = [val for (key, val) in SIGNALS_MAP.items()]
 NEWLINE = "\n"
 
 CSV_COLS = [

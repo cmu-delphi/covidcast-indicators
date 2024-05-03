@@ -12,7 +12,6 @@ from io import BytesIO
 from os import remove, listdir
 from os.path import join, isfile
 from zipfile import ZipFile
-from pandas.core.frame import DataFrame
 
 import requests
 import pandas as pd
@@ -70,8 +69,8 @@ def create_fips_zip_crosswalk():
     # Find the population fractions (the heaviest computation, takes about a minute)
     # Note that the denominator in the fractions is the source population
     pop_df.set_index(["fips", "zip"], inplace=True)
-    fips_zip: DataFrame = pop_df.groupby("fips", as_index=False).apply(lambda g: g["pop"] / g["pop"].sum())
-    zip_fips: DataFrame = pop_df.groupby("zip", as_index=False).apply(lambda g: g["pop"] / g["pop"].sum())
+    fips_zip: pd.DataFrame = pop_df.groupby("fips", as_index=False).apply(lambda g: g["pop"] / g["pop"].sum())
+    zip_fips: pd.DataFrame = pop_df.groupby("zip", as_index=False).apply(lambda g: g["pop"] / g["pop"].sum())
 
     # Rename and write to file
     fips_zip = fips_zip.reset_index(level=["fips", "zip"]).rename(columns={"pop": "weight"}).query("weight > 0.0")
@@ -228,7 +227,7 @@ def create_state_population_table():
         derive_fips_state_crosswalk()
 
     census_pop = pd.read_csv(join(OUTPUT_DIR, FIPS_POPULATION_OUT_FILENAME), dtype={"fips": str, "pop": int})
-    state: DataFrame = pd.read_csv(join(OUTPUT_DIR, FIPS_STATE_OUT_FILENAME), dtype=str)
+    state: pd.DataFrame = pd.read_csv(join(OUTPUT_DIR, FIPS_STATE_OUT_FILENAME), dtype=str)
     state_pop = state.merge(census_pop, on="fips").groupby(["state_code", "state_id", "state_name"], as_index=False).sum()
     state_pop.sort_values("state_code").to_csv(join(OUTPUT_DIR, STATE_POPULATION_OUT_FILENAME), index=False)
 

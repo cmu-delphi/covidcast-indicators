@@ -1,15 +1,12 @@
 """Contains geographic mapping tools.
 
 Authors: Dmitry Shemetov @dshemetov, James Sharpnack @jsharpna, Maria Jahja
-Created: 2020-06-01
-
-TODO:
-- use a caching utility to store the crossfiles
-  see: https://github.com/cmu-delphi/covidcast-indicators/issues/282
 """
+
 # pylint: disable=too-many-lines
 from os.path import join
 from collections import defaultdict
+from typing import Iterator, List, Literal, Optional, Set, Union
 
 import pandas as pd
 import pkg_resources
@@ -106,7 +103,7 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         "nation": {"pop": "nation_pop.csv"},
     }
 
-    def __init__(self, census_year=2020):
+    def __init__(self, census_year: int = 2020):
         """Initialize geomapper.
 
         Parameters
@@ -137,7 +134,9 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         for geo_type in self._geos:
             self._geo_sets[geo_type] = self._load_geo_values(geo_type)
 
-    def _load_crosswalk_from_file(self, from_code, to_code, data_path):
+    def _load_crosswalk_from_file(
+        self, from_code: str, to_code: str, data_path: str
+    ) -> pd.DataFrame:
         stream = pkg_resources.resource_stream(__name__, data_path)
         dtype = {
             from_code: str,
@@ -167,7 +166,9 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         return set(crosswalk[geo_type])
 
     @staticmethod
-    def convert_fips_to_mega(data, fips_col="fips", mega_col="megafips"):
+    def convert_fips_to_mega(
+        data: pd.DataFrame, fips_col: str = "fips", mega_col: str = "megafips"
+    ) -> pd.DataFrame:
         """Convert fips or chng-fips string to a megafips string."""
         data = data.copy()
         data[mega_col] = data[fips_col].astype(str).str.zfill(5)
@@ -176,14 +177,14 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
 
     @staticmethod
     def megacounty_creation(
-        data,
-        thr_count,
-        thr_win_len,
-        thr_col="visits",
-        fips_col="fips",
-        date_col="timestamp",
-        mega_col="megafips",
-    ):
+        data: pd.DataFrame,
+        thr_count: Union[float, int],
+        thr_win_len: int,
+        thr_col: str = "visits",
+        fips_col: str = "fips",
+        date_col: str = "timestamp",
+        mega_col: str = "megafips",
+    ) -> pd.DataFrame:
         """Create megacounty column.
 
         Parameters
@@ -205,7 +206,7 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         if "_thr_col_roll" in data.columns:
             raise ValueError("Column name '_thr_col_roll' is reserved.")
 
-        def agg_sum_iter(data):
+        def agg_sum_iter(data: pd.DataFrame) -> Iterator[pd.DataFrame]:
             data_gby = (
                 data[[fips_col, date_col, thr_col]]
                 .set_index(date_col)
@@ -228,7 +229,13 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
 
     # Conversion functions
     def add_geocode(
-        self, df, from_code, new_code, from_col=None, new_col=None, dropna=True
+        self,
+        df: pd.DataFrame,
+        from_code: str,
+        new_code: str,
+        from_col: Optional[str] = None,
+        new_col: Optional[str] = None,
+        dropna: bool = True,
     ):
         """Add a new geocode column to a dataframe.
 
@@ -316,7 +323,9 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
 
         return df
 
-    def _add_nation_geocode(self, df, from_code, from_col, new_col):
+    def _add_nation_geocode(
+        self, df: pd.DataFrame, from_code: str, from_col: str, new_col: str
+    ) -> pd.DataFrame:
         """Add a nation geocode column to a dataframe.
 
         See `add_geocode()` documentation for argument description.
@@ -334,15 +343,15 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
 
     def replace_geocode(
         self,
-        df,
-        from_code,
-        new_code,
-        from_col=None,
-        new_col=None,
-        date_col="timestamp",
-        data_cols=None,
-        dropna=True,
-    ):
+        df: pd.DataFrame,
+        from_code: str,
+        new_code: str,
+        from_col: Optional[str] = None,
+        new_col: Optional[str] = None,
+        date_col: Optional[str] = "timestamp",
+        data_cols: Optional[List[str]] = None,
+        dropna: bool = True,
+    ) -> pd.DataFrame:
         """Replace a geocode column in a dataframe.
 
         Currently supported conversions:
@@ -403,7 +412,13 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
             df = df.groupby([new_col]).sum(numeric_only=True).reset_index()
         return df
 
-    def add_population_column(self, data, geocode_type, geocode_col=None, dropna=True):
+    def add_population_column(
+        self,
+        data: pd.DataFrame,
+        geocode_type: Literal["fips", "zip"],
+        geocode_col: Optional[str] = None,
+        dropna: bool = True,
+    ) -> pd.DataFrame:
         """
         Append a population column to a dataframe, based on the FIPS or ZIP code.
 
@@ -451,15 +466,15 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
 
     @staticmethod
     def fips_to_megacounty(
-        data,
-        thr_count,
-        thr_win_len,
-        thr_col="visits",
-        fips_col="fips",
-        date_col="timestamp",
-        mega_col="megafips",
+        data: pd.DataFrame,
+        thr_count: Union[float, int],
+        thr_win_len: int,
+        thr_col: str = "visits",
+        fips_col: str = "fips",
+        date_col: str = "timestamp",
+        mega_col: str = "megafips",
         count_cols=None,
-    ):
+    ) -> pd.DataFrame:
         """Convert and aggregate from FIPS or chng-fips to megaFIPS.
 
         Parameters
@@ -501,7 +516,7 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         data = data.reset_index().groupby([date_col, mega_col]).sum(numeric_only=True)
         return data.reset_index()
 
-    def as_mapper_name(self, geo_type, state="state_id"):
+    def as_mapper_name(self, geo_type: str, state: str = "state_id") -> str:
         """
         Return the mapper equivalent of a region type.
 
@@ -513,7 +528,7 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
             return "fips"
         return geo_type
 
-    def get_crosswalk(self, from_code, to_code):
+    def get_crosswalk(self, from_code: str, to_code: str) -> pd.DataFrame:
         """Return a dataframe mapping the given geocodes.
 
         Parameters
@@ -532,7 +547,7 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         except KeyError as e:
             raise ValueError(f'Mapping from "{from_code}" to "{to_code}" not found.') from e
 
-    def get_geo_values(self, geo_type):
+    def get_geo_values(self, geo_type: str) -> Set[str]:
         """
         Return a set of all values for a given geography type.
 
@@ -551,7 +566,12 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         except KeyError as e:
             raise ValueError(f'Given geo type "{geo_type}" not found') from e
 
-    def get_geos_within(self, container_geocode, contained_geocode_type, container_geocode_type):
+    def get_geos_within(
+        self,
+        container_geocode: str,
+        contained_geocode_type: str,
+        container_geocode_type: str,
+    ) -> Set[str]:
         """
         Return all contained regions of the given type within the given container geocode.
 

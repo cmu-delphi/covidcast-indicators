@@ -76,7 +76,7 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
             "msa": "zip_msa_table.csv",
             "pop": "zip_pop.csv",
             "state": "zip_state_code_table.csv",
-            "hhs": "zip_hhs_table.csv"
+            "hhs": "zip_hhs_table.csv",
         },
         "fips": {
             "chng-fips": "fips_chng-fips_table.csv",
@@ -87,19 +87,12 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
             "state": "fips_state_table.csv",
             "hhs": "fips_hhs_table.csv",
         },
+        "hhs": {"pop": "hhs_pop.csv"},
         "chng-fips": {"state": "chng-fips_state_table.csv"},
         "state": {"state": "state_codes_table.csv"},
-        "state_code": {
-            "hhs": "state_code_hhs_table.csv",
-            "pop": "state_pop.csv"
-        },
-        "state_id": {
-            "pop": "state_pop.csv"
-        },
-        "state_name": {
-            "pop": "state_pop.csv"
-        },
-        "hhs": {"pop": "hhs_pop.csv"},
+        "state_code": {"hhs": "state_code_hhs_table.csv", "pop": "state_pop.csv"},
+        "state_id": {"pop": "state_pop.csv"},
+        "state_name": {"pop": "state_pop.csv"},
         "nation": {"pop": "nation_pop.csv"},
     }
 
@@ -117,19 +110,16 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         # Include all unique geos from first-level and second-level keys in
         # CROSSWALK_FILENAMES, with a few exceptions
         self._geos = {
-                subkey for mainkey in self.CROSSWALK_FILENAMES
-                for subkey in self.CROSSWALK_FILENAMES[mainkey]
-            }.union(
-                set(self.CROSSWALK_FILENAMES.keys())
-            ) - set(["state", "pop"])
+            subkey
+            for mainkey in self.CROSSWALK_FILENAMES
+            for subkey in self.CROSSWALK_FILENAMES[mainkey]
+        }.union(set(self.CROSSWALK_FILENAMES.keys())) - set(["state", "pop"])
 
         for from_code, to_codes in self.CROSSWALK_FILENAMES.items():
             for to_code, file_path in to_codes.items():
-                self._crosswalks[from_code][to_code] = \
-                    self._load_crosswalk_from_file(from_code,
-                                                   to_code,
-                                                   join(f"data/{census_year}", file_path)
-                                                   )
+                self._crosswalks[from_code][to_code] = self._load_crosswalk_from_file(
+                    from_code, to_code, join(f"data/{census_year}", file_path)
+                )
 
         for geo_type in self._geos:
             self._geo_sets[geo_type] = self._load_geo_values(geo_type)
@@ -143,13 +133,13 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
             to_code: str,
             "pop": int,
             "weight": float,
-            **{geo: str for geo in self._geos - set("nation")}
+            **{geo: str for geo in self._geos - set("nation")},
         }
 
         usecols = [from_code, "pop"] if to_code == "pop" else None
         return pd.read_csv(stream, dtype=dtype, usecols=usecols)
 
-    def _load_geo_values(self, geo_type):
+    def _load_geo_values(self, geo_type: str) -> Set[str]:
         if geo_type == "nation":
             return {"us"}
 
@@ -276,8 +266,9 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         df = df.copy()
         from_col = from_code if from_col is None else from_col
         new_col = new_code if new_col is None else new_col
-        assert from_col != new_col, \
-            f"Can't use the same column '{from_col}' for both from_col and to_col"
+        assert (
+            from_col != new_col
+        ), f"Can't use the same column '{from_col}' for both from_col and to_col"
         state_codes = ["state_code", "state_id", "state_name"]
 
         if not is_string_dtype(df[from_col]):
@@ -337,7 +328,7 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
             return df
 
         raise ValueError(
-            f"Conversion to the nation level is not supported "
+            "Conversion to the nation level is not supported "
             f"from {from_code}; try {valid_from_codes}"
         )
 
@@ -443,7 +434,15 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         """
         geocode_col = geocode_type if geocode_col is None else geocode_col
         data = data.copy()
-        supported_geos = ["fips", "zip", "state_id", "state_name", "state_code", "hhs", "nation"]
+        supported_geos = [
+            "fips",
+            "zip",
+            "state_id",
+            "state_name",
+            "state_code",
+            "hhs",
+            "nation",
+        ]
         if geocode_type not in supported_geos:
             raise ValueError(
                 f"Only {supported_geos} geocodes supported. For other codes, aggregate those."
@@ -457,11 +456,9 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
             else:
                 data[geocode_col] = data[geocode_col].astype(str)
         merge_type = "inner" if dropna else "left"
-        data_with_pop = (
-            data
-            .merge(pop_df, left_on=geocode_col, right_on=geocode_type, how=merge_type)
-            .rename(columns={"pop": "population"})
-        )
+        data_with_pop = data.merge(
+            pop_df, left_on=geocode_col, right_on=geocode_type, how=merge_type
+        ).rename(columns={"pop": "population"})
         return data_with_pop
 
     @staticmethod
@@ -545,7 +542,9 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         try:
             return self._crosswalks[from_code][to_code]
         except KeyError as e:
-            raise ValueError(f'Mapping from "{from_code}" to "{to_code}" not found.') from e
+            raise ValueError(
+                f'Mapping from "{from_code}" to "{to_code}" not found.'
+            ) from e
 
     def get_geo_values(self, geo_type: str) -> Set[str]:
         """
@@ -601,20 +600,30 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         if contained_geocode_type == "state":
             if container_geocode_type == "nation" and container_geocode == "us":
                 crosswalk = self._crosswalks["state"]["state"]
-                return set(crosswalk["state_id"])   # pylint: disable=unsubscriptable-object
+                return set(crosswalk["state_id"])  # pylint: disable=unsubscriptable-object
             if container_geocode_type == "hhs":
                 crosswalk_hhs = self._crosswalks["fips"]["hhs"]
                 crosswalk_state = self._crosswalks["fips"]["state"]
-                fips_hhs = crosswalk_hhs[crosswalk_hhs["hhs"] == container_geocode]["fips"]
-                return set(crosswalk_state[crosswalk_state["fips"].isin(fips_hhs)]["state_id"])
-        elif (contained_geocode_type in ("county", "fips", "chng-fips") and
-                container_geocode_type == "state"):
+                fips_hhs = crosswalk_hhs[crosswalk_hhs["hhs"] == container_geocode][
+                    "fips"
+                ]
+                return set(
+                    crosswalk_state[crosswalk_state["fips"].isin(fips_hhs)]["state_id"]
+                )
+        elif (
+            contained_geocode_type in ("county", "fips", "chng-fips")
+            and container_geocode_type == "state"
+        ):
             contained_geocode_type = self.as_mapper_name(contained_geocode_type)
             crosswalk = self._crosswalks[contained_geocode_type]["state"]
             return set(
-                crosswalk[crosswalk["state_id"] == container_geocode][contained_geocode_type]
+                crosswalk[crosswalk["state_id"] == container_geocode][
+                    contained_geocode_type
+                ]
             )
-        raise ValueError("(contained_geocode_type, container_geocode_type) was "
-                         f"({contained_geocode_type}, {container_geocode_type}), but "
-                         "must be one of (state, nation), (state, hhs), (county, state)"
-                         ", (fips, state), (chng-fips, state)")
+        raise ValueError(
+            "(contained_geocode_type, container_geocode_type) was "
+            f"({contained_geocode_type}, {container_geocode_type}), but "
+            "must be one of (state, nation), (state, hhs), (county, state)"
+            ", (fips, state), (chng-fips, state)"
+        )

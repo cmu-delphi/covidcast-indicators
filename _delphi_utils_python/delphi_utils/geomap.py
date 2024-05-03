@@ -1,15 +1,12 @@
 """Contains geographic mapping tools.
 
 Authors: Dmitry Shemetov @dshemetov, James Sharpnack @jsharpna, Maria Jahja
-Created: 2020-06-01
-
-TODO:
-- use a caching utility to store the crossfiles
-  see: https://github.com/cmu-delphi/covidcast-indicators/issues/282
 """
+
 # pylint: disable=too-many-lines
 from os.path import join
 from collections import defaultdict
+from typing import Iterator, List, Literal, Optional, Set, Union
 
 import pandas as pd
 import pkg_resources
@@ -79,7 +76,7 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
             "msa": "zip_msa_table.csv",
             "pop": "zip_pop.csv",
             "state": "zip_state_code_table.csv",
-            "hhs": "zip_hhs_table.csv"
+            "hhs": "zip_hhs_table.csv",
         },
         "fips": {
             "chng-fips": "fips_chng-fips_table.csv",
@@ -90,23 +87,16 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
             "state": "fips_state_table.csv",
             "hhs": "fips_hhs_table.csv",
         },
+        "hhs": {"pop": "hhs_pop.csv"},
         "chng-fips": {"state": "chng-fips_state_table.csv"},
         "state": {"state": "state_codes_table.csv"},
-        "state_code": {
-            "hhs": "state_code_hhs_table.csv",
-            "pop": "state_pop.csv"
-        },
-        "state_id": {
-            "pop": "state_pop.csv"
-        },
-        "state_name": {
-            "pop": "state_pop.csv"
-        },
-        "hhs": {"pop": "hhs_pop.csv"},
+        "state_code": {"hhs": "state_code_hhs_table.csv", "pop": "state_pop.csv"},
+        "state_id": {"pop": "state_pop.csv"},
+        "state_name": {"pop": "state_pop.csv"},
         "nation": {"pop": "nation_pop.csv"},
     }
 
-    def __init__(self, census_year=2020):
+    def __init__(self, census_year: int = 2020):
         """Initialize geomapper.
 
         Parameters
@@ -120,37 +110,36 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         # Include all unique geos from first-level and second-level keys in
         # CROSSWALK_FILENAMES, with a few exceptions
         self._geos = {
-                subkey for mainkey in self.CROSSWALK_FILENAMES
-                for subkey in self.CROSSWALK_FILENAMES[mainkey]
-            }.union(
-                set(self.CROSSWALK_FILENAMES.keys())
-            ) - set(["state", "pop"])
+            subkey
+            for mainkey in self.CROSSWALK_FILENAMES
+            for subkey in self.CROSSWALK_FILENAMES[mainkey]
+        }.union(set(self.CROSSWALK_FILENAMES.keys())) - set(["state", "pop"])
 
         for from_code, to_codes in self.CROSSWALK_FILENAMES.items():
             for to_code, file_path in to_codes.items():
-                self._crosswalks[from_code][to_code] = \
-                    self._load_crosswalk_from_file(from_code,
-                                                   to_code,
-                                                   join(f"data/{census_year}", file_path)
-                                                   )
+                self._crosswalks[from_code][to_code] = self._load_crosswalk_from_file(
+                    from_code, to_code, join(f"data/{census_year}", file_path)
+                )
 
         for geo_type in self._geos:
             self._geo_sets[geo_type] = self._load_geo_values(geo_type)
 
-    def _load_crosswalk_from_file(self, from_code, to_code, data_path):
+    def _load_crosswalk_from_file(
+        self, from_code: str, to_code: str, data_path: str
+    ) -> pd.DataFrame:
         stream = pkg_resources.resource_stream(__name__, data_path)
         dtype = {
             from_code: str,
             to_code: str,
             "pop": int,
             "weight": float,
-            **{geo: str for geo in self._geos - set("nation")}
+            **{geo: str for geo in self._geos - set("nation")},
         }
 
         usecols = [from_code, "pop"] if to_code == "pop" else None
         return pd.read_csv(stream, dtype=dtype, usecols=usecols)
 
-    def _load_geo_values(self, geo_type):
+    def _load_geo_values(self, geo_type: str) -> Set[str]:
         if geo_type == "nation":
             return {"us"}
 
@@ -167,7 +156,9 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         return set(crosswalk[geo_type])
 
     @staticmethod
-    def convert_fips_to_mega(data, fips_col="fips", mega_col="megafips"):
+    def convert_fips_to_mega(
+        data: pd.DataFrame, fips_col: str = "fips", mega_col: str = "megafips"
+    ) -> pd.DataFrame:
         """Convert fips or chng-fips string to a megafips string."""
         data = data.copy()
         data[mega_col] = data[fips_col].astype(str).str.zfill(5)
@@ -176,14 +167,14 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
 
     @staticmethod
     def megacounty_creation(
-        data,
-        thr_count,
-        thr_win_len,
-        thr_col="visits",
-        fips_col="fips",
-        date_col="timestamp",
-        mega_col="megafips",
-    ):
+        data: pd.DataFrame,
+        thr_count: Union[float, int],
+        thr_win_len: int,
+        thr_col: str = "visits",
+        fips_col: str = "fips",
+        date_col: str = "timestamp",
+        mega_col: str = "megafips",
+    ) -> pd.DataFrame:
         """Create megacounty column.
 
         Parameters
@@ -205,7 +196,7 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         if "_thr_col_roll" in data.columns:
             raise ValueError("Column name '_thr_col_roll' is reserved.")
 
-        def agg_sum_iter(data):
+        def agg_sum_iter(data: pd.DataFrame) -> Iterator[pd.DataFrame]:
             data_gby = (
                 data[[fips_col, date_col, thr_col]]
                 .set_index(date_col)
@@ -228,7 +219,13 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
 
     # Conversion functions
     def add_geocode(
-        self, df, from_code, new_code, from_col=None, new_col=None, dropna=True
+        self,
+        df: pd.DataFrame,
+        from_code: str,
+        new_code: str,
+        from_col: Optional[str] = None,
+        new_col: Optional[str] = None,
+        dropna: bool = True,
     ):
         """Add a new geocode column to a dataframe.
 
@@ -269,8 +266,9 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         df = df.copy()
         from_col = from_code if from_col is None else from_col
         new_col = new_code if new_col is None else new_col
-        assert from_col != new_col, \
-            f"Can't use the same column '{from_col}' for both from_col and to_col"
+        assert (
+            from_col != new_col
+        ), f"Can't use the same column '{from_col}' for both from_col and to_col"
         state_codes = ["state_code", "state_id", "state_name"]
 
         if not is_string_dtype(df[from_col]):
@@ -316,7 +314,9 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
 
         return df
 
-    def _add_nation_geocode(self, df, from_code, from_col, new_col):
+    def _add_nation_geocode(
+        self, df: pd.DataFrame, from_code: str, from_col: str, new_col: str
+    ) -> pd.DataFrame:
         """Add a nation geocode column to a dataframe.
 
         See `add_geocode()` documentation for argument description.
@@ -328,21 +328,21 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
             return df
 
         raise ValueError(
-            f"Conversion to the nation level is not supported "
+            "Conversion to the nation level is not supported "
             f"from {from_code}; try {valid_from_codes}"
         )
 
     def replace_geocode(
         self,
-        df,
-        from_code,
-        new_code,
-        from_col=None,
-        new_col=None,
-        date_col="timestamp",
-        data_cols=None,
-        dropna=True,
-    ):
+        df: pd.DataFrame,
+        from_code: str,
+        new_code: str,
+        from_col: Optional[str] = None,
+        new_col: Optional[str] = None,
+        date_col: Optional[str] = "timestamp",
+        data_cols: Optional[List[str]] = None,
+        dropna: bool = True,
+    ) -> pd.DataFrame:
         """Replace a geocode column in a dataframe.
 
         Currently supported conversions:
@@ -403,7 +403,13 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
             df = df.groupby([new_col]).sum(numeric_only=True).reset_index()
         return df
 
-    def add_population_column(self, data, geocode_type, geocode_col=None, dropna=True):
+    def add_population_column(
+        self,
+        data: pd.DataFrame,
+        geocode_type: Literal["fips", "zip"],
+        geocode_col: Optional[str] = None,
+        dropna: bool = True,
+    ) -> pd.DataFrame:
         """
         Append a population column to a dataframe, based on the FIPS or ZIP code.
 
@@ -428,7 +434,15 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         """
         geocode_col = geocode_type if geocode_col is None else geocode_col
         data = data.copy()
-        supported_geos = ["fips", "zip", "state_id", "state_name", "state_code", "hhs", "nation"]
+        supported_geos = [
+            "fips",
+            "zip",
+            "state_id",
+            "state_name",
+            "state_code",
+            "hhs",
+            "nation",
+        ]
         if geocode_type not in supported_geos:
             raise ValueError(
                 f"Only {supported_geos} geocodes supported. For other codes, aggregate those."
@@ -442,24 +456,22 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
             else:
                 data[geocode_col] = data[geocode_col].astype(str)
         merge_type = "inner" if dropna else "left"
-        data_with_pop = (
-            data
-            .merge(pop_df, left_on=geocode_col, right_on=geocode_type, how=merge_type)
-            .rename(columns={"pop": "population"})
-        )
+        data_with_pop = data.merge(
+            pop_df, left_on=geocode_col, right_on=geocode_type, how=merge_type
+        ).rename(columns={"pop": "population"})
         return data_with_pop
 
     @staticmethod
     def fips_to_megacounty(
-        data,
-        thr_count,
-        thr_win_len,
-        thr_col="visits",
-        fips_col="fips",
-        date_col="timestamp",
-        mega_col="megafips",
+        data: pd.DataFrame,
+        thr_count: Union[float, int],
+        thr_win_len: int,
+        thr_col: str = "visits",
+        fips_col: str = "fips",
+        date_col: str = "timestamp",
+        mega_col: str = "megafips",
         count_cols=None,
-    ):
+    ) -> pd.DataFrame:
         """Convert and aggregate from FIPS or chng-fips to megaFIPS.
 
         Parameters
@@ -501,7 +513,7 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         data = data.reset_index().groupby([date_col, mega_col]).sum(numeric_only=True)
         return data.reset_index()
 
-    def as_mapper_name(self, geo_type, state="state_id"):
+    def as_mapper_name(self, geo_type: str, state: str = "state_id") -> str:
         """
         Return the mapper equivalent of a region type.
 
@@ -513,7 +525,7 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
             return "fips"
         return geo_type
 
-    def get_crosswalk(self, from_code, to_code):
+    def get_crosswalk(self, from_code: str, to_code: str) -> pd.DataFrame:
         """Return a dataframe mapping the given geocodes.
 
         Parameters
@@ -530,9 +542,11 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         try:
             return self._crosswalks[from_code][to_code]
         except KeyError as e:
-            raise ValueError(f'Mapping from "{from_code}" to "{to_code}" not found.') from e
+            raise ValueError(
+                f'Mapping from "{from_code}" to "{to_code}" not found.'
+            ) from e
 
-    def get_geo_values(self, geo_type):
+    def get_geo_values(self, geo_type: str) -> Set[str]:
         """
         Return a set of all values for a given geography type.
 
@@ -551,7 +565,12 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         except KeyError as e:
             raise ValueError(f'Given geo type "{geo_type}" not found') from e
 
-    def get_geos_within(self, container_geocode, contained_geocode_type, container_geocode_type):
+    def get_geos_within(
+        self,
+        container_geocode: str,
+        contained_geocode_type: str,
+        container_geocode_type: str,
+    ) -> Set[str]:
         """
         Return all contained regions of the given type within the given container geocode.
 
@@ -581,20 +600,30 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         if contained_geocode_type == "state":
             if container_geocode_type == "nation" and container_geocode == "us":
                 crosswalk = self._crosswalks["state"]["state"]
-                return set(crosswalk["state_id"])   # pylint: disable=unsubscriptable-object
+                return set(crosswalk["state_id"])  # pylint: disable=unsubscriptable-object
             if container_geocode_type == "hhs":
                 crosswalk_hhs = self._crosswalks["fips"]["hhs"]
                 crosswalk_state = self._crosswalks["fips"]["state"]
-                fips_hhs = crosswalk_hhs[crosswalk_hhs["hhs"] == container_geocode]["fips"]
-                return set(crosswalk_state[crosswalk_state["fips"].isin(fips_hhs)]["state_id"])
-        elif (contained_geocode_type in ("county", "fips", "chng-fips") and
-                container_geocode_type == "state"):
+                fips_hhs = crosswalk_hhs[crosswalk_hhs["hhs"] == container_geocode][
+                    "fips"
+                ]
+                return set(
+                    crosswalk_state[crosswalk_state["fips"].isin(fips_hhs)]["state_id"]
+                )
+        elif (
+            contained_geocode_type in ("county", "fips", "chng-fips")
+            and container_geocode_type == "state"
+        ):
             contained_geocode_type = self.as_mapper_name(contained_geocode_type)
             crosswalk = self._crosswalks[contained_geocode_type]["state"]
             return set(
-                crosswalk[crosswalk["state_id"] == container_geocode][contained_geocode_type]
+                crosswalk[crosswalk["state_id"] == container_geocode][
+                    contained_geocode_type
+                ]
             )
-        raise ValueError("(contained_geocode_type, container_geocode_type) was "
-                         f"({contained_geocode_type}, {container_geocode_type}), but "
-                         "must be one of (state, nation), (state, hhs), (county, state)"
-                         ", (fips, state), (chng-fips, state)")
+        raise ValueError(
+            "(contained_geocode_type, container_geocode_type) was "
+            f"({contained_geocode_type}, {container_geocode_type}), but "
+            "must be one of (state, nation), (state, hhs), (county, state)"
+            ", (fips, state), (chng-fips, state)"
+        )

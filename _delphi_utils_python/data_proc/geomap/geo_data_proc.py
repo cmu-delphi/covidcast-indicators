@@ -1,10 +1,7 @@
 """
-Authors: Dmitry Shemetov @dshemetov, James Sharpnack @jsharpna
-
-Intended execution:
+Authors: Dmitry Shemetov, James Sharpnack
 
 cd _delphi_utils/data_proc/geomap
-chmod u+x geo_data_proc.py
 python geo_data_proc.py
 """
 
@@ -19,7 +16,7 @@ import numpy as np
 
 
 # Source files
-YEAR = 2019
+YEAR = 2020
 INPUT_DIR = "./old_source_files"
 OUTPUT_DIR = f"../../delphi_utils/data/{YEAR}"
 FIPS_BY_ZIP_POP_URL = "https://www2.census.gov/geo/docs/maps-data/data/rel/zcta_county_rel_10.txt?#"
@@ -41,7 +38,6 @@ FIPS_ZIP_OUT_FILENAME = "fips_zip_table.csv"
 FIPS_HHS_FILENAME = "fips_hhs_table.csv"
 FIPS_CHNGFIPS_OUT_FILENAME = "fips_chng-fips_table.csv"
 FIPS_POPULATION_OUT_FILENAME = "fips_pop.csv"
-
 CHNGFIPS_STATE_OUT_FILENAME = "chng-fips_state_table.csv"
 ZIP_HSA_OUT_FILENAME = "zip_hsa_table.csv"
 ZIP_HRR_OUT_FILENAME = "zip_hrr_table.csv"

@@ -18,54 +18,89 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
 
     The GeoMapper class provides utility functions for translating between different
     geocodes. Supported geocodes:
-    - zip: zip5, a length 5 str of 0-9 with leading 0's
-    - fips: state code and county code, a length 5 str of 0-9 with leading 0's
-    - msa: metropolitan statistical area, a length 5 str of 0-9 with leading 0's
-    - state_code: state code, a str of 0-9
-    - state_id: state id, a str of A-Z
-    - hrr: hospital referral region, an int 1-500
 
-    Mappings:
-    - [x] zip -> fips : population weighted
-    - [x] zip -> hrr : unweighted
-    - [x] zip -> msa : unweighted
-    - [x] zip -> state
-    - [x] zip -> hhs
-    - [x] zip -> population
-    - [x] state code -> hhs
-    - [x] fips -> state : unweighted
-    - [x] fips -> msa : unweighted
-    - [x] fips -> megacounty
-    - [x] fips -> hrr
-    - [x] fips -> hhs
-    - [x] fips -> chng-fips
-    - [x] chng-fips -> state : unweighted
-    - [x] nation
-    - [ ] zip -> dma (postponed)
+    - zip:          five characters [0-9] with leading 0's, e.g. "33626"
+                    also known as zip5 or zip code
+    - fips:         five characters [0-9] with leading 0's, e.g. "12057"
+                    the first two digits are the state FIPS code and the last
+                    three are the county FIPS code
+    - msa:          five characters [0-9] with leading 0's, e.g. "90001"
+                    also known as metropolitan statistical area
+    - state_code:   two characters [0-9], e.g "06"
+    - state_id:     two characters [A-Z], e.g "CA"
+    - state_name:   human-readable name, e.g "California"
+    - hrr:          an integer from 1-500, also known as hospital
+                    referral region
+    - hhs:          an integer from 1-10, also known as health and human services region
+                    https://www.hhs.gov/about/agencies/iea/regional-offices/index.html
 
-    The GeoMapper instance loads crosswalk tables from the package data_dir. The
-    crosswalk tables are assumed to have been built using the geo_data_proc.py script
-    in data_proc/geomap. If a mapping between codes is NOT one to many, then the table has
-    just two colums. If the mapping IS one to many, then a third column, the weight column,
-    exists (e.g. zip, fips, weight; satisfying (sum(weights) where zip==ZIP) == 1).
+    Valid mappings:
+
+    From            To              Population Weighted
+    zip             fips            Yes
+    zip             hrr             No
+    zip             msa             Yes
+    zip             state_*         Yes
+    zip             hhs             Yes
+    zip             population      --
+    zip             nation          No
+    state_*         state_*         No
+    state_*         hhs             No
+    state_*         population      --
+    state_*         nation          No
+    fips            state_*         No
+    fips            msa             No
+    fips            megacounty      No
+    fips            hrr             Yes
+    fips            hhs             No
+    fips            chng-fips       No
+    fips            nation          No
+    chng-fips       state_*         No
+
+    Crosswalk Tables
+    ================
+
+    The GeoMapper instance loads pre-generated crosswalk tables (built by the
+    script in `data_proc/geomap/geo_data_proc.py`). If a mapping between codes
+    is one to one or many to one, then the table has just two columns. If the
+    mapping is one to many, then a weight column is provided, which gives the
+    fractional population contribution of a source_geo to the target_geo. The
+    weights satisfy the condition that df.groupby(from_code).sum(weight) == 1.0
+    for all values of from_code.
+
+    Aggregation
+    ===========
+
+    The GeoMapper class provides functions to aggregate data from one geocode
+    to another. The aggregation can be a simple one-to-one mapping or a
+    weighted aggregation. The weighted aggregation is useful when the data
+    being aggregated is a population-weighted quantity, such as visits or
+    cases. The aggregation is done by multiplying the data columns by the
+    weights and summing over the data columns. Note that the aggregation does
+    not adjust the aggregation for missing or NA values in the data columns,
+    which is equivalent to a zero-fill.
 
     Example Usage
-    ==========
+    =============
     The main GeoMapper object loads and stores crosswalk dataframes on-demand.
 
-    When replacing geocodes with a new one an aggregation step is performed on the data columns
-    to merge entries  (i.e. in the case of a many to one mapping or a weighted mapping). This
-    requires a specification of the data columns, which are assumed to be all the columns that
-    are not the geocodes or the date column specified in date_col.
+    When replacing geocodes with a new one an aggregation step is performed on
+    the data columns to merge entries  (i.e. in the case of a many to one
+    mapping or a weighted mapping). This requires a specification of the data
+    columns, which are assumed to be all the columns that are not the geocodes
+    or the date column specified in date_col.
 
     Example 1: to add a new column with a new geocode, possibly with weights:
     > gmpr = GeoMapper()
-    > df = gmpr.add_geocode(df, "fips", "zip", from_col="fips", new_col="geo_id",
+    > df = gmpr.add_geocode(df, "fips", "zip",
+                            from_col="fips", new_col="geo_id",
                             date_col="timestamp", dropna=False)
 
-    Example 2: to replace a geocode column with a new one, aggregating the data with weights:
+    Example 2: to replace a geocode column with a new one, aggregating the data
+    with weights:
     > gmpr = GeoMapper()
-    > df = gmpr.replace_geocode(df, "fips", "zip", from_col="fips", new_col="geo_id",
+    > df = gmpr.replace_geocode(df, "fips", "zip",
+                                from_col="fips", new_col="geo_id",
                                 date_col="timestamp", dropna=False)
     """
 
@@ -113,7 +148,7 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
             subkey
             for mainkey in self.CROSSWALK_FILENAMES
             for subkey in self.CROSSWALK_FILENAMES[mainkey]
-        }.union(set(self.CROSSWALK_FILENAMES.keys())) - set(["state", "pop"])
+        }.union(set(self.CROSSWALK_FILENAMES.keys())) - {"state", "pop"}
 
         for from_code, to_codes in self.CROSSWALK_FILENAMES.items():
             for to_code, file_path in to_codes.items():
@@ -135,7 +170,6 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
             "weight": float,
             **{geo: str for geo in self._geos - set("nation")},
         }
-
         usecols = [from_code, "pop"] if to_code == "pop" else None
         return pd.read_csv(stream, dtype=dtype, usecols=usecols)
 
@@ -229,13 +263,6 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
     ):
         """Add a new geocode column to a dataframe.
 
-        Currently supported conversions:
-        - fips -> state_code, state_id, state_name, zip, msa, hrr, nation, hhs, chng-fips
-        - chng-fips -> state_code, state_id, state_name
-        - zip -> state_code, state_id, state_name, fips, msa, hrr, nation, hhs
-        - state_x -> state_y (where x and y are in {code, id, name}), nation
-        - state_code -> hhs, nation
-
         Parameters
         ---------
         df: pd.DataFrame
@@ -303,7 +330,7 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
             df = df.merge(crosswalk, left_on=from_col, right_on=from_col, how="left")
 
         # Drop extra state columns
-        if new_code in state_codes and not from_code in state_codes:
+        if new_code in state_codes and from_code not in state_codes:
             state_codes.remove(new_code)
             df.drop(columns=state_codes, inplace=True)
         elif new_code in state_codes and from_code in state_codes:
@@ -344,13 +371,6 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         dropna: bool = True,
     ) -> pd.DataFrame:
         """Replace a geocode column in a dataframe.
-
-        Currently supported conversions:
-        - fips -> chng-fips, state_code, state_id, state_name, zip, msa, hrr, nation
-        - chng-fips -> state_code, state_id, state_name
-        - zip -> state_code, state_id, state_name, fips, msa, hrr, nation
-        - state_x -> state_y (where x and y are in {code, id, name}), nation
-        - state_code -> hhs, nation
 
         Parameters
         ---------
@@ -397,7 +417,7 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
             df[data_cols] = df[data_cols].multiply(df["weight"], axis=0)
             df.drop("weight", axis=1, inplace=True)
 
-        if not date_col is None:
+        if date_col is not None:
             df = df.groupby([date_col, new_col]).sum(numeric_only=True).reset_index()
         else:
             df = df.groupby([new_col]).sum(numeric_only=True).reset_index()
@@ -575,8 +595,7 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         Return all contained regions of the given type within the given container geocode.
 
         Given container_geocode (e.g "ca" for California) of type container_geocode_type
-        (e.g "state"), return:
-            - all (contained_geocode_type)s within container_geocode
+        (e.g "state"), return all (contained_geocode_type)s within container_geocode.
 
         Supports these 4 combinations:
             - all states within a nation

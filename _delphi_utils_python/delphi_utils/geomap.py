@@ -646,3 +646,46 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
             "must be one of (state, nation), (state, hhs), (county, state)"
             ", (fips, state), (chng-fips, state)"
         )
+
+    def aggregate_by_weighted_sum(
+        self, df: pd.DataFrame, to_geo: str, sensor: str, population_column: str
+    ) -> pd.DataFrame:
+        """Aggregate sensor, weighted by time-dependent population.
+
+        Note: This function generates its own population weights and adjusts the
+        weights based on which data is NA. This is in contrast to the
+        `replace_geocode` function, which assumes that the weights are already
+        present in the data and does not adjust for missing data (see the
+        docstring for the GeoMapper class).
+
+        Parameters
+        ---------
+        df: pd.DataFrame
+            Input dataframe, assumed to have a sensor column (e.g. "visits"), a
+            to_geo column (e.g. "state"), and a population column (corresponding
+            to a from_geo, e.g. "wastewater collection site").
+        to_geo: str
+            The column name of the geocode to aggregate to.
+        sensor: str
+            The column name of the sensor to aggregate.
+        population_column: str
+            The column name of the population to weight the sensor by.
+
+        Returns
+        ---------
+        agg_df: pd.DataFrame
+            A dataframe with the aggregated sensor values, weighted by population.
+        """
+        # Zero-out populations where the sensor is NA
+        df[f"relevant_pop_{sensor}"] = df[population_column] * df[sensor].abs().notna()
+        # Weight the sensor by the population
+        df[f"weighted_{sensor}"] = df[sensor] * df[f"relevant_pop_{sensor}"]
+        agg_df = df.groupby(["timestamp", to_geo]).agg(
+            {
+                f"relevant_pop_{sensor}": "sum",
+                f"weighted_{sensor}": lambda x: x.sum(min_count=1),
+            }
+        )
+        agg_df["val"] = agg_df[f"weighted_{sensor}"] / agg_df[f"relevant_pop_{sensor}"]
+        agg_df = agg_df.reset_index()
+        return agg_df

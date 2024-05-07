@@ -374,6 +374,8 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         dropna: bool = True,
     ) -> pd.DataFrame:
         """Replace a geocode column in a dataframe.
+        
+        See class docstring for supported geocode transformations.
 
         Parameters
         ---------

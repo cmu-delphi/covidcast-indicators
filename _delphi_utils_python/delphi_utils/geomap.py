@@ -657,11 +657,11 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
     ) -> pd.DataFrame:
         """Aggregate sensor, weighted by time-dependent population.
 
-        Note: This function generates its own population weights and adjusts the
-        weights based on which data is NA. This is in contrast to the
-        `replace_geocode` function, which assumes that the weights are already
-        present in the data and does not adjust for missing data (see the
-        docstring for the GeoMapper class).
+        Note: This function generates its own population weights and excludes
+        locations where the data is NA, which is effectively an extrapolation assumption 
+        to the rest of the geos.  This is in contrast to the `replace_geocode` function,
+        which assumes that the weights are already present in the data and does
+        not adjust for missing data (see the docstring for the GeoMapper class).
 
         Parameters
         ---------

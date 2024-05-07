@@ -29,6 +29,7 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
     - state_code:   two characters [0-9], e.g "06"
     - state_id:     two characters [A-Z], e.g "CA"
     - state_name:   human-readable name, e.g "California"
+    - state_*:      we use this below to refer to the three above geocodes in aggregate
     - hrr:          an integer from 1-500, also known as hospital
                     referral region
     - hhs:          an integer from 1-10, also known as health and human services region

@@ -263,7 +263,7 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         dropna: bool = True,
     ):
         """Add a new geocode column to a dataframe.
-        
+
         See class docstring for supported geocode transformations.
 
         Parameters
@@ -374,7 +374,7 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         dropna: bool = True,
     ) -> pd.DataFrame:
         """Replace a geocode column in a dataframe.
-        
+
         See class docstring for supported geocode transformations.
 
         Parameters
@@ -653,15 +653,16 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         )
 
     def aggregate_by_weighted_sum(
-        self, df: pd.DataFrame, to_geo: str, sensor: str, population_column: str
+        self, df: pd.DataFrame, to_geo: str, sensor_col: str, time_col: str, population_col: str
     ) -> pd.DataFrame:
         """Aggregate sensor, weighted by time-dependent population.
 
         Note: This function generates its own population weights and excludes
-        locations where the data is NA, which is effectively an extrapolation assumption 
-        to the rest of the geos.  This is in contrast to the `replace_geocode` function,
-        which assumes that the weights are already present in the data and does
-        not adjust for missing data (see the docstring for the GeoMapper class).
+        locations where the data is NA, which is effectively an extrapolation
+        assumption to the rest of the geos.  This is in contrast to the
+        `replace_geocode` function, which assumes that the weights are already
+        present in the data and does not adjust for missing data (see the
+        docstring for the GeoMapper class).
 
         Parameters
         ---------
@@ -681,16 +682,24 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         agg_df: pd.DataFrame
             A dataframe with the aggregated sensor values, weighted by population.
         """
+        # Don't modify the input dataframe
+        df = df.copy()
         # Zero-out populations where the sensor is NA
-        df[f"relevant_pop_{sensor}"] = df[population_column] * df[sensor].abs().notna()
+        df["_zeroed_pop"] = df[population_col] * df[sensor_col].abs().notna()
         # Weight the sensor by the population
-        df[f"weighted_{sensor}"] = df[sensor] * df[f"relevant_pop_{sensor}"]
-        agg_df = df.groupby(["timestamp", to_geo]).agg(
+        df["_weighted_sensor"] = df[sensor_col] * df["_zeroed_pop"]
+        agg_df = (
+            df.groupby([time_col, to_geo])
+            .agg(
             {
-                f"relevant_pop_{sensor}": "sum",
-                f"weighted_{sensor}": lambda x: x.sum(min_count=1),
+                "_zeroed_pop": "sum",
+                "_weighted_sensor": lambda x: x.sum(min_count=1),
             }
+            ).assign(
+                _new_sensor = lambda x: x["_weighted_sensor"] / x["_zeroed_pop"]
+            ).reset_index()
+            .rename(columns={"_new_sensor": f"weighted_{sensor_col}"})
+            .drop(columns=["_zeroed_pop", "_weighted_sensor"])
         )
-        agg_df["val"] = agg_df[f"weighted_{sensor}"] / agg_df[f"relevant_pop_{sensor}"]
-        agg_df = agg_df.reset_index()
+
         return agg_df

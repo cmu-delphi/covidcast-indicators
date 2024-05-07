@@ -395,3 +395,89 @@ class TestGeoMapper:
         df = pd.DataFrame({"fips": ["01001"]})
         assert geomapper.add_population_column(df, "fips").population[0] == 56145
         assert geomapper_2019.add_population_column(df, "fips").population[0] == 55869
+
+    def test_aggregate_by_weighted_sum(self, geomapper: GeoMapper):
+        df = pd.DataFrame(
+            {
+                "timestamp": [0] * 7,
+                "state": ["al", "al", "ca", "ca", "nd", "me", "me"],
+                "a": [1, 2, 3, 4, 12, -2, 2],
+                "b": [5, 6, 7, np.nan, np.nan, -1, -2],
+                "population_served": [10, 5, 8, 1, 3, 1, 2],
+            }
+        )
+        agg_df = geomapper.aggregate_by_weighted_sum(
+            df,
+            to_geo="state",
+            sensor_col="a",
+            time_col = "timestamp",
+            population_col="population_served"
+        )
+        agg_df_by_hand = pd.DataFrame(
+            {
+                "timestamp": [0] * 4,
+                "state": ["al", "ca", "me", "nd"],
+                "weighted_a": [
+                    (1 * 10 + 2 * 5) / 15,
+                    (3 * 8 + 4 * 1) / 9,
+                    (-2 * 1 + 2 * 2) / 3,
+                    (12 * 3) / 3,
+                ]
+            }
+        )
+        pd.testing.assert_frame_equal(agg_df, agg_df_by_hand)
+        agg_df = geomapper.aggregate_by_weighted_sum(
+            df,
+            to_geo="state",
+            sensor_col="b",
+            time_col = "timestamp",
+            population_col="population_served"
+        )
+        agg_df_by_hand = pd.DataFrame(
+            {
+                "timestamp": [0] * 4,
+                "state": ["al", "ca", "me", "nd"],
+                "weighted_b": [
+                    (5 * 10 + 6 * 5) / 15,
+                    (7 * 8 + 4 * 0) / 8,
+                    (-1 * 1 + -2 * 2) / 3,
+                    (np.nan) / 3,
+                ]
+            }
+        )
+        pd.testing.assert_frame_equal(agg_df, agg_df_by_hand)
+
+        df = pd.DataFrame(
+            {
+                "state": [
+                    "al",
+                    "al",
+                    "ca",
+                    "ca",
+                    "nd",
+                ],
+                "nation": ["us"] * 5,
+                "timestamp": [0] * 3 + [1] * 2,
+                "a": [1, 2, 3, 4, 12],
+                "b": [5, 6, 7, np.nan, np.nan],
+                "population_served": [10, 5, 8, 1, 3],
+            }
+        )
+        agg_df = geomapper.aggregate_by_weighted_sum(
+            df,
+            to_geo="nation",
+            sensor_col="a",
+            time_col = "timestamp",
+            population_col="population_served"
+        )
+        agg_df_by_hand = pd.DataFrame(
+            {
+                "timestamp": [0, 1],
+                "nation": ["us"] * 2,
+                "weighted_a": [
+                    (1 * 10 + 2 * 5 + 3 * 8) / 23,
+                    (1 * 4 + 3 * 12) / 4
+                    ]
+            }
+        )
+        pd.testing.assert_frame_equal(agg_df, agg_df_by_hand)

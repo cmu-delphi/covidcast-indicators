@@ -21,6 +21,7 @@ the following structure:
         - "bucket_name: str, name of S3 bucket to read/write
         - "cache_dir": str, directory of locally cached data
 """
+
 import time
 from datetime import datetime
 import numpy as np
@@ -71,11 +72,12 @@ def add_needed_columns(df, col_names=None):
     """Short util to add expected columns not found in the dataset."""
     if col_names is None:
         col_names = [
-            "se", 
+            "se",
             "sample_size",
             "missing_val",
             "missing_se",
-            "missing_sample_size"]
+            "missing_sample_size",
+        ]
 
     for col_name in col_names:
         df[col_name] = np.nan
@@ -141,25 +143,31 @@ def run_module(params):
                 df = df[df["geography"] == "United States"]
                 df["geo_id"] = "us"
             elif geo == "state":
-                df = df[(df['county'] == "All") & (df["geography"] != "United States")]
-                df["geo_id"] = df["geography"].apply(lambda x: us.states.lookup(x).abbr.lower() if us.states.lookup(x) else 'dc')
+                df = df[(df["county"] == "All") & (df["geography"] != "United States")]
+                df["geo_id"] = df["geography"].apply(
+                    lambda x: us.states.lookup(x).abbr.lower() if us.states.lookup(x) else "dc"
+                )
             elif geo == "hrr" or geo == "msa":
-                df = df[['fips', 'val', 'timestamp']]
+                df = df[["fips", "val", "timestamp"]]
                 df = geo_mapper.add_population_column(df, geocode_type="fips", geocode_col="fips")
                 df = geo_mapper.add_geocode(df, "fips", geo, from_col="fips", new_col="geo_id")
                 df = generate_weights(df, "val")
                 df = weighted_geo_sum(df, "geo_id", "val")
-                df = df.groupby(["timestamp","geo_id", "val"]).sum(numeric_only=True).reset_index()
+                df = df.groupby(["timestamp", "geo_id", "val"]).sum(numeric_only=True).reset_index()
             else:
-                df = df[df['county'] != "All"]
+                df = df[df["county"] != "All"]
                 df["geo_id"] = df["fips"]
             # add se, sample_size, and na codes
             missing_cols = set(CSV_COLS) - set(df.columns)
             df = add_needed_columns(df, col_names=list(missing_cols))
-            df_csv = df[CSV_COLS+["timestamp"]]
+            df_csv = df[CSV_COLS + ["timestamp"]]
             # actual export
             dates = create_export_csv(
-                df_csv, geo_res=geo, export_dir=export_dir, sensor=SIGNALS[signal_i], weekly_dates=True
+                df_csv,
+                geo_res=geo,
+                export_dir=export_dir,
+                sensor=SIGNALS[signal_i],
+                weekly_dates=True,
             )
             if len(dates) > 0:
                 run_stats.append((max(dates), len(dates)))

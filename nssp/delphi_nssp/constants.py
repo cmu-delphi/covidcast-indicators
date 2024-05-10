@@ -23,17 +23,21 @@ SIGNALS = [val for (key, val) in SIGNALS_MAP.items()]
 NEWLINE = "\n"
 
 CSV_COLS = [
-            "geo_id",
-            "val",
-            "se",
-            "sample_size",
-            "missing_val",
-            "missing_se",
-            "missing_sample_size"
-        ]
+    "geo_id",
+    "val",
+    "se",
+    "sample_size",
+    "missing_val",
+    "missing_se",
+    "missing_sample_size",
+]
 
 TYPE_DICT = {key: float for key in SIGNALS}
-TYPE_DICT.update({"timestamp": "datetime64[ns]",
-                   "geography": str,
-                   "county": str,
-                   "fips": int})
+TYPE_DICT.update(
+    {
+        "timestamp": "datetime64[ns]",
+        "geography": str,
+        "county": str,
+        "fips": int,
+    }
+)

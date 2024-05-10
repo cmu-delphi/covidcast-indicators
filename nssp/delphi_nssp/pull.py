@@ -9,7 +9,7 @@ from .constants import (
     SIGNALS,
     NEWLINE,
     SIGNALS_MAP,
-    TYPE_DICT
+    TYPE_DICT,
 )
 
 
@@ -17,7 +17,7 @@ from .constants import (
 def warn_string(df, type_dict):
     """Format the warning string."""
 
-    warn= textwrap.dedent(f"""
+    warn = textwrap.dedent(f"""
         Expected column(s) missed, The dataset schema may
         have changed. Please investigate and amend the code.
 

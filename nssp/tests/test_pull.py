@@ -17,22 +17,24 @@ from delphi_nssp.constants import (
     SIGNALS,
     NEWLINE,
     SIGNALS_MAP,
-    TYPE_DICT
+    TYPE_DICT,
 )
+
+
 class TestPullNSSPData(unittest.TestCase):
-    @patch('delphi_nssp.pull.Socrata')
+    @patch("delphi_nssp.pull.Socrata")
     def test_pull_nssp_data(self, mock_socrata):
         # Load test data
-        with open('test_data/page.txt', 'r') as f:
+        with open("test_data/page.txt", "r") as f:
             test_data = json.load(f)
-        
+
         # Mock Socrata client and its get method
         mock_client = MagicMock()
         mock_client.get.side_effect = [test_data, []]  # Return test data on first call, empty list on second call
         mock_socrata.return_value = mock_client
 
         # Call function with test token
-        test_token = 'test_token'
+        test_token = "test_token"
         result = pull_nssp_data(test_token)
         print(result)
 
@@ -43,13 +45,15 @@ class TestPullNSSPData(unittest.TestCase):
         mock_client.get.assert_any_call("rdmq-nq56", limit=50000, offset=0)
 
         # Check result
-        assert result['timestamp'].notnull().all(), "timestamp has rogue NaN"
-        assert result['geography'].notnull().all(), "geography has rogue NaN"
-        assert result['county'].notnull().all(), "county has rogue NaN"
-        assert result['fips'].notnull().all(), "fips has rogue NaN"
+        assert result["timestamp"].notnull().all(), "timestamp has rogue NaN"
+        assert result["geography"].notnull().all(), "geography has rogue NaN"
+        assert result["county"].notnull().all(), "county has rogue NaN"
+        assert result["fips"].notnull().all(), "fips has rogue NaN"
 
         # Check for each signal in SIGNALS
         for signal in SIGNALS:
             assert result[signal].notnull().all(), f"{signal} has rogue NaN"
-if __name__ == '__main__':
+
+
+if __name__ == "__main__":
     unittest.main()

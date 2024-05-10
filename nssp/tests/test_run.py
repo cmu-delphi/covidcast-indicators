@@ -17,14 +17,22 @@ from delphi_nssp.run import (
     weighted_geo_sum,
 )
 
+
 def test_add_needed_columns():
-    df = pd.DataFrame({'geo_id': ['us'], 'val': [1]})
+    df = pd.DataFrame({"geo_id": ["us"], "val": [1]})
     df = add_needed_columns(df, col_names=None)
     assert df.columns.tolist() == [
-        "geo_id","val", "se", "sample_size",
-        "missing_val", "missing_se", "missing_sample_size"]
+        "geo_id",
+        "val",
+        "se",
+        "sample_size",
+        "missing_val",
+        "missing_se",
+        "missing_sample_size",
+    ]
     assert df["se"].isnull().all()
     assert df["sample_size"].isnull().all()
+
 
 def test_sum_all_nan():
     """Check that sum_all_nan returns NaN iff everything is a NaN"""

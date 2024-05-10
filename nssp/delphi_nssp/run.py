@@ -25,15 +25,13 @@ the following structure:
 import time
 from datetime import datetime
 import numpy as np
-import pandas as pd
-from delphi_utils import S3ArchiveDiffer, get_structured_logger, create_export_csv
+from delphi_utils import get_structured_logger, create_export_csv
 from delphi_utils.nancodes import add_default_nancodes
+from delphi_utils.geomap import GeoMapper
+import us
 
 from .constants import GEOS, SIGNALS, CSV_COLS
 from .pull import pull_nssp_data
-
-from delphi_utils.geomap import GeoMapper
-import us
 
 
 def add_needed_columns(df, col_names=None):

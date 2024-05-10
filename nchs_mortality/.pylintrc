@@ -22,3 +22,4 @@ attr-rgx=[a-z_][a-z0-9_]*
 
 # Don't complain about pytest "unused" arguments.
 ignored-argument-names=(_.*|run_as_module)
+max-line-length=120

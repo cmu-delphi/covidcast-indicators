@@ -35,38 +35,6 @@ from .pull import pull_nssp_data
 from delphi_utils.geomap import GeoMapper
 import us
 
-def sum_all_nan(x):
-    """Return a normal sum unless everything is NaN, then return that."""
-    all_nan = np.isnan(x).all()
-    if all_nan:
-        return np.nan
-    return np.nansum(x)
-
-def weighted_geo_sum(df: pd.DataFrame, geo: str, sensor: str):
-    """Sum sensor, weighted by population for non NA's, grouped by state."""
-    agg_df = df.groupby(["timestamp", geo]).agg(
-        {f"relevant_pop_{sensor}": "sum", f"weighted_{sensor}": sum_all_nan}
-    )
-    agg_df["val"] = agg_df[f"weighted_{sensor}"] / agg_df[f"relevant_pop_{sensor}"]
-    agg_df = agg_df.reset_index()
-    return agg_df
-
-def generate_weights(df, column_aggregating="val"):
-    """
-    Weigh column_aggregating by population.
-
-    generate the relevant population amounts, and create a weighted but
-    unnormalized column, derived from `column_aggregating`
-    """
-    # set the weight of places with na's to zero
-    df[f"relevant_pop_{column_aggregating}"] = (
-        df["population"] * np.abs(df[column_aggregating]).notna()
-    )
-    # generate the weighted version
-    df[f"weighted_{column_aggregating}"] = (
-        df[column_aggregating] * df[f"relevant_pop_{column_aggregating}"]
-    )
-    return df
 
 def add_needed_columns(df, col_names=None):
     """Short util to add expected columns not found in the dataset."""
@@ -118,15 +86,6 @@ def run_module(params):
     )
     export_dir = params["common"]["export_dir"]
     socrata_token = params["indicator"]["socrata_token"]
-    # if "archive" in params:
-    #     daily_arch_diff = S3ArchiveDiffer(
-    #         params["archive"]["cache_dir"],
-    #         export_dir,
-    #         params["archive"]["bucket_name"],
-    #         "nchs_mortality",
-    #         params["archive"]["aws_credentials"],
-    #     )
-    #     daily_arch_diff.update_cache()
 
     run_stats = []
     ## build the base version of the signal at the most detailed geo level you can get.
@@ -147,13 +106,16 @@ def run_module(params):
                 df["geo_id"] = df["geography"].apply(
                     lambda x: us.states.lookup(x).abbr.lower() if us.states.lookup(x) else "dc"
                 )
-            elif geo == "hrr" or geo == "msa":
+            elif geo == "hrr":
                 df = df[["fips", "val", "timestamp"]]
+                # fips -> hrr has a weighted version
+                df = geo_mapper.replace_geocode(df, "fips", "hrr")
+            elif geo == "msa":
+                df = df[["fips", "val", "timestamp"]]
+                # fips -> msa doesn't have a weighted version, so we need to add columns and sum ourselves
                 df = geo_mapper.add_population_column(df, geocode_type="fips", geocode_col="fips")
-                df = geo_mapper.add_geocode(df, "fips", geo, from_col="fips", new_col="geo_id")
-                df = generate_weights(df, "val")
-                df = weighted_geo_sum(df, "geo_id", "val")
-                df = df.groupby(["timestamp", "geo_id", "val"]).sum(numeric_only=True).reset_index()
+                df = geo_mapper.add_geocode(df, "fips", "msa", from_col="fips", new_col="geo_id")
+                df = geo_mapper.aggregate_by_weighted_sum(df, "geo_id", "val", "timestamp", "population")
             else:
                 df = df[df["county"] != "All"]
                 df["geo_id"] = df["fips"]

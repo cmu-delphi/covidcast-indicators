@@ -2,3 +2,7 @@
 line-length = 120
 target-version = ['py38']
 include = '_delphi_utils_python'
+
+[tool.ruff]
+line-length = 120
+target-version = 'py38'

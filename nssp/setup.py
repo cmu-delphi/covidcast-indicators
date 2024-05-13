@@ -17,7 +17,7 @@ required = [
 
 setup(
     name="delphi_nssp",
-    version="0.0.1",
+    version="0.1.0",
     description="Indicators NSSP Emergency Department Visit",
     author="Minh Le",
     author_email="minhkhul@andrew.cmu.edu",

@@ -26,60 +26,16 @@ import time
 from datetime import datetime
 
 import numpy as np
-import pandas as pd
-from delphi_utils import S3ArchiveDiffer, get_structured_logger, create_export_csv
+from delphi_utils import (
+    GeoMapper,
+    S3ArchiveDiffer,
+    get_structured_logger,
+    create_export_csv,
+)
 from delphi_utils.nancodes import add_default_nancodes
 
 from .constants import GEOS, METRIC_SIGNALS, PROVIDER_NORMS, SIGNALS
 from .pull import pull_nwss_data
-
-
-def sum_all_nan(x):
-    """Return a normal sum unless everything is NaN, then return that."""
-    all_nan = np.isnan(x).all()
-    if all_nan:
-        return np.nan
-    return np.nansum(x)
-
-
-def generate_weights(df, column_aggregating="pcr_conc_smoothed"):
-    """
-    Weigh column_aggregating by population.
-
-    generate the relevant population amounts, and create a weighted but
-    unnormalized column, derived from `column_aggregating`
-    """
-    # set the weight of places with na's to zero
-    df[f"relevant_pop_{column_aggregating}"] = (
-        df["population_served"] * np.abs(df[column_aggregating]).notna()
-    )
-    # generate the weighted version
-    df[f"weighted_{column_aggregating}"] = (
-        df[column_aggregating] * df[f"relevant_pop_{column_aggregating}"]
-    )
-    return df
-
-
-def weighted_state_sum(df: pd.DataFrame, geo: str, sensor: str):
-    """Sum sensor, weighted by population for non NA's, grouped by state."""
-    agg_df = df.groupby(["timestamp", geo]).agg(
-        {f"relevant_pop_{sensor}": "sum", f"weighted_{sensor}": sum_all_nan}
-    )
-    agg_df["val"] = agg_df[f"weighted_{sensor}"] / agg_df[f"relevant_pop_{sensor}"]
-    agg_df = agg_df.reset_index()
-    agg_df = agg_df.rename(columns={"state": "geo_id"})
-    return agg_df
-
-
-def weighted_nation_sum(df: pd.DataFrame, sensor: str):
-    """Sum sensor, weighted by population for non NA's."""
-    agg_df = df.groupby("timestamp").agg(
-        {f"relevant_pop_{sensor}": "sum", f"weighted_{sensor}": sum_all_nan}
-    )
-    agg_df["val"] = agg_df[f"weighted_{sensor}"] / agg_df[f"relevant_pop_{sensor}"]
-    agg_df = agg_df.reset_index()
-    agg_df["geo_id"] = "us"
-    return agg_df
 
 
 def add_needed_columns(df, col_names=None):
@@ -140,7 +96,7 @@ def run_module(params):
     ## build the base version of the signal at the most detailed geo level you can get.
     ## compute stuff here or farm out to another function or file
     df_pull = pull_nwss_data(socrata_token, logger)
-    ## aggregate
+    geomapper = GeoMapper()
     # iterate over the providers and the normalizations that they specifically provide
     for provider, normalization in zip(
         PROVIDER_NORMS["provider"], PROVIDER_NORMS["normalization"]
@@ -153,16 +109,22 @@ def run_module(params):
         for sensor in [*SIGNALS, *METRIC_SIGNALS]:
             full_sensor_name = sensor + "_" + provider + "_" + normalization
             df_prov_norm = df_prov_norm.rename(columns={sensor: full_sensor_name})
-            # add weighed column
-            df = generate_weights(df_prov_norm, full_sensor_name)
             for geo in GEOS:
                 logger.info(
                     "Generating signal and exporting to CSV", metric=full_sensor_name
                 )
                 if geo == "nation":
-                    agg_df = weighted_nation_sum(df, full_sensor_name)
-                else:
-                    agg_df = weighted_state_sum(df, geo, full_sensor_name)
+                    df_prov_norm["nation"] = "us"
+                agg_df = geomapper.aggregate_by_weighted_sum(
+                    df_prov_norm,
+                    geo,
+                    full_sensor_name,
+                    "timestamp",
+                    "population_served",
+                )
+                agg_df = agg_df.rename(
+                    columns={geo: "geo_id", f"weighted_{full_sensor_name}": "val"}
+                )
                 # add se, sample_size, and na codes
                 agg_df = add_needed_columns(agg_df)
                 # actual export

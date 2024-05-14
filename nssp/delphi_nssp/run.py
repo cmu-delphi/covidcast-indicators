@@ -91,7 +91,7 @@ def run_module(params):
     df_pull = pull_nssp_data(socrata_token)
     ## aggregate
     geo_mapper = GeoMapper()
-    for signal_i, signal in enumerate(SIGNALS):
+    for signal in SIGNALS:
         for geo in GEOS:
             df = df_pull.copy()
             df["val"] = df[signal]
@@ -108,12 +108,14 @@ def run_module(params):
                 df = df[["fips", "val", "timestamp"]]
                 # fips -> hrr has a weighted version
                 df = geo_mapper.replace_geocode(df, "fips", "hrr")
+                df = df.rename(columns={"hrr": "geo_id"})
             elif geo == "msa":
                 df = df[["fips", "val", "timestamp"]]
                 # fips -> msa doesn't have a weighted version, so we need to add columns and sum ourselves
                 df = geo_mapper.add_population_column(df, geocode_type="fips", geocode_col="fips")
                 df = geo_mapper.add_geocode(df, "fips", "msa", from_col="fips", new_col="geo_id")
                 df = geo_mapper.aggregate_by_weighted_sum(df, "geo_id", "val", "timestamp", "population")
+                df = df.rename(columns={"weighted_val": "val"})
             else:
                 df = df[df["county"] != "All"]
                 df["geo_id"] = df["fips"]
@@ -126,7 +128,7 @@ def run_module(params):
                 df_csv,
                 geo_res=geo,
                 export_dir=export_dir,
-                sensor=SIGNALS[signal_i],
+                sensor=signal,
                 weekly_dates=True,
             )
             if len(dates) > 0:

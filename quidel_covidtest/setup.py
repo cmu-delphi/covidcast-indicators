@@ -2,19 +2,19 @@ from setuptools import setup
 from setuptools import find_packages
 
 required = [
+    "covidcast",
     "darker[isort]~=2.1.1",
+    "delphi-utils",
+    "imap-tools",
     "numpy",
+    "openpyxl",
     "pandas",
     "pyarrow",
     "pydocstyle",
-    "pytest",
-    "pytest-cov",
     "pylint==2.8.3",
-    "delphi-utils",
-    "imap-tools",
+    "pytest-cov",
+    "pytest",
     "xlrd==1.2.0",
-    "covidcast",
-    "openpyxl",
 ]
 
 setup(

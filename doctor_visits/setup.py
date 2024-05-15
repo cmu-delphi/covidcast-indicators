@@ -3,14 +3,14 @@ from setuptools import find_packages
 
 required = [
     "darker[isort]~=2.1.1",
+    "delphi-utils",
     "numpy",
     "pandas",
     "paramiko",
-    "scikit-learn",
-    "pytest",
-    "pytest-cov",
     "pylint==2.8.3",
-    "delphi-utils",
+    "pytest-cov",
+    "pytest",
+    "scikit-learn",
 ]
 
 setup(

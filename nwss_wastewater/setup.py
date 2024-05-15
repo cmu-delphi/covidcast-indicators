@@ -3,16 +3,16 @@ from setuptools import find_packages
 
 required = [
     "darker[isort]~=2.1.1",
+    "delphi-utils",
+    "epiweeks",
+    "freezegun",
     "numpy",
     "pandas",
     "pydocstyle",
-    "pytest",
-    "pytest-cov",
     "pylint==2.8.3",
-    "delphi-utils",
+    "pytest-cov",
+    "pytest",
     "sodapy",
-    "epiweeks",
-    "freezegun",
 ]
 
 setup(

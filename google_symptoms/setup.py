@@ -3,17 +3,17 @@ from setuptools import find_packages
 
 required = [
     "darker[isort]~=2.1.1",
-    "mock",
-    "numpy",
-    "pandas",
-    "pydocstyle",
-    "pytest",
-    "pytest-cov",
-    "pylint==2.8.3",
+    "db-dtypes",
     "delphi-utils",
     "freezegun",
+    "mock",
+    "numpy",
     "pandas-gbq",
-    "db-dtypes",
+    "pandas",
+    "pydocstyle",
+    "pylint==2.8.3",
+    "pytest-cov",
+    "pytest",
 ]
 
 setup(

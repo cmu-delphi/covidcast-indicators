@@ -19,9 +19,10 @@ class Weekday:
         series column in the data.
         """
         tmp = data.reset_index()
-        denoms = tmp.groupby(date_col).sum()[denominator_col]
-        nums = tmp.groupby(date_col).sum()[numerator_cols]
-
+        denoms = tmp.groupby(date_col).sum(numeric_only = True)[denominator_col]
+        nums = tmp.groupby(date_col).sum(numeric_only = True)[numerator_cols]
+        if nums.shape[0] < 7:
+            logger.warning("Trying to handle weekday effects with fewer than 7 days worth of data. This will probably not work.")
         # Construct design matrix to have weekday indicator columns and then day
         # indicators.
         X = np.zeros((nums.shape[0], 6 + nums.shape[0]))
@@ -40,7 +41,9 @@ class Weekday:
                 logger.error("Unable to calculate weekday correction")
             else:
                 params[i,:] = result
-
+        if np.exp(-params).max() == np.inf:
+            logger.warning("largest weekday correction is infinite. Defaulting to no correction")
+            params = np.zeros((nums.shape[1], X.shape[1]))
         return params
 
     @staticmethod
@@ -93,11 +96,12 @@ class Weekday:
         for scale in scales:
             try:
                 prob = cp.Problem(cp.Minimize((-ll + lmbda * penalty) / scale))
-                _ = prob.solve()
+                _ = prob.solve(solver = cp.ECOS)
                 return b.value
             except SolverError:
                 # If the magnitude of the objective function is too large, an error is
                 # thrown; Rescale the objective function by going through loop
+                print(f"Solver didn't work at {scale}x")
                 continue
         return None
 

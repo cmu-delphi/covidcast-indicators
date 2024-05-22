@@ -61,12 +61,16 @@ def download(ftp_credentials, out_path, logger):
     client = paramiko.SSHClient()
     client.set_missing_host_key_policy(AllowAnythingPolicy())
 
-    client.connect(ftp_credentials["host"],
-                   username=ftp_credentials["user"],
-                   password=ftp_credentials["pass"],
-                   port=ftp_credentials["port"])
+    client.connect(
+        ftp_credentials["host"],
+        username=ftp_credentials["user"],
+        password=ftp_credentials["pass"],
+        port=ftp_credentials["port"],
+        allow_agent=False,
+        look_for_keys=False,
+    )
     sftp = client.open_sftp()
-    sftp.chdir('/optum/receiving')
+    sftp.chdir("/optum/receiving")
 
     # go through files in recieving dir
     files_to_download = []

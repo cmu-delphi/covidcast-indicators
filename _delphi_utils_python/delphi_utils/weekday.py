@@ -48,7 +48,7 @@ class Weekday:
         if effective_multipliers.max() == np.inf or effective_multipliers.min() == -np.inf:
             logger.warning("largest weekday correction is infinite. Defaulting to no correction")
             params = np.zeros((nums.shape[1], X.shape[1]))
-        else if effective_multipliers.max() > 1000:
+        elif effective_multipliers.max() > 1000:
             logger.warning("largest weekday correction is over a factor of 1000. This is probably an error, but may be associated with a zero value.")
         return params
 

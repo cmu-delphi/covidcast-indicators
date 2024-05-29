@@ -23,7 +23,6 @@ jobs:
             claims_hosp,
             doctor_visits,
             google_symptoms,
-            hhs_hosp,
             nchs_mortality,
             nwss_wastewater,
             quidel_covidtest,

@@ -61,7 +61,7 @@ jobs:
           bump2version --list ${{ github.event.inputs.versionName }} | grep ^new_version | sed -r s,"^.*=",,
       - name: Copy version to indicator directory
         run: |
-          indicator_list=("changehc" "claims_hosp" "doctor_visits" "google_symptoms" "hhs_hosp" "nchs_mortality" "quidel_covidtest" "sir_complainsalot")
+          indicator_list=("changehc" "claims_hosp" "doctor_visits" "google_symptoms" "nchs_mortality" "quidel_covidtest" "sir_complainsalot")
           for path in ${indicator_list[@]}; do
             echo "current_version = ${{ steps.indicators.outputs.version }}" > $path/version.cfg
           done

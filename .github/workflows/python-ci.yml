@@ -31,6 +31,8 @@ jobs:
             dir: "delphi_hhs"
           - package: "nchs_mortality"
             dir: "delphi_nchs_mortality"
+          - package: "nssp"
+            dir: "delphi_nssp"
           - package: "nwss_wastewater"
             dir: "delphi_nwss"
           - package: "quidel_covidtest"

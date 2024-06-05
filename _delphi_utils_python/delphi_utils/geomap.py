@@ -3,7 +3,6 @@
 Authors: Dmitry Shemetov @dshemetov, James Sharpnack @jsharpna, Maria Jahja
 """
 
-# pylint: disable=too-many-lines
 from os.path import join
 from collections import defaultdict
 from typing import Iterator, List, Literal, Optional, Set, Union
@@ -13,7 +12,7 @@ import pkg_resources
 from pandas.api.types import is_string_dtype
 
 
-class GeoMapper:  # pylint: disable=too-many-public-methods
+class GeoMapper:
     """Geo mapping tools commonly used in Delphi.
 
     The GeoMapper class provides utility functions for translating between different
@@ -624,7 +623,7 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         if contained_geocode_type == "state":
             if container_geocode_type == "nation" and container_geocode == "us":
                 crosswalk = self._crosswalks["state"]["state"]
-                return set(crosswalk["state_id"])  # pylint: disable=unsubscriptable-object
+                return set(crosswalk["state_id"])
             if container_geocode_type == "hhs":
                 crosswalk_hhs = self._crosswalks["fips"]["hhs"]
                 crosswalk_state = self._crosswalks["fips"]["state"]

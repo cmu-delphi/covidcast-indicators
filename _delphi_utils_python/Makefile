@@ -14,8 +14,11 @@ install-ci: venv
 	pip install .
 
 lint:
-	. env/bin/activate; pylint delphi_utils
+	. env/bin/activate; pylint delphi_utils --rcfile=../pyproject.toml
 	. env/bin/activate; pydocstyle delphi_utils
+
+format:
+	. env/bin/activate; darker delphi_utils
 
 test:
 	. env/bin/activate ;\

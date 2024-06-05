@@ -1,7 +1,6 @@
 """Download files from the specified ftp server."""
 
 # standard
-import datetime
 import functools
 from os import path
 

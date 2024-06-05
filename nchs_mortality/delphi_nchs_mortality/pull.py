@@ -5,11 +5,11 @@ from typing import Optional
 
 import numpy as np
 import pandas as pd
+from delphi_utils.geomap import GeoMapper
 from sodapy import Socrata
 
-from delphi_utils.geomap import GeoMapper
-
 from .constants import METRICS, RENAME
+
 
 def standardize_columns(df):
     """Rename columns to comply with a standard set.
@@ -85,13 +85,15 @@ def pull_nchs_mortality_data(socrata_token: str, test_file: Optional[str] = None
     try:
         df = df.astype(type_dict)
     except KeyError as exc:
-        raise ValueError(f"""
+        raise ValueError(
+            f"""
 Expected column(s) missed, The dataset schema may
 have changed. Please investigate and amend the code.
 
 expected={''.join(type_dict.keys())}
 received={''.join(df.columns)}
-""") from exc
+"""
+        ) from exc
 
     df = df[keep_columns + ["timestamp", "state"]].set_index("timestamp")
 

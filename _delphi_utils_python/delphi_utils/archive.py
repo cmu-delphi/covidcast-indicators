@@ -26,25 +26,25 @@ Author: Eu Jing Chua
 Created: 2020-08-06
 """
 
-from contextlib import contextmanager
 import filecmp
-from glob import glob
-from os import remove, replace
-from os.path import join, basename, abspath
 import shutil
 import time
-from typing import Tuple, List, Dict, Optional
+from contextlib import contextmanager
+from glob import glob
+from os import remove, replace
+from os.path import abspath, basename, join
+from typing import Dict, List, Optional, Tuple
 
+import numpy as np
+import pandas as pd
 from boto3 import Session
 from boto3.exceptions import S3UploadFailedError
+from delphi_logger import get_structured_logger
 from git import Repo
 from git.refs.head import Head
-import pandas as pd
-import numpy as np
 
-from .utils import read_params
-from delphi_logger import get_structured_logger
 from .nancodes import Nans
+from .utils import read_params
 
 Files = List[str]
 FileDiffMap = Dict[str, Optional[str]]

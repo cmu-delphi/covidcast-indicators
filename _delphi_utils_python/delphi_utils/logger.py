@@ -6,4 +6,5 @@ Can be removed once this line
 
 no longer imports from `delphi_utils.logger` directly.
 """
-from delphi_logger import get_structured_logger # pylint: disable=unused-import
+
+from delphi_logger import get_structured_logger  # pylint: disable=unused-import

@@ -1,16 +1,17 @@
 """Indicator running utilities."""
 import argparse as ap
 import importlib
-import os
-from typing import Any, Callable, Dict, Optional
 import multiprocessing
+import os
 import time
-from .archive import ArchiveDiffer, archiver_from_params
-from delphi_logger import get_structured_logger
-from .utils import read_params, transfer_files, delete_move_files
-from .validator.validate import Validator
-from .validator.run import validator_from_params
+from typing import Any, Callable, Dict, Optional
 
+from delphi_logger import get_structured_logger
+
+from .archive import ArchiveDiffer, archiver_from_params
+from .utils import delete_move_files, read_params, transfer_files
+from .validator.run import validator_from_params
+from .validator.validate import Validator
 
 Params = Dict[str, Any]
 

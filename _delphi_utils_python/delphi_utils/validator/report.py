@@ -1,8 +1,11 @@
 """Validation output reports."""
 import sys
 from typing import List
+
 from delphi_logger import get_structured_logger
+
 from .errors import ValidationFailure
+
 
 class ValidationReport:
     """Class for reporting the results of validation."""

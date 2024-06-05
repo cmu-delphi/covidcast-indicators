@@ -5,30 +5,30 @@ This module should contain a function called `run_module`, that is executed
 when the module is run with `python -m MODULE_NAME`.
 """
 import atexit
+import time
 from datetime import datetime
 from multiprocessing import cpu_count
-import time
-from typing import Dict, Any
+from typing import Any, Dict
 
-from delphi_utils import (
-    add_prefix,
-    create_export_csv,
-    get_structured_logger
+from delphi_utils import add_prefix, create_export_csv, get_structured_logger, pool_and_threadedlogger
+
+from .backfill import merge_backfill_file, store_backfill_file
+from .constants import (
+    AGE_GROUPS,
+    END_FROM_TODAY_MINUS,
+    NONPARENT_GEO_RESOLUTIONS,
+    PARENT_GEO_RESOLUTIONS,
+    RAW_POSITIVE,
+    RAW_TEST_PER_DEVICE,
+    SENSORS,
+    SMOOTHED_POSITIVE,
+    SMOOTHED_TEST_PER_DEVICE,
+    SMOOTHERS,
 )
-from delphi_utils import pool_and_threadedlogger
-
-from .constants import (END_FROM_TODAY_MINUS,
-                        SMOOTHED_POSITIVE, RAW_POSITIVE,
-                        SMOOTHED_TEST_PER_DEVICE, RAW_TEST_PER_DEVICE,
-                        PARENT_GEO_RESOLUTIONS, SENSORS, SMOOTHERS, NONPARENT_GEO_RESOLUTIONS,
-                        AGE_GROUPS)
-from .generate_sensor import generate_sensor_for_parent_geo, generate_sensor_for_nonparent_geo
+from .generate_sensor import generate_sensor_for_nonparent_geo, generate_sensor_for_parent_geo
 from .geo_maps import geo_map
-from .pull import (pull_quidel_covidtest,
-                   check_export_start_date,
-                   check_export_end_date,
-                   update_cache_file)
-from .backfill import (store_backfill_file, merge_backfill_file)
+from .pull import check_export_end_date, check_export_start_date, pull_quidel_covidtest, update_cache_file
+
 
 def log_exit(start_time, stats, logger):
     """Log at program exit."""

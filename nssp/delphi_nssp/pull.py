@@ -11,7 +11,6 @@ from .constants import NEWLINE, SIGNALS, SIGNALS_MAP, TYPE_DICT
 
 def warn_string(df, type_dict):
     """Format the warning string."""
-
     warn = textwrap.dedent(
         f"""
         Expected column(s) missed, The dataset schema may

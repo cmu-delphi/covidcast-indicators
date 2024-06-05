@@ -24,13 +24,14 @@ the following structure:
 
 import time
 from datetime import datetime
-import numpy as np
-from delphi_utils import get_structured_logger, create_export_csv
-from delphi_utils.nancodes import add_default_nancodes
-from delphi_utils.geomap import GeoMapper
-import us
 
-from .constants import GEOS, SIGNALS, CSV_COLS
+import numpy as np
+import us
+from delphi_utils import create_export_csv, get_structured_logger
+from delphi_utils.geomap import GeoMapper
+from delphi_utils.nancodes import add_default_nancodes
+
+from .constants import CSV_COLS, GEOS, SIGNALS
 from .pull import pull_nssp_data
 
 

@@ -2,22 +2,18 @@
 """Functions for pulling NSSP ER data."""
 
 import textwrap
+
 import pandas as pd
 from sodapy import Socrata
 
-from .constants import (
-    SIGNALS,
-    NEWLINE,
-    SIGNALS_MAP,
-    TYPE_DICT,
-)
-
+from .constants import NEWLINE, SIGNALS, SIGNALS_MAP, TYPE_DICT
 
 
 def warn_string(df, type_dict):
     """Format the warning string."""
 
-    warn = textwrap.dedent(f"""
+    warn = textwrap.dedent(
+        f"""
         Expected column(s) missed, The dataset schema may
         have changed. Please investigate and amend the code.
 
@@ -26,7 +22,8 @@ def warn_string(df, type_dict):
 
         Columns available:
         {NEWLINE.join(sorted(df.columns))}
-    """)
+    """
+    )
 
     return warn
 

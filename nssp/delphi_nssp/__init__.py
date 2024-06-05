@@ -8,7 +8,6 @@ for testing.
 
 from __future__ import absolute_import
 
-from . import pull
-from . import run
+from . import pull, run
 
 __version__ = "0.1.0"

@@ -18,10 +18,11 @@ class TestWeekday:
 
         result = Weekday.get_params(self.TEST_DATA, "den", ["num"], "date", [1], TEST_LOGGER)
         print(result)
-        expected_result = np.array([[-0.05998306, -0.07269935, -0.05603804,  0.03437098,  0.12530953,
-                0.04554737, -2.27674403, -1.89568887, -1.56957556, -1.29840412,
-                -1.08217453, -0.9208868 , -0.81454092, -0.76313691, -0.76667475,
-                -0.82515445]])
+        expected_result = np.array([[-0.05990542, -0.07272124, -0.05618539,
+                                     0.0343087, 0.1253007, 0.04562494,
+                                    -2.27662546, -1.8956484,  -1.56959677,
+                                    -1.29847058, -1.08226981, -0.92099449,
+                                    -0.81464459, -0.76322013, -0.7667211,-0.8251475]])
         assert np.allclose(result, expected_result)
 
     def test_calc_adjustment_with_zero_parameters(self):

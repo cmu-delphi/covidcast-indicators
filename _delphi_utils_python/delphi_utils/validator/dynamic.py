@@ -320,7 +320,6 @@ class DynamicValidator:
         #
         # These variables are interpolated into the call to `api_df_or_error.query()`
         # below but pylint doesn't recognize that.
-        # pylint: disable=unused-variable
         reference_start_date = recent_cutoff_date - self.params.max_check_lookbehind
         if signal_type in self.params.smoothed_signals:
             # Add an extra 7 days to the reference period.
@@ -328,7 +327,6 @@ class DynamicValidator:
                 timedelta(days=7)
 
         reference_end_date = recent_cutoff_date - timedelta(days=1)
-        # pylint: enable=unused-variable
 
         # Subset API data to relevant range of dates.
         reference_api_df = api_df_or_error.query(

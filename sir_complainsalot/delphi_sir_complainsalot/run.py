@@ -48,7 +48,7 @@ def run_module():
         elapsed_time_in_seconds = elapsed_time_in_seconds)
 
 
-def split_complaints(complaints, n=49):  # pylint: disable=invalid-name
+def split_complaints(complaints, n=49):
     """Yield successive n-sized chunks from complaints list."""
     for i in range(0, len(complaints), n):
         yield complaints[i:i + n]

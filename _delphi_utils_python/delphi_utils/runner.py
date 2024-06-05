@@ -6,7 +6,7 @@ from typing import Any, Callable, Dict, Optional
 import multiprocessing
 import time
 from .archive import ArchiveDiffer, archiver_from_params
-from .logger import get_structured_logger
+from delphi_logger import get_structured_logger
 from .utils import read_params, transfer_files, delete_move_files
 from .validator.validate import Validator
 from .validator.run import validator_from_params

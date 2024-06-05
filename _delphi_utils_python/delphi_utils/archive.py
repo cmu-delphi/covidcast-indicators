@@ -43,7 +43,7 @@ import pandas as pd
 import numpy as np
 
 from .utils import read_params
-from .logger import get_structured_logger
+from delphi_logger import get_structured_logger
 from .nancodes import Nans
 
 Files = List[str]

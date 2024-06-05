@@ -15,7 +15,7 @@ from delphi_utils import (
     create_export_csv,
     get_structured_logger
 )
-from delphi_utils.logger import pool_and_threadedlogger
+from delphi_utils import pool_and_threadedlogger
 
 from .constants import (END_FROM_TODAY_MINUS,
                         SMOOTHED_POSITIVE, RAW_POSITIVE,

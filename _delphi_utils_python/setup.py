@@ -9,6 +9,7 @@ required = [
     "covidcast",
     "cvxpy",
     "darker[isort]~=2.1.1",
+    "delphi_logger @ git+https://github.com/cmu-delphi/delphi-logger",
     "epiweeks",
     "freezegun",
     "gitpython",
@@ -22,8 +23,7 @@ required = [
     "pytest",
     "requests-mock",
     "slackclient",
-    "structlog",
-    "xlrd"
+    "xlrd",
 ]
 
 setup(
@@ -42,5 +42,5 @@ setup(
         "Programming Language :: Python :: 3.8",
     ],
     packages=find_packages(),
-    package_data={'': ['data/20*/*.csv']}
+    package_data={"": ["data/20*/*.csv"]},
 )

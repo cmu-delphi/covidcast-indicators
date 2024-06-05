@@ -8,7 +8,7 @@ from .export import create_export_csv
 from .utils import read_params
 
 from .slack_notifier import SlackNotifier
-from .logger import get_structured_logger
+from delphi_logger import get_structured_logger, pool_and_threadedlogger
 from .geomap import GeoMapper
 from .smooth import Smoother
 from .signal import add_prefix

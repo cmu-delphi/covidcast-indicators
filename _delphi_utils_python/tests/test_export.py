@@ -321,8 +321,8 @@ class TestExport:
         ).astype({"geo_id": str, "sample_size": int})
         assert_frame_equal(df, expected_df)
 
-    @mock.patch("delphi_utils.logger")
-    def test_export_df_with_contradictory_missingness(self, mock_logger, tmp_path):
+    def test_export_df_with_contradictory_missingness(self, tmp_path):
+        mock_logger = mock.MagicMock()
 
         create_export_csv(
             df=self.DF3.copy(),

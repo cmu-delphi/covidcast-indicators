@@ -47,7 +47,6 @@ def pull_nssp_data(socrata_token: str):
     pd.DataFrame
         Dataframe as described above.
     """
-
     # Pull data from Socrata API
     client = Socrata("data.cdc.gov", socrata_token)
     results = []

@@ -5,14 +5,7 @@ import numpy as np
 import pandas as pd
 from sodapy import Socrata
 
-from .constants import (
-    SIGNALS,
-    PROVIDER_NORMS,
-    METRIC_SIGNALS,
-    SIG_DIGITS,
-    TYPE_DICT,
-    TYPE_DICT_METRIC,
-)
+from .constants import METRIC_SIGNALS, PROVIDER_NORMS, SIG_DIGITS, SIGNALS, TYPE_DICT, TYPE_DICT_METRIC
 
 
 def sig_digit_round(value, n_digits):
@@ -28,7 +21,7 @@ def sig_digit_round(value, n_digits):
     sign_mask = value < 0
     value[sign_mask] *= -1
     exponent = np.ceil(np.log10(value))
-    result = 10 ** exponent * np.round(value * 10 ** (-exponent), n_digits)
+    result = 10**exponent * np.round(value * 10 ** (-exponent), n_digits)
     result[sign_mask] *= -1
     result[zero_mask] = in_value[zero_mask]
     return result
@@ -59,9 +52,7 @@ def reformat(df, df_metric):
     Specifically the population and METRIC_SIGNAL columns, and renames date_start to timestamp.
     """
     # drop unused columns from df_metric
-    df_metric_core = df_metric.loc[
-        :, ["key_plot_id", "date_end", "population_served", *METRIC_SIGNALS]
-    ]
+    df_metric_core = df_metric.loc[:, ["key_plot_id", "date_end", "population_served", *METRIC_SIGNALS]]
     # get matching keys
     df_metric_core = df_metric_core.rename(columns={"date_end": "timestamp"})
     df_metric_core = df_metric_core.set_index(["key_plot_id", "timestamp"])
@@ -96,9 +87,7 @@ def check_endpoints(df):
         .reset_index(drop=True)
     )
     if not unique_provider_norms.equals(pd.DataFrame(PROVIDER_NORMS)):
-        raise ValueError(
-            f"There are new providers and/or norms. They are\n{unique_provider_norms}"
-        )
+        raise ValueError(f"There are new providers and/or norms. They are\n{unique_provider_norms}")
 
 
 def pull_nwss_data(token: str, logger):
@@ -124,8 +113,8 @@ def pull_nwss_data(token: str, logger):
     """
     # Pull data from Socrata API
     client = Socrata("data.cdc.gov", token)
-    results_concentration = client.get("g653-rqe2", limit=10 ** 10)
-    results_metric = client.get("2ew6-ywp6", limit=10 ** 10)
+    results_concentration = client.get("g653-rqe2", limit=10**10)
+    results_metric = client.get("2ew6-ywp6", limit=10**10)
     df_metric = pd.DataFrame.from_records(results_metric)
     df_concentration = pd.DataFrame.from_records(results_concentration)
     df_concentration = df_concentration.rename(columns={"date": "timestamp"})

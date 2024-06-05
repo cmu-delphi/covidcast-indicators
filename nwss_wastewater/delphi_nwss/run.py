@@ -26,12 +26,7 @@ import time
 from datetime import datetime
 
 import numpy as np
-from delphi_utils import (
-    GeoMapper,
-    S3ArchiveDiffer,
-    get_structured_logger,
-    create_export_csv,
-)
+from delphi_utils import GeoMapper, S3ArchiveDiffer, create_export_csv, get_structured_logger
 from delphi_utils.nancodes import add_default_nancodes
 
 from .constants import GEOS, METRIC_SIGNALS, PROVIDER_NORMS, SIGNALS
@@ -98,21 +93,15 @@ def run_module(params):
     df_pull = pull_nwss_data(socrata_token, logger)
     geomapper = GeoMapper()
     # iterate over the providers and the normalizations that they specifically provide
-    for provider, normalization in zip(
-        PROVIDER_NORMS["provider"], PROVIDER_NORMS["normalization"]
-    ):
+    for provider, normalization in zip(PROVIDER_NORMS["provider"], PROVIDER_NORMS["normalization"]):
         # copy by only taking the relevant subsection
-        df_prov_norm = df_pull[
-            (df_pull.provider == provider) & (df_pull.normalization == normalization)
-        ]
+        df_prov_norm = df_pull[(df_pull.provider == provider) & (df_pull.normalization == normalization)]
         df_prov_norm = df_prov_norm.drop(["provider", "normalization"], axis=1)
         for sensor in [*SIGNALS, *METRIC_SIGNALS]:
             full_sensor_name = sensor + "_" + provider + "_" + normalization
             df_prov_norm = df_prov_norm.rename(columns={sensor: full_sensor_name})
             for geo in GEOS:
-                logger.info(
-                    "Generating signal and exporting to CSV", metric=full_sensor_name
-                )
+                logger.info("Generating signal and exporting to CSV", metric=full_sensor_name)
                 if geo == "nation":
                     df_prov_norm["nation"] = "us"
                 agg_df = geomapper.aggregate_by_weighted_sum(
@@ -122,25 +111,17 @@ def run_module(params):
                     "timestamp",
                     "population_served",
                 )
-                agg_df = agg_df.rename(
-                    columns={geo: "geo_id", f"weighted_{full_sensor_name}": "val"}
-                )
+                agg_df = agg_df.rename(columns={geo: "geo_id", f"weighted_{full_sensor_name}": "val"})
                 # add se, sample_size, and na codes
                 agg_df = add_needed_columns(agg_df)
                 # actual export
-                dates = create_export_csv(
-                    agg_df, geo_res=geo, export_dir=export_dir, sensor=full_sensor_name
-                )
+                dates = create_export_csv(agg_df, geo_res=geo, export_dir=export_dir, sensor=full_sensor_name)
                 if "archive" in params:
                     _, common_diffs, new_files = arch_diff.diff_exports()
-                    to_archive = [
-                        f for f, diff in common_diffs.items() if diff is not None
-                    ]
+                    to_archive = [f for f, diff in common_diffs.items() if diff is not None]
                     to_archive += new_files
                     _, fails = arch_diff.archive_exports(to_archive)
-                    succ_common_diffs = {
-                        f: diff for f, diff in common_diffs.items() if f not in fails
-                    }
+                    succ_common_diffs = {f: diff for f, diff in common_diffs.items() if f not in fails}
                     arch_diff.filter_exports(succ_common_diffs)
                 if len(dates) > 0:
                     run_stats.append((max(dates), len(dates)))

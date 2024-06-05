@@ -31,20 +31,14 @@ from delphi_utils import create_export_csv, get_structured_logger
 from delphi_utils.geomap import GeoMapper
 from delphi_utils.nancodes import add_default_nancodes
 
-from .constants import CSV_COLS, GEOS, SIGNALS
+from .constants import AUXILIARY_COLS, CSV_COLS, GEOS, SIGNALS
 from .pull import pull_nssp_data
 
 
 def add_needed_columns(df, col_names=None):
     """Short util to add expected columns not found in the dataset."""
     if col_names is None:
-        col_names = [
-            "se",
-            "sample_size",
-            "missing_val",
-            "missing_se",
-            "missing_sample_size",
-        ]
+        col_names = AUXILIARY_COLS
 
     for col_name in col_names:
         df[col_name] = np.nan

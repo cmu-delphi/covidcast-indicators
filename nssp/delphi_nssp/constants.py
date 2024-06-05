@@ -22,15 +22,14 @@ SIGNALS_MAP = {
 SIGNALS = [val for (key, val) in SIGNALS_MAP.items()]
 NEWLINE = "\n"
 
-CSV_COLS = [
-    "geo_id",
-    "val",
+AUXILIARY_COLS = [
     "se",
     "sample_size",
     "missing_val",
     "missing_se",
     "missing_sample_size",
 ]
+CSV_COLS = ["geo_id", "val"] + AUXILIARY_COLS
 
 TYPE_DICT = {key: float for key in SIGNALS}
 TYPE_DICT.update(

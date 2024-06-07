@@ -3,12 +3,12 @@
 Authors: Dmitry Shemetov @dshemetov, James Sharpnack @jsharpna, Maria Jahja
 """
 
-from os.path import join
 from collections import defaultdict
+from os.path import join
 from typing import Iterator, List, Literal, Optional, Set, Union
 
-import pandas as pd
 import importlib_resources
+import pandas as pd
 from pandas.api.types import is_string_dtype
 
 

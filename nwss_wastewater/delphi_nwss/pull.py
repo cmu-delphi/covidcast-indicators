@@ -47,9 +47,9 @@ received={''.join(sorted(df.columns))}
 
 
 def reformat(df, df_metric):
-    """Add columns from df_metric to df, and rename some columns.
+    """Combine df_metric and df
 
-    Specifically the population and METRIC_SIGNAL columns, and renames date_start to timestamp.
+    Move population and METRIC_SIGNAL columns from df_metric to df, and rename date_start to timestamp.
     """
     # drop unused columns from df_metric
     df_metric_core = df_metric.loc[:, ["key_plot_id", "date_end", "population_served", *METRIC_SIGNALS]]
@@ -57,6 +57,7 @@ def reformat(df, df_metric):
     df_metric_core = df_metric_core.rename(columns={"date_end": "timestamp"})
     df_metric_core = df_metric_core.set_index(["key_plot_id", "timestamp"])
     df = df.set_index(["key_plot_id", "timestamp"])
+    df = df.sort_index()
 
     df = df.join(df_metric_core)
     df = df.reset_index()
@@ -64,19 +65,21 @@ def reformat(df, df_metric):
 
 
 def add_identifier_columns(df):
-    """Add identifier columns.
+    """Parse `key_plot_id` to create several key columns
 
-    Add columns to get more detail than key_plot_id gives;
+    `key_plot_id` is of format "<provider>_<state>_<plant id>_wwtp_id". We split by `_` and put each resulting item into its own column.    Add columns to get more detail than key_plot_id gives;
     specifically, state, and `provider_normalization`, which gives the signal identifier
     """
-    # a pair of alphanumerics surrounded by _
+    df = df.copy()
+    # a pair of alphanumerics surrounded by _; for example, it matches "_al_", and not "_3a_" and returns just the two letters "al"
     df["state"] = df.key_plot_id.str.extract(r"_(\w\w)_")
-    # anything followed by state ^
+    # anything followed by state as described just above. For example "CDC_VERILY_al" pulls out "CDC_VERILY"
     df["provider"] = df.key_plot_id.str.extract(r"(.*)_[a-z]{2}_")
     df["signal_name"] = df.provider + "_" + df.normalization
+    return df
 
 
-def check_endpoints(df):
+def check_expected_signals(df):
     """Make sure that there aren't any new signals that we need to add."""
     # compare with existing column name checker
     # also add a note about handling errors
@@ -103,8 +106,7 @@ def pull_nwss_data(token: str, logger):
     ----------
     socrata_token: str
         My App Token for pulling the NWSS data (could be the same as the nchs data)
-    test_file: Optional[str]
-        When not null, name of file from which to read test data
+    logger: the structured logger
 
     Returns
     -------
@@ -127,7 +129,7 @@ def pull_nwss_data(token: str, logger):
     df = df_concentration[~df_concentration["normalization"].isna()]
 
     # Pull 2 letter state labels out of the key_plot_id labels.
-    add_identifier_columns(df)
+    df = add_identifier_columns(df)
 
     # move population and metric signals over to df
     df = reformat(df, df_metric)
@@ -139,7 +141,7 @@ def pull_nwss_data(token: str, logger):
     # likely introduced by dates only present in one and not the other; even
     # otherwise, best to assume some value rather than break the data)
     df.population_served = df.population_served.ffill()
-    check_endpoints(df)
+    check_expected_signals(df)
 
     keep_columns = [
         *SIGNALS,

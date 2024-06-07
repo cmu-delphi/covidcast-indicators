@@ -109,7 +109,7 @@ def test_formatting():
 
 def test_identifier_colnames():
     test_df = pd.read_csv("test_data/conc_data.csv", index_col=0)
-    add_identifier_columns(test_df)
+    test_df = add_identifier_columns(test_df)
     assert all(test_df.state.unique() == ["ak", "tn"])
     assert all(test_df.provider.unique() == ["CDC_BIOBOT", "WWS"])
     # the only cases where the signal name is wrong is when normalization isn't defined

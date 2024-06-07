@@ -2,7 +2,7 @@
 """Functions to call when running the function.
 
 This module should contain a function called `run_module`, that is executed
-when the module is run with `python -m MODULE_NAME`.  `run_module`'s lone argument should be a
+when the module is run with `python -m delphi_nwss`.  `run_module`'s lone argument should be a
 nested dictionary of parameters loaded from the params.json file.  We expect the `params` to have
 the following structure:
     - "common":
@@ -16,17 +16,17 @@ the following structure:
             `delphi_utils.add_prefix()`
         - "test_file" (optional): str, name of file from which to read test data
         - "socrata_token": str, authentication for upstream data pull
-    - "archive" (optional): if provided, output will be archived with S3
-        - "aws_credentials": Dict[str, str], AWS login credentials (see S3 documentation)
-        - "bucket_name: str, name of S3 bucket to read/write
-        - "cache_dir": str, directory of locally cached data
 """
 
 import time
 from datetime import datetime
 
 import numpy as np
-from delphi_utils import GeoMapper, S3ArchiveDiffer, create_export_csv, get_structured_logger
+from delphi_utils import (
+    GeoMapper,
+    get_structured_logger,
+    create_export_csv,
+)
 from delphi_utils.nancodes import add_default_nancodes
 
 from .constants import GEOS, METRIC_SIGNALS, PROVIDER_NORMS, SIGNALS
@@ -37,6 +37,10 @@ def add_needed_columns(df, col_names=None):
     """Short util to add expected columns not found in the dataset."""
     if col_names is None:
         col_names = ["se", "sample_size"]
+    else:
+        assert "geo_value" not in col_names
+        assert "time_value" not in col_names
+        assert "value" not in col_names
 
     for col_name in col_names:
         df[col_name] = np.nan
@@ -77,52 +81,44 @@ def run_module(params):
     )
     export_dir = params["common"]["export_dir"]
     socrata_token = params["indicator"]["socrata_token"]
-    if "archive" in params:
-        arch_diff = S3ArchiveDiffer(
-            params["archive"]["cache_dir"],
-            export_dir,
-            params["archive"]["bucket_name"],
-            "nwss_wastewater",
-            params["archive"]["aws_credentials"],
-        )
-        arch_diff.update_cache()
-
     run_stats = []
     ## build the base version of the signal at the most detailed geo level you can get.
     ## compute stuff here or farm out to another function or file
     df_pull = pull_nwss_data(socrata_token, logger)
     geomapper = GeoMapper()
     # iterate over the providers and the normalizations that they specifically provide
-    for provider, normalization in zip(PROVIDER_NORMS["provider"], PROVIDER_NORMS["normalization"]):
+    for provider, normalization in zip(
+        PROVIDER_NORMS["provider"], PROVIDER_NORMS["normalization"]
+    ):
         # copy by only taking the relevant subsection
-        df_prov_norm = df_pull[(df_pull.provider == provider) & (df_pull.normalization == normalization)]
+        df_prov_norm = df_pull[
+            (df_pull.provider == provider) & (df_pull.normalization == normalization)
+        ]
         df_prov_norm = df_prov_norm.drop(["provider", "normalization"], axis=1)
         for sensor in [*SIGNALS, *METRIC_SIGNALS]:
             full_sensor_name = sensor + "_" + provider + "_" + normalization
-            df_prov_norm = df_prov_norm.rename(columns={sensor: full_sensor_name})
             for geo in GEOS:
-                logger.info("Generating signal and exporting to CSV", metric=full_sensor_name)
+                logger.info(
+                    "Generating signal and exporting to CSV", metric=full_sensor_name
+                )
                 if geo == "nation":
                     df_prov_norm["nation"] = "us"
                 agg_df = geomapper.aggregate_by_weighted_sum(
                     df_prov_norm,
                     geo,
-                    full_sensor_name,
+                    sensor,
                     "timestamp",
                     "population_served",
                 )
-                agg_df = agg_df.rename(columns={geo: "geo_id", f"weighted_{full_sensor_name}": "val"})
+                agg_df = agg_df.rename(
+                    columns={geo: "geo_id", f"weighted_{sensor}": "val"}
+                )
                 # add se, sample_size, and na codes
                 agg_df = add_needed_columns(agg_df)
                 # actual export
-                dates = create_export_csv(agg_df, geo_res=geo, export_dir=export_dir, sensor=full_sensor_name)
-                if "archive" in params:
-                    _, common_diffs, new_files = arch_diff.diff_exports()
-                    to_archive = [f for f, diff in common_diffs.items() if diff is not None]
-                    to_archive += new_files
-                    _, fails = arch_diff.archive_exports(to_archive)
-                    succ_common_diffs = {f: diff for f, diff in common_diffs.items() if f not in fails}
-                    arch_diff.filter_exports(succ_common_diffs)
+                dates = create_export_csv(
+                    agg_df, geo_res=geo, export_dir=export_dir, sensor=full_sensor_name
+                )
                 if len(dates) > 0:
                     run_stats.append((max(dates), len(dates)))
     ## log this indicator run

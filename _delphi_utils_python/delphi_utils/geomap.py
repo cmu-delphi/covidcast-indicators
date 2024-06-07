@@ -131,14 +131,14 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
                 self._crosswalks[from_code][to_code] = \
                     self._load_crosswalk_from_file(from_code,
                                                    to_code,
-                                                   join(f"data/{census_year}", file_path)
+                                                   join("data", f"{census_year}", file_path)
                                                    )
 
         for geo_type in self._geos:
             self._geo_sets[geo_type] = self._load_geo_values(geo_type)
 
     def _load_crosswalk_from_file(self, from_code, to_code, data_path):
-        stream = importlib_resources.files(__name__).joinpath(data_path)
+        stream = importlib_resources.files(__name__) / data_path
         dtype = {
             from_code: str,
             to_code: str,

@@ -22,7 +22,7 @@ def moving_avg(x, y, k=7):
     """
     n = len(y)
     sy = np.zeros((n - k + 1, 1))
-    for i in range(len(sy)):
+    for i in range(len(sy)):  # pylint: disable=consider-using-enumerate
         sy[i] = np.mean(y[i : (i + k)])
 
     return x[(k - 1) :], sy
@@ -39,7 +39,7 @@ def padded_moving_avg(y, k=7):
     """
     n = len(y)
     sy = np.zeros((n - k + 1, 1))
-    for i in range(len(sy)):
+    for i in range(len(sy)):  # pylint: disable=consider-using-enumerate
         sy[i] = np.mean(y[i : (i + k)])
 
     # pad first k obs with 0

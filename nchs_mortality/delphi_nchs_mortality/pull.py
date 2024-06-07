@@ -22,7 +22,7 @@ def standardize_columns(df):
     return df.rename(columns=dict(rename_pairs))
 
 
-def pull_nchs_mortality_data(token: str, test_file: Optional[str]=None):
+def pull_nchs_mortality_data(socrata_token: str, test_file: Optional[str] = None):
     """Pull the latest NCHS Mortality data, and conforms it into a dataset.
 
     The output dataset has:
@@ -38,7 +38,7 @@ def pull_nchs_mortality_data(token: str, test_file: Optional[str]=None):
 
     Parameters
     ----------
-    token: str
+    socrata_token: str
         My App Token for pulling the NCHS mortality data
     test_file: Optional[str]
         When not null, name of file from which to read test data
@@ -57,7 +57,7 @@ def pull_nchs_mortality_data(token: str, test_file: Optional[str]=None):
         df = pd.read_csv("./test_data/%s"%test_file)
     else:
         # Pull data from Socrata API
-        client = Socrata("data.cdc.gov", token)
+        client = Socrata("data.cdc.gov", socrata_token)
         results = client.get("r8kw-7aab", limit=10**10)
         df = pd.DataFrame.from_records(results)
         # drop "By Total" rows
@@ -96,8 +96,6 @@ Columns available:
 {NEWLINE.join(df.columns)}
 """) from exc
 
-    # Drop rows for locations outside US
-    df = df[df["state"] != "United States"]
     df = df[keep_columns + ["timestamp", "state"]].set_index("timestamp")
 
     # NCHS considers NYC as an individual state, however, we want it included
@@ -124,6 +122,14 @@ Columns available:
     # Add population info
     keep_columns.extend(["timestamp", "geo_id", "population"])
     gmpr = GeoMapper()
-    df = gmpr.add_population_column(df, "state_name", geocode_col="state")
-    df = gmpr.add_geocode(df, "state_name", "state_id", from_col="state", new_col="geo_id")
+    # Map state to geo_id, but set dropna=False as we also have national data
+    df = gmpr.add_population_column(df, "state_name",
+                                    geocode_col="state", dropna=False)
+    df = gmpr.add_geocode(df, "state_name", "state_id",
+                          from_col="state", new_col="geo_id", dropna=False)
+    # Manually set geo_id and population for national data
+    national_pop = gmpr.get_crosswalk("nation", "pop")
+    us_pop = national_pop.loc[national_pop["nation"] == "us"]["pop"][0]
+    df.loc[df["state"] == "United States", "population"] = us_pop
+    df.loc[df["state"] == "United States", "geo_id"] = "us"
     return df[keep_columns]

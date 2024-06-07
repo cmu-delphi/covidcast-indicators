@@ -2,24 +2,25 @@ from setuptools import setup
 from setuptools import find_packages
 
 with open("README.md", "r") as f:
-  long_description = f.read()
+    long_description = f.read()
 
 required = [
     "boto3",
     "covidcast",
     "cvxpy",
+    "darker[isort]~=2.1.1",
     "epiweeks",
     "freezegun",
     "gitpython",
     "importlib_resources>=1.3",
     "mock",
-    "moto",
+    "moto~=4.2.14",
     "numpy",
     "pandas>=1.1.0",
     "pydocstyle",
     "pylint==2.8.3",
-    "pytest",
     "pytest-cov",
+    "pytest",
     "requests-mock",
     "slackclient",
     "structlog",
@@ -28,7 +29,7 @@ required = [
 
 setup(
     name="delphi_utils",
-    version="0.3.21",
+    version="0.3.23",
     description="Shared Utility Functions for Indicators",
     long_description=long_description,
     long_description_content_type="text/markdown",

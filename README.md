@@ -4,7 +4,7 @@
 
 In early April 2020, Delphi developed a uniform data schema for [a new Epidata endpoint focused on COVID-19](https://cmu-delphi.github.io/delphi-epidata/api/covidcast.html). Our intent was to provide signals that would track in real-time and in fine geographic granularity all facets of the COVID-19 pandemic, aiding both nowcasting and forecasting. Delphi's long history in tracking and forecasting influenza made us uniquely situated to provide access to data streams not available anywhere else, including medical claims data, electronic medical records, lab test records, massive public surveys, and internet search trends. We also process commonly-used publicly-available data sources, both for user convenience and to provide data versioning for sources that do not track revisions themselves.
 
-Each data stream arrives in a different format using a different delivery technique, be it sftp, an access-controlled API, or an email attachment. The purpose of each pipeline in this repository is to fetch the raw source data, extract informative aggregate signals, and output those signals---which we call **COVID-19 indicators**---in a common format for upload to the [COVIDcast API](https://cmu-delphi.github.io/delphi-epidata/api/covidcast.html). 
+Each data stream arrives in a different format using a different delivery technique, be it sftp, an access-controlled API, or an email attachment. The purpose of each pipeline in this repository is to fetch the raw source data, extract informative aggregate signals, and output those signals---which we call **COVID-19 indicators**---in a common format for upload to the [COVIDcast API](https://cmu-delphi.github.io/delphi-epidata/api/covidcast.html).
 
 For client access to the API, along with a variety of other utilities, see our [R](https://cmu-delphi.github.io/covidcast/covidcastR/) and [Python](https://cmu-delphi.github.io/covidcast/covidcast-py/html/) packages.
 
@@ -13,18 +13,19 @@ For interactive visualizations (of a subset of the available indicators), see ou
 ## Organization
 
 Utilities:
-* `_delphi_utils_python` - common behaviors
-* `_template_python` & `_template_r` - starting points for new data sources
-* `ansible` & `jenkins` - automated testing and deployment
-* `sir_complainsalot` - a Slack bot to check for missing data
+
+- `_delphi_utils_python` - common behaviors
+- `_template_python` & `_template_r` - starting points for new data sources
+- `ansible` & `jenkins` - automated testing and deployment
+- `sir_complainsalot` - a Slack bot to check for missing data
 
 Indicator pipelines: all remaining directories.
 
-Each indicator pipeline includes its own documentation. 
+Each indicator pipeline includes its own documentation.
 
-* Consult README.md for directions to install, lint, test, and run the pipeline for that indicator. 
-* Consult REVIEW.md for the checklist to use for code reviews. 
-* Consult DETAILS.md (if present) for implementation details, including handling of corner cases.
+- Consult README.md for directions to install, lint, test, and run the pipeline for that indicator.
+- Consult REVIEW.md for the checklist to use for code reviews.
+- Consult DETAILS.md (if present) for implementation details, including handling of corner cases.
 
 ## Development
 
@@ -34,6 +35,28 @@ Each indicator pipeline includes its own documentation.
 2. PR into `main` and assign a reviewer (or tag someone) to get feedback on your change. List the issue number under `Fixes` if your change resolves an existing [GitHub Issue](https://github.com/cmu-delphi/covidcast-indicators/issues).
 3. Add new commits to your branch in response to feedback.
 4. When approved, tag an admin to merge the PR. Let them know if this change should be released immediately, at a set future date, or if it can just go along for the ride whenever the next release happens.
+
+### Linting and Formatting
+
+Each indicator has a `make lint` command to check for linting errors and a `make
+format` command to incrementally format your code (using
+[darker](https://github.com/akaihola/darker)). These are both automated with a
+[Github Action](.github/workflows/python-ci.yml).
+
+If you get the error `ERROR:darker.git:fatal: Not a valid commit name <hash>`,
+then it's likely because your local main branch is not up to date; either you
+need to rebase or merge. Note that `darker` reads from `pyproject.toml` for
+default settings.
+
+If the lines you change are in a file that uses 2 space indentation, `darker`
+will indent the lines around your changes and not the rest, which will likely
+break the code; in that case, you should probably just pass the whole file
+through black. You can do that with the following command (using the same
+virtual environment as above):
+
+```sh
+env/bin/black <file>
+```
 
 ## Release Process
 

@@ -1,9 +1,10 @@
-"""Structured logger utility for creating JSON logs."""
+"""Structured logger utility for creating JSON logs.
 
-# the Delphi group uses two ~identical versions of this file.
-# try to keep them in sync with edits, for sanity.
-#   https://github.com/cmu-delphi/covidcast-indicators/blob/main/_delphi_utils_python/delphi_utils/logger.py  # pylint: disable=line-too-long
-#   https://github.com/cmu-delphi/delphi-epidata/blob/dev/src/common/logger.py
+The Delphi group uses two ~identical versions of this file.
+Try to keep them in sync with edits, for sanity.
+  https://github.com/cmu-delphi/covidcast-indicators/blob/main/_delphi_utils_python/delphi_utils/logger.py
+  https://github.com/cmu-delphi/delphi-epidata/blob/dev/src/common/logger.py
+"""
 
 import contextlib
 import logging

@@ -3,17 +3,16 @@
 Authors: Dmitry Shemetov @dshemetov, James Sharpnack @jsharpna, Maria Jahja
 """
 
-# pylint: disable=too-many-lines
-from os.path import join
 from collections import defaultdict
+from os.path import join
 from typing import Iterator, List, Literal, Optional, Set, Union
 
+import importlib_resources
 import pandas as pd
-import pkg_resources
 from pandas.api.types import is_string_dtype
 
 
-class GeoMapper:  # pylint: disable=too-many-public-methods
+class GeoMapper:
     """Geo mapping tools commonly used in Delphi.
 
     The GeoMapper class provides utility functions for translating between different
@@ -154,7 +153,7 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         for from_code, to_codes in self.CROSSWALK_FILENAMES.items():
             for to_code, file_path in to_codes.items():
                 self._crosswalks[from_code][to_code] = self._load_crosswalk_from_file(
-                    from_code, to_code, join(f"data/{census_year}", file_path)
+                    from_code, to_code, join("data", f"{census_year}", file_path)
                 )
 
         for geo_type in self._geos:
@@ -163,7 +162,7 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
     def _load_crosswalk_from_file(
         self, from_code: str, to_code: str, data_path: str
     ) -> pd.DataFrame:
-        stream = pkg_resources.resource_stream(__name__, data_path)
+        stream = importlib_resources.files(__name__) / data_path
         dtype = {
             from_code: str,
             to_code: str,
@@ -624,7 +623,7 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         if contained_geocode_type == "state":
             if container_geocode_type == "nation" and container_geocode == "us":
                 crosswalk = self._crosswalks["state"]["state"]
-                return set(crosswalk["state_id"])  # pylint: disable=unsubscriptable-object
+                return set(crosswalk["state_id"])
             if container_geocode_type == "hhs":
                 crosswalk_hhs = self._crosswalks["fips"]["hhs"]
                 crosswalk_state = self._crosswalks["fips"]["state"]

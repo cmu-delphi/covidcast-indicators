@@ -93,7 +93,7 @@ class Weekday:
         for scale in scales:
             try:
                 prob = cp.Problem(cp.Minimize((-ll + lmbda * penalty) / scale))
-                _ = prob.solve()
+                _ = prob.solve(solver=cp.CLARABEL)
                 return b.value
             except SolverError:
                 # If the magnitude of the objective function is too large, an error is

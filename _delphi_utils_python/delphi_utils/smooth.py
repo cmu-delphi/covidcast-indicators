@@ -304,17 +304,11 @@ class Smoother:  # pylint: disable=too-many-instance-attributes
         n = len(signal)
         signal_smoothed = np.zeros_like(signal)
         # A is the regression design matrix
-        A = np.vstack([np.ones(n), np.arange(n)]).T  # pylint: disable=invalid-name
+        A = np.vstack([np.ones(n), np.arange(n)]).T
         for idx in range(n):
-            weights = np.exp(
-                -((np.arange(idx + 1) - idx) ** 2) / self.gaussian_bandwidth
-            )
-            AwA = np.dot(  # pylint: disable=invalid-name
-                A[: (idx + 1), :].T * weights, A[: (idx + 1), :]
-            )
-            Awy = np.dot(  # pylint: disable=invalid-name
-                A[: (idx + 1), :].T * weights, signal[: (idx + 1)].reshape(-1, 1)
-            )
+            weights = np.exp(-((np.arange(idx + 1) - idx) ** 2) / self.gaussian_bandwidth)
+            AwA = np.dot(A[: (idx + 1), :].T * weights, A[: (idx + 1), :])
+            Awy = np.dot(A[: (idx + 1), :].T * weights, signal[: (idx + 1)].reshape(-1, 1))
             try:
                 beta = np.linalg.solve(AwA, Awy)
                 signal_smoothed[idx] = np.dot(A[: (idx + 1), :], beta)[-1]
@@ -389,9 +383,7 @@ class Smoother:  # pylint: disable=too-many-instance-attributes
         if nr > 0:
             warnings.warn("The filter is no longer causal.")
 
-        A = np.vstack(  # pylint: disable=invalid-name
-            [np.arange(nl, nr + 1) ** j for j in range(poly_fit_degree + 1)]
-        ).T
+        A = np.vstack([np.arange(nl, nr + 1) ** j for j in range(poly_fit_degree + 1)]).T
 
         if self.gaussian_bandwidth is None:
             mat_inverse = np.linalg.inv(A.T @ A) @ A.T
@@ -406,7 +398,7 @@ class Smoother:  # pylint: disable=too-many-instance-attributes
             coeffs[i] = (mat_inverse @ basis_vector)[0]
         return coeffs
 
-    def savgol_smoother(self, signal):  # pylint: disable=inconsistent-return-statements
+    def savgol_smoother(self, signal):
         """Smooth signal with the savgol smoother.
 
         Returns a convolution of the 1D signal with the Savitzky-Golay coefficients, respecting

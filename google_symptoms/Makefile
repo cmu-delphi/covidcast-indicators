@@ -17,8 +17,11 @@ install-ci: venv
 	pip install .
 
 lint:
-	. env/bin/activate; pylint $(dir)
+	. env/bin/activate; pylint $(dir) --rcfile=../pyproject.toml
 	. env/bin/activate; pydocstyle $(dir)
+
+format:
+	. env/bin/activate; darker $(dir)
 
 test:
 	. env/bin/activate ;

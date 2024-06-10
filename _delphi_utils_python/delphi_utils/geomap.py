@@ -1,74 +1,106 @@
 """Contains geographic mapping tools.
 
 Authors: Dmitry Shemetov @dshemetov, James Sharpnack @jsharpna, Maria Jahja
-Created: 2020-06-01
-
-TODO:
-- use a caching utility to store the crossfiles
-  see: https://github.com/cmu-delphi/covidcast-indicators/issues/282
 """
-# pylint: disable=too-many-lines
+
 from os.path import join
 from collections import defaultdict
+from typing import Iterator, List, Literal, Optional, Set, Union
 
 import pandas as pd
 import pkg_resources
 from pandas.api.types import is_string_dtype
 
 
-class GeoMapper:  # pylint: disable=too-many-public-methods
+class GeoMapper:
     """Geo mapping tools commonly used in Delphi.
 
     The GeoMapper class provides utility functions for translating between different
     geocodes. Supported geocodes:
-    - zip: zip5, a length 5 str of 0-9 with leading 0's
-    - fips: state code and county code, a length 5 str of 0-9 with leading 0's
-    - msa: metropolitan statistical area, a length 5 str of 0-9 with leading 0's
-    - state_code: state code, a str of 0-9
-    - state_id: state id, a str of A-Z
-    - hrr: hospital referral region, an int 1-500
 
-    Mappings:
-    - [x] zip -> fips : population weighted
-    - [x] zip -> hrr : unweighted
-    - [x] zip -> msa : unweighted
-    - [x] zip -> state
-    - [x] zip -> hhs
-    - [x] zip -> population
-    - [x] state code -> hhs
-    - [x] fips -> state : unweighted
-    - [x] fips -> msa : unweighted
-    - [x] fips -> megacounty
-    - [x] fips -> hrr
-    - [x] fips -> hhs
-    - [x] fips -> chng-fips
-    - [x] chng-fips -> state : unweighted
-    - [x] nation
-    - [ ] zip -> dma (postponed)
+    - zip:          five characters [0-9] with leading 0's, e.g. "33626"
+                    also known as zip5 or zip code
+    - fips:         five characters [0-9] with leading 0's, e.g. "12057"
+                    the first two digits are the state FIPS code and the last
+                    three are the county FIPS code
+    - msa:          five characters [0-9] with leading 0's, e.g. "90001"
+                    also known as metropolitan statistical area
+    - state_code:   two characters [0-9], e.g "06"
+    - state_id:     two characters [A-Z], e.g "CA"
+    - state_name:   human-readable name, e.g "California"
+    - state_*:      we use this below to refer to the three above geocodes in aggregate
+    - hrr:          an integer from 1-500, also known as hospital
+                    referral region
+    - hhs:          an integer from 1-10, also known as health and human services region
+                    https://www.hhs.gov/about/agencies/iea/regional-offices/index.html
 
-    The GeoMapper instance loads crosswalk tables from the package data_dir. The
-    crosswalk tables are assumed to have been built using the geo_data_proc.py script
-    in data_proc/geomap. If a mapping between codes is NOT one to many, then the table has
-    just two colums. If the mapping IS one to many, then a third column, the weight column,
-    exists (e.g. zip, fips, weight; satisfying (sum(weights) where zip==ZIP) == 1).
+    Valid mappings:
+
+    From            To              Population Weighted
+    zip             fips            Yes
+    zip             hrr             No
+    zip             msa             Yes
+    zip             state_*         Yes
+    zip             hhs             Yes
+    zip             population      --
+    zip             nation          No
+    state_*         state_*         No
+    state_*         hhs             No
+    state_*         population      --
+    state_*         nation          No
+    fips            state_*         No
+    fips            msa             No
+    fips            megacounty      No
+    fips            hrr             Yes
+    fips            hhs             No
+    fips            chng-fips       No
+    fips            nation          No
+    chng-fips       state_*         No
+
+    Crosswalk Tables
+    ================
+
+    The GeoMapper instance loads pre-generated crosswalk tables (built by the
+    script in `data_proc/geomap/geo_data_proc.py`). If a mapping between codes
+    is one to one or many to one, then the table has just two columns. If the
+    mapping is one to many, then a weight column is provided, which gives the
+    fractional population contribution of a source_geo to the target_geo. The
+    weights satisfy the condition that df.groupby(from_code).sum(weight) == 1.0
+    for all values of from_code.
+
+    Aggregation
+    ===========
+
+    The GeoMapper class provides functions to aggregate data from one geocode
+    to another. The aggregation can be a simple one-to-one mapping or a
+    weighted aggregation. The weighted aggregation is useful when the data
+    being aggregated is a population-weighted quantity, such as visits or
+    cases. The aggregation is done by multiplying the data columns by the
+    weights and summing over the data columns. Note that the aggregation does
+    not adjust the aggregation for missing or NA values in the data columns,
+    which is equivalent to a zero-fill.
 
     Example Usage
-    ==========
+    =============
     The main GeoMapper object loads and stores crosswalk dataframes on-demand.
 
-    When replacing geocodes with a new one an aggregation step is performed on the data columns
-    to merge entries  (i.e. in the case of a many to one mapping or a weighted mapping). This
-    requires a specification of the data columns, which are assumed to be all the columns that
-    are not the geocodes or the date column specified in date_col.
+    When replacing geocodes with a new one an aggregation step is performed on
+    the data columns to merge entries  (i.e. in the case of a many to one
+    mapping or a weighted mapping). This requires a specification of the data
+    columns, which are assumed to be all the columns that are not the geocodes
+    or the date column specified in date_col.
 
     Example 1: to add a new column with a new geocode, possibly with weights:
     > gmpr = GeoMapper()
-    > df = gmpr.add_geocode(df, "fips", "zip", from_col="fips", new_col="geo_id",
+    > df = gmpr.add_geocode(df, "fips", "zip",
+                            from_col="fips", new_col="geo_id",
                             date_col="timestamp", dropna=False)
 
-    Example 2: to replace a geocode column with a new one, aggregating the data with weights:
+    Example 2: to replace a geocode column with a new one, aggregating the data
+    with weights:
     > gmpr = GeoMapper()
-    > df = gmpr.replace_geocode(df, "fips", "zip", from_col="fips", new_col="geo_id",
+    > df = gmpr.replace_geocode(df, "fips", "zip",
+                                from_col="fips", new_col="geo_id",
                                 date_col="timestamp", dropna=False)
     """
 
@@ -79,7 +111,7 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
             "msa": "zip_msa_table.csv",
             "pop": "zip_pop.csv",
             "state": "zip_state_code_table.csv",
-            "hhs": "zip_hhs_table.csv"
+            "hhs": "zip_hhs_table.csv",
         },
         "fips": {
             "chng-fips": "fips_chng-fips_table.csv",
@@ -90,23 +122,16 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
             "state": "fips_state_table.csv",
             "hhs": "fips_hhs_table.csv",
         },
+        "hhs": {"pop": "hhs_pop.csv"},
         "chng-fips": {"state": "chng-fips_state_table.csv"},
         "state": {"state": "state_codes_table.csv"},
-        "state_code": {
-            "hhs": "state_code_hhs_table.csv",
-            "pop": "state_pop.csv"
-        },
-        "state_id": {
-            "pop": "state_pop.csv"
-        },
-        "state_name": {
-            "pop": "state_pop.csv"
-        },
-        "hhs": {"pop": "hhs_pop.csv"},
+        "state_code": {"hhs": "state_code_hhs_table.csv", "pop": "state_pop.csv"},
+        "state_id": {"pop": "state_pop.csv"},
+        "state_name": {"pop": "state_pop.csv"},
         "nation": {"pop": "nation_pop.csv"},
     }
 
-    def __init__(self, census_year=2020):
+    def __init__(self, census_year: int = 2020):
         """Initialize geomapper.
 
         Parameters
@@ -120,37 +145,35 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         # Include all unique geos from first-level and second-level keys in
         # CROSSWALK_FILENAMES, with a few exceptions
         self._geos = {
-                subkey for mainkey in self.CROSSWALK_FILENAMES
-                for subkey in self.CROSSWALK_FILENAMES[mainkey]
-            }.union(
-                set(self.CROSSWALK_FILENAMES.keys())
-            ) - set(["state", "pop"])
+            subkey
+            for mainkey in self.CROSSWALK_FILENAMES
+            for subkey in self.CROSSWALK_FILENAMES[mainkey]
+        }.union(set(self.CROSSWALK_FILENAMES.keys())) - {"state", "pop"}
 
         for from_code, to_codes in self.CROSSWALK_FILENAMES.items():
             for to_code, file_path in to_codes.items():
-                self._crosswalks[from_code][to_code] = \
-                    self._load_crosswalk_from_file(from_code,
-                                                   to_code,
-                                                   join(f"data/{census_year}", file_path)
-                                                   )
+                self._crosswalks[from_code][to_code] = self._load_crosswalk_from_file(
+                    from_code, to_code, join(f"data/{census_year}", file_path)
+                )
 
         for geo_type in self._geos:
             self._geo_sets[geo_type] = self._load_geo_values(geo_type)
 
-    def _load_crosswalk_from_file(self, from_code, to_code, data_path):
+    def _load_crosswalk_from_file(
+        self, from_code: str, to_code: str, data_path: str
+    ) -> pd.DataFrame:
         stream = pkg_resources.resource_stream(__name__, data_path)
         dtype = {
             from_code: str,
             to_code: str,
             "pop": int,
             "weight": float,
-            **{geo: str for geo in self._geos - set("nation")}
+            **{geo: str for geo in self._geos - set("nation")},
         }
-
         usecols = [from_code, "pop"] if to_code == "pop" else None
         return pd.read_csv(stream, dtype=dtype, usecols=usecols)
 
-    def _load_geo_values(self, geo_type):
+    def _load_geo_values(self, geo_type: str) -> Set[str]:
         if geo_type == "nation":
             return {"us"}
 
@@ -167,7 +190,9 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         return set(crosswalk[geo_type])
 
     @staticmethod
-    def convert_fips_to_mega(data, fips_col="fips", mega_col="megafips"):
+    def convert_fips_to_mega(
+        data: pd.DataFrame, fips_col: str = "fips", mega_col: str = "megafips"
+    ) -> pd.DataFrame:
         """Convert fips or chng-fips string to a megafips string."""
         data = data.copy()
         data[mega_col] = data[fips_col].astype(str).str.zfill(5)
@@ -176,14 +201,14 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
 
     @staticmethod
     def megacounty_creation(
-        data,
-        thr_count,
-        thr_win_len,
-        thr_col="visits",
-        fips_col="fips",
-        date_col="timestamp",
-        mega_col="megafips",
-    ):
+        data: pd.DataFrame,
+        thr_count: Union[float, int],
+        thr_win_len: int,
+        thr_col: str = "visits",
+        fips_col: str = "fips",
+        date_col: str = "timestamp",
+        mega_col: str = "megafips",
+    ) -> pd.DataFrame:
         """Create megacounty column.
 
         Parameters
@@ -205,7 +230,7 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         if "_thr_col_roll" in data.columns:
             raise ValueError("Column name '_thr_col_roll' is reserved.")
 
-        def agg_sum_iter(data):
+        def agg_sum_iter(data: pd.DataFrame) -> Iterator[pd.DataFrame]:
             data_gby = (
                 data[[fips_col, date_col, thr_col]]
                 .set_index(date_col)
@@ -228,16 +253,17 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
 
     # Conversion functions
     def add_geocode(
-        self, df, from_code, new_code, from_col=None, new_col=None, dropna=True
+        self,
+        df: pd.DataFrame,
+        from_code: str,
+        new_code: str,
+        from_col: Optional[str] = None,
+        new_col: Optional[str] = None,
+        dropna: bool = True,
     ):
         """Add a new geocode column to a dataframe.
 
-        Currently supported conversions:
-        - fips -> state_code, state_id, state_name, zip, msa, hrr, nation, hhs, chng-fips
-        - chng-fips -> state_code, state_id, state_name
-        - zip -> state_code, state_id, state_name, fips, msa, hrr, nation, hhs
-        - state_x -> state_y (where x and y are in {code, id, name}), nation
-        - state_code -> hhs, nation
+        See class docstring for supported geocode transformations.
 
         Parameters
         ---------
@@ -269,8 +295,9 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         df = df.copy()
         from_col = from_code if from_col is None else from_col
         new_col = new_code if new_col is None else new_col
-        assert from_col != new_col, \
-            f"Can't use the same column '{from_col}' for both from_col and to_col"
+        assert (
+            from_col != new_col
+        ), f"Can't use the same column '{from_col}' for both from_col and to_col"
         state_codes = ["state_code", "state_id", "state_name"]
 
         if not is_string_dtype(df[from_col]):
@@ -305,7 +332,7 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
             df = df.merge(crosswalk, left_on=from_col, right_on=from_col, how="left")
 
         # Drop extra state columns
-        if new_code in state_codes and not from_code in state_codes:
+        if new_code in state_codes and from_code not in state_codes:
             state_codes.remove(new_code)
             df.drop(columns=state_codes, inplace=True)
         elif new_code in state_codes and from_code in state_codes:
@@ -316,7 +343,9 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
 
         return df
 
-    def _add_nation_geocode(self, df, from_code, from_col, new_col):
+    def _add_nation_geocode(
+        self, df: pd.DataFrame, from_code: str, from_col: str, new_col: str
+    ) -> pd.DataFrame:
         """Add a nation geocode column to a dataframe.
 
         See `add_geocode()` documentation for argument description.
@@ -328,29 +357,24 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
             return df
 
         raise ValueError(
-            f"Conversion to the nation level is not supported "
+            "Conversion to the nation level is not supported "
             f"from {from_code}; try {valid_from_codes}"
         )
 
     def replace_geocode(
         self,
-        df,
-        from_code,
-        new_code,
-        from_col=None,
-        new_col=None,
-        date_col="timestamp",
-        data_cols=None,
-        dropna=True,
-    ):
+        df: pd.DataFrame,
+        from_code: str,
+        new_code: str,
+        from_col: Optional[str] = None,
+        new_col: Optional[str] = None,
+        date_col: Optional[str] = "timestamp",
+        data_cols: Optional[List[str]] = None,
+        dropna: bool = True,
+    ) -> pd.DataFrame:
         """Replace a geocode column in a dataframe.
 
-        Currently supported conversions:
-        - fips -> chng-fips, state_code, state_id, state_name, zip, msa, hrr, nation
-        - chng-fips -> state_code, state_id, state_name
-        - zip -> state_code, state_id, state_name, fips, msa, hrr, nation
-        - state_x -> state_y (where x and y are in {code, id, name}), nation
-        - state_code -> hhs, nation
+        See class docstring for supported geocode transformations.
 
         Parameters
         ---------
@@ -397,13 +421,19 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
             df[data_cols] = df[data_cols].multiply(df["weight"], axis=0)
             df.drop("weight", axis=1, inplace=True)
 
-        if not date_col is None:
+        if date_col is not None:
             df = df.groupby([date_col, new_col]).sum(numeric_only=True).reset_index()
         else:
             df = df.groupby([new_col]).sum(numeric_only=True).reset_index()
         return df
 
-    def add_population_column(self, data, geocode_type, geocode_col=None, dropna=True):
+    def add_population_column(
+        self,
+        data: pd.DataFrame,
+        geocode_type: Literal["fips", "zip"],
+        geocode_col: Optional[str] = None,
+        dropna: bool = True,
+    ) -> pd.DataFrame:
         """
         Append a population column to a dataframe, based on the FIPS or ZIP code.
 
@@ -428,7 +458,15 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         """
         geocode_col = geocode_type if geocode_col is None else geocode_col
         data = data.copy()
-        supported_geos = ["fips", "zip", "state_id", "state_name", "state_code", "hhs", "nation"]
+        supported_geos = [
+            "fips",
+            "zip",
+            "state_id",
+            "state_name",
+            "state_code",
+            "hhs",
+            "nation",
+        ]
         if geocode_type not in supported_geos:
             raise ValueError(
                 f"Only {supported_geos} geocodes supported. For other codes, aggregate those."
@@ -442,24 +480,22 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
             else:
                 data[geocode_col] = data[geocode_col].astype(str)
         merge_type = "inner" if dropna else "left"
-        data_with_pop = (
-            data
-            .merge(pop_df, left_on=geocode_col, right_on=geocode_type, how=merge_type)
-            .rename(columns={"pop": "population"})
-        )
+        data_with_pop = data.merge(
+            pop_df, left_on=geocode_col, right_on=geocode_type, how=merge_type
+        ).rename(columns={"pop": "population"})
         return data_with_pop
 
     @staticmethod
     def fips_to_megacounty(
-        data,
-        thr_count,
-        thr_win_len,
-        thr_col="visits",
-        fips_col="fips",
-        date_col="timestamp",
-        mega_col="megafips",
+        data: pd.DataFrame,
+        thr_count: Union[float, int],
+        thr_win_len: int,
+        thr_col: str = "visits",
+        fips_col: str = "fips",
+        date_col: str = "timestamp",
+        mega_col: str = "megafips",
         count_cols=None,
-    ):
+    ) -> pd.DataFrame:
         """Convert and aggregate from FIPS or chng-fips to megaFIPS.
 
         Parameters
@@ -501,7 +537,7 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         data = data.reset_index().groupby([date_col, mega_col]).sum(numeric_only=True)
         return data.reset_index()
 
-    def as_mapper_name(self, geo_type, state="state_id"):
+    def as_mapper_name(self, geo_type: str, state: str = "state_id") -> str:
         """
         Return the mapper equivalent of a region type.
 
@@ -513,7 +549,7 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
             return "fips"
         return geo_type
 
-    def get_crosswalk(self, from_code, to_code):
+    def get_crosswalk(self, from_code: str, to_code: str) -> pd.DataFrame:
         """Return a dataframe mapping the given geocodes.
 
         Parameters
@@ -530,9 +566,11 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         try:
             return self._crosswalks[from_code][to_code]
         except KeyError as e:
-            raise ValueError(f'Mapping from "{from_code}" to "{to_code}" not found.') from e
+            raise ValueError(
+                f'Mapping from "{from_code}" to "{to_code}" not found.'
+            ) from e
 
-    def get_geo_values(self, geo_type):
+    def get_geo_values(self, geo_type: str) -> Set[str]:
         """
         Return a set of all values for a given geography type.
 
@@ -551,13 +589,17 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         except KeyError as e:
             raise ValueError(f'Given geo type "{geo_type}" not found') from e
 
-    def get_geos_within(self, container_geocode, contained_geocode_type, container_geocode_type):
+    def get_geos_within(
+        self,
+        container_geocode: str,
+        contained_geocode_type: str,
+        container_geocode_type: str,
+    ) -> Set[str]:
         """
         Return all contained regions of the given type within the given container geocode.
 
         Given container_geocode (e.g "ca" for California) of type container_geocode_type
-        (e.g "state"), return:
-            - all (contained_geocode_type)s within container_geocode
+        (e.g "state"), return all (contained_geocode_type)s within container_geocode.
 
         Supports these 4 combinations:
             - all states within a nation
@@ -581,20 +623,82 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         if contained_geocode_type == "state":
             if container_geocode_type == "nation" and container_geocode == "us":
                 crosswalk = self._crosswalks["state"]["state"]
-                return set(crosswalk["state_id"])   # pylint: disable=unsubscriptable-object
+                return set(crosswalk["state_id"])
             if container_geocode_type == "hhs":
                 crosswalk_hhs = self._crosswalks["fips"]["hhs"]
                 crosswalk_state = self._crosswalks["fips"]["state"]
-                fips_hhs = crosswalk_hhs[crosswalk_hhs["hhs"] == container_geocode]["fips"]
-                return set(crosswalk_state[crosswalk_state["fips"].isin(fips_hhs)]["state_id"])
-        elif (contained_geocode_type in ("county", "fips", "chng-fips") and
-                container_geocode_type == "state"):
+                fips_hhs = crosswalk_hhs[crosswalk_hhs["hhs"] == container_geocode][
+                    "fips"
+                ]
+                return set(
+                    crosswalk_state[crosswalk_state["fips"].isin(fips_hhs)]["state_id"]
+                )
+        elif (
+            contained_geocode_type in ("county", "fips", "chng-fips")
+            and container_geocode_type == "state"
+        ):
             contained_geocode_type = self.as_mapper_name(contained_geocode_type)
             crosswalk = self._crosswalks[contained_geocode_type]["state"]
             return set(
-                crosswalk[crosswalk["state_id"] == container_geocode][contained_geocode_type]
+                crosswalk[crosswalk["state_id"] == container_geocode][
+                    contained_geocode_type
+                ]
             )
-        raise ValueError("(contained_geocode_type, container_geocode_type) was "
-                         f"({contained_geocode_type}, {container_geocode_type}), but "
-                         "must be one of (state, nation), (state, hhs), (county, state)"
-                         ", (fips, state), (chng-fips, state)")
+        raise ValueError(
+            "(contained_geocode_type, container_geocode_type) was "
+            f"({contained_geocode_type}, {container_geocode_type}), but "
+            "must be one of (state, nation), (state, hhs), (county, state)"
+            ", (fips, state), (chng-fips, state)"
+        )
+
+    def aggregate_by_weighted_sum(
+        self, df: pd.DataFrame, to_geo: str, sensor_col: str, time_col: str, population_col: str
+    ) -> pd.DataFrame:
+        """Aggregate sensor, weighted by time-dependent population.
+
+        Note: This function generates its own population weights and excludes
+        locations where the data is NA, which is effectively an extrapolation
+        assumption to the rest of the geos.  This is in contrast to the
+        `replace_geocode` function, which assumes that the weights are already
+        present in the data and does not adjust for missing data (see the
+        docstring for the GeoMapper class).
+
+        Parameters
+        ---------
+        df: pd.DataFrame
+            Input dataframe, assumed to have a sensor column (e.g. "visits"), a
+            to_geo column (e.g. "state"), and a population column (corresponding
+            to a from_geo, e.g. "wastewater collection site").
+        to_geo: str
+            The column name of the geocode to aggregate to.
+        sensor: str
+            The column name of the sensor to aggregate.
+        population_column: str
+            The column name of the population to weight the sensor by.
+
+        Returns
+        ---------
+        agg_df: pd.DataFrame
+            A dataframe with the aggregated sensor values, weighted by population.
+        """
+        # Don't modify the input dataframe
+        df = df.copy()
+        # Zero-out populations where the sensor is NA
+        df["_zeroed_pop"] = df[population_col] * df[sensor_col].abs().notna()
+        # Weight the sensor by the population
+        df["_weighted_sensor"] = df[sensor_col] * df["_zeroed_pop"]
+        agg_df = (
+            df.groupby([time_col, to_geo])
+            .agg(
+            {
+                "_zeroed_pop": "sum",
+                "_weighted_sensor": lambda x: x.sum(min_count=1),
+            }
+            ).assign(
+                _new_sensor = lambda x: x["_weighted_sensor"] / x["_zeroed_pop"]
+            ).reset_index()
+            .rename(columns={"_new_sensor": f"weighted_{sensor_col}"})
+            .drop(columns=["_zeroed_pop", "_weighted_sensor"])
+        )
+
+        return agg_df

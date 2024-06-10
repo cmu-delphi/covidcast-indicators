@@ -95,7 +95,7 @@ nchs <- epidatr::pub_covidcast(
 # Flu
 ```{r}
 library(epiprocess)
-nssp_flu_state <- nssp_state %>% filter(signal == "pct_visits_influenza") %>% select(-signal) %>% drop_na %>% rename(pct_flu_visits = val) %>% as_epi_df(time_type = "week", geo_type = "state")
+nssp_flu_state <- nssp_state %>% filter(signal == "pct_ed_visits_influenza") %>% select(-signal) %>% drop_na %>% rename(pct_flu_visits = val) %>% as_epi_df(time_type = "week", geo_type = "state")
 week_starts <- nssp_flu_state$time_value %>% unique()
 flu_hhs_weekly <- flu_hhs %>% select(geo_value, time_value, value) %>% filter(time_value %in% week_starts) %>% rename(conf_admission = value) %>% drop_na %>% as_epi_df(time_type = "week", geo_type = "state")
 joined <- nssp_flu_state %>% left_join(flu_hhs_weekly)
@@ -178,7 +178,7 @@ nssp_state <- nssp_data %>%
   mutate(time_value = epidatr:::parse_api_week(time_value)) %>%
   as_epi_df(time_type = "week", geo_type = "state") %>%
   select(-missing_val, -geo_type) 
-nssp_covid_state <- nssp_state %>% filter(signal == "pct_visits_covid") %>% select(-signal) %>% drop_na %>% rename(pct_covid_visits = val) %>% as_epi_df(time_type = "week", geo_type = "state")
+nssp_covid_state <- nssp_state %>% filter(signal == "pct_ed_visits_covid") %>% select(-signal) %>% drop_na %>% rename(pct_covid_visits = val) %>% as_epi_df(time_type = "week", geo_type = "state")
 week_starts <- nssp_covid_state$time_value %>% unique()
 covid_hhs_weekly <- covid_hhs %>% select(geo_value, time_value, value) %>% filter(time_value %in% week_starts) %>% rename(conf_admission = value) %>% drop_na %>% as_epi_df(time_type = "week", geo_type = "state")
 joined_covid <- nssp_covid_state %>% left_join(covid_hhs_weekly)

@@ -13,6 +13,7 @@ required = [
     "pylint==2.8.3",
     "pytest-cov",
     "pytest",
+    "cvxpy<=1.4",
 ]
 
 setup(

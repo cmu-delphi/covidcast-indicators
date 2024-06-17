@@ -68,7 +68,7 @@ def pull_nssp_data(socrata_token: str):
         raise ValueError(warn_string(df_ervisits, TYPE_DICT)) from exc
 
     # Format county fips to all be 5 digits with leading zeros
-    df_ervisits['fips'] = df_ervisits['fips'].apply(lambda x: str(x).zfill(5) if str(x) != '0' else '0')
+    df_ervisits["fips"] = df_ervisits["fips"].apply(lambda x: str(x).zfill(5) if str(x) != "0" else "0")
 
     keep_columns = ["timestamp", "geography", "county", "fips"]
     return df_ervisits[SIGNALS + keep_columns]

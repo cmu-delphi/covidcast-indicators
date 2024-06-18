@@ -12,11 +12,13 @@ class Weekday:
     """Class to handle weekday effects."""
 
     @staticmethod
-    def get_params(data, denominator_col, numerator_cols, date_col, scales, logger):
+    def get_params(data, denominator_col, numerator_cols, date_col, scales, logger, solver=cp.ECOS):
         r"""Fit weekday correction for each col in numerator_cols.
 
         Return a matrix of parameters: the entire vector of betas, for each time
         series column in the data.
+
+        solver: Historically we default to "ECOS" but if encounter numerical issues, "CLARABEL" can be used instead.
         """
         tmp = data.reset_index()
         denoms = tmp.groupby(date_col).sum()[denominator_col]
@@ -35,7 +37,7 @@ class Weekday:
 
         # Loop over the available numerator columns and smooth each separately.
         for i in range(nums.shape[1]):
-            result = Weekday._fit(X, scales, npnums[:, i], npdenoms)
+            result = Weekday._fit(X, scales, npnums[:, i], npdenoms, solver)
             if result is None:
                 logger.error("Unable to calculate weekday correction")
             else:
@@ -44,7 +46,7 @@ class Weekday:
         return params
 
     @staticmethod
-    def _fit(X, scales, npnums, npdenoms):
+    def _fit(X, scales, npnums, npdenoms, solver=cp.ECOS):
         r"""Correct a signal estimated as numerator/denominator for weekday effects.
 
         The ordinary estimate would be numerator_t/denominator_t for each time point
@@ -78,6 +80,8 @@ class Weekday:
 
         ll = (numerator * (X*b + log(denominator)) - sum(exp(X*b) + log(denominator)))
                 / num_days
+
+        solver: Historically we default to "ECOS" but if encounter numerical issues, "CLARABEL" can be used instead.
         """
         b = cp.Variable((X.shape[1]))
 
@@ -93,7 +97,7 @@ class Weekday:
         for scale in scales:
             try:
                 prob = cp.Problem(cp.Minimize((-ll + lmbda * penalty) / scale))
-                _ = prob.solve()
+                _ = prob.solve(solver=solver)
                 return b.value
             except SolverError:
                 # If the magnitude of the objective function is too large, an error is

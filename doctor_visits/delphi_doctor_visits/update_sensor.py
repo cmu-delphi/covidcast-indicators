@@ -12,8 +12,6 @@ Modified:
 from datetime import timedelta
 from multiprocessing import Pool, cpu_count
 
-import cvxpy as cp
-
 # third party
 import numpy as np
 import pandas as pd
@@ -136,7 +134,6 @@ def update_sensor(
             Config.DATE_COL,
             [1, 1e5, 1e10, 1e15],
             logger,
-            cp.CLARABEL,  # switch to Clarabel to avoid numerical issues associated w ECOS
         )
         if weekday
         else None

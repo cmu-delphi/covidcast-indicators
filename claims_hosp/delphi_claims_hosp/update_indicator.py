@@ -9,6 +9,7 @@ Created: 2020-09-27
 # standard packages
 import logging
 from multiprocessing import Pool, cpu_count
+import cvxpy as cp
 
 # third party
 import numpy as np
@@ -159,6 +160,7 @@ class ClaimsHospIndicatorUpdater:
             Config.DATE_COL,
             [1, 1e5],
             logger,
+            cp.ECOS,
         ) if self.weekday else None
 
         # run fitting code (maybe in parallel)

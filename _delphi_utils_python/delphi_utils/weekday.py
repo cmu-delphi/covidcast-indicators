@@ -12,13 +12,13 @@ class Weekday:
     """Class to handle weekday effects."""
 
     @staticmethod
-    def get_params(data, denominator_col, numerator_cols, date_col, scales, logger, solver=cp.ECOS):
+    def get_params(data, denominator_col, numerator_cols, date_col, scales, logger, solver=cp.CLARABEL):
         r"""Fit weekday correction for each col in numerator_cols.
 
         Return a matrix of parameters: the entire vector of betas, for each time
         series column in the data.
 
-        solver: Historically we default to "ECOS" but if encounter numerical issues, "CLARABEL" can be used instead.
+        solver: Historically use "ECOS" but due to numerical issues, "CLARABEL" is now default.
         """
         tmp = data.reset_index()
         denoms = tmp.groupby(date_col).sum()[denominator_col]
@@ -46,7 +46,7 @@ class Weekday:
         return params
 
     @staticmethod
-    def _fit(X, scales, npnums, npdenoms, solver=cp.ECOS):
+    def _fit(X, scales, npnums, npdenoms, solver=cp.CLARABEL):
         r"""Correct a signal estimated as numerator/denominator for weekday effects.
 
         The ordinary estimate would be numerator_t/denominator_t for each time point
@@ -81,7 +81,7 @@ class Weekday:
         ll = (numerator * (X*b + log(denominator)) - sum(exp(X*b) + log(denominator)))
                 / num_days
 
-        solver: Historically we default to "ECOS" but if encounter numerical issues, "CLARABEL" can be used instead.
+        solver: Historically use "ECOS" but due to numerical issues, "CLARABEL" is now default.
         """
         b = cp.Variable((X.shape[1]))
 

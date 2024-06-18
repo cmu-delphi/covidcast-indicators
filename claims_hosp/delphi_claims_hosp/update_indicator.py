@@ -9,18 +9,19 @@ Created: 2020-09-27
 # standard packages
 import logging
 from multiprocessing import Pool, cpu_count
+
 import cvxpy as cp
 
 # third party
 import numpy as np
 import pandas as pd
-from delphi_utils import GeoMapper
 
 # first party
-from delphi_utils import Weekday
+from delphi_utils import GeoMapper, Weekday
+
 from .config import Config, GeoConstants
-from .load_data import load_data
 from .indicator import ClaimsHospIndicator
+from .load_data import load_data
 
 
 class ClaimsHospIndicatorUpdater:
@@ -153,16 +154,19 @@ class ClaimsHospIndicatorUpdater:
         data_frame = self.geo_reindex(data)
 
         # handle if we need to adjust by weekday
-        wd_params = Weekday.get_params(
-            data_frame,
-            "den",
-            ["num"],
-            Config.DATE_COL,
-            [1, 1e5],
-            logger,
-            cp.ECOS,
-        ) if self.weekday else None
-
+        wd_params = (
+            Weekday.get_params(
+                data_frame,
+                "den",
+                ["num"],
+                Config.DATE_COL,
+                [1, 1e5],
+                logger,
+                cp.ECOS,
+            )
+            if self.weekday
+            else None
+        )
         # run fitting code (maybe in parallel)
         rates = {}
         std_errs = {}

@@ -133,7 +133,7 @@ def update_sensor(
         Config.DATE_COL,
         [1, 1e5, 1e10, 1e15],
         logger,
-        cp.CLARABEL, # switch to using Clarabel for weekday adjustment to avoid numerical issues with historical ECOS use
+        cp.CLARABEL, # switch to Clarabel to avoid numerical issues associated w ECOS
     ) if weekday else None
     if weekday and np.any(np.all(params == 0,axis=1)):
         # Weekday correction failed for at least one count type

@@ -11,6 +11,7 @@ Modified:
 # standard packages
 from datetime import timedelta
 from multiprocessing import Pool, cpu_count
+
 import cvxpy as cp
 
 # third party
@@ -19,6 +20,7 @@ import pandas as pd
 
 # first party
 from delphi_utils import Weekday
+
 from .config import Config
 from .geo_maps import GeoMaps
 from .sensor import DoctorVisitsSensor

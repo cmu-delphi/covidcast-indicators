@@ -49,6 +49,7 @@ class TestPullNSSPData(unittest.TestCase):
         assert result["geography"].notnull().all(), "geography has rogue NaN"
         assert result["county"].notnull().all(), "county has rogue NaN"
         assert result["fips"].notnull().all(), "fips has rogue NaN"
+        assert result["fips"].apply(lambda x: isinstance(x, str) and len(x) != 4).all(), "fips formatting should always be 5 digits; include leading zeros if aplicable"
 
         # Check for each signal in SIGNALS
         for signal in SIGNALS:

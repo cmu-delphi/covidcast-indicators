@@ -61,5 +61,26 @@
         "hsa_nci_id": "All",
         "fips": "0",
         "trend_source": "United States"
+    },
+    {
+    "week_end": "2023-05-13T00:00:00.000",
+    "geography": "Colorado",
+    "county": "Jefferson",
+    "percent_visits_combined": "0.84",
+    "percent_visits_covid": "0.59",
+    "percent_visits_influenza": "0.23",
+    "percent_visits_rsv": "0.03",
+    "percent_visits_smoothed": "0.83",
+    "percent_visits_smoothed_covid": "0.62",
+    "percent_visits_smoothed_1": "0.18",
+    "percent_visits_smoothed_rsv": "0.02",
+    "ed_trends_covid": "Decreasing",
+    "ed_trends_influenza": "No Change",
+    "ed_trends_rsv": "Decreasing",
+    "hsa": "Denver (Denver), CO - Jefferson, CO",
+    "hsa_counties": "Adams, Arapahoe, Clear Creek, Denver, Douglas, Elbert, Gilpin, Grand, Jefferson, Park, Summit",
+    "hsa_nci_id": "688",
+    "fips": "8059",
+    "trend_source": "HSA"
     }
 ]

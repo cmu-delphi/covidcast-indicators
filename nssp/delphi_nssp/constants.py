@@ -37,6 +37,6 @@ TYPE_DICT.update(
         "timestamp": "datetime64[ns]",
         "geography": str,
         "county": str,
-        "fips": int,
+        "fips": str,
     }
 )

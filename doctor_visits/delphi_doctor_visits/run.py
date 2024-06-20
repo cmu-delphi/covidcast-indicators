@@ -42,18 +42,28 @@ def run_module(params):  # pylint: disable=too-many-statements
             - "se": bool, whether to write out standard errors
             - "obfuscated_prefix": str, prefix for signal name if write_se is True.
             - "parallel": bool, whether to update sensor in parallel.
+        - "patch": Only used for patching data
+            - start_date: str, YYYY-MM-DD format, first issue date
+            - end_date: str, YYYY-MM-DD format, last issue date
+            - patch_dir: str, directory to write all issues output
+            - current_issue: str, YYYY-MM-DD format, current issue date to patch
     """
     start_time = time.time()
     logger = get_structured_logger(
         __name__, filename=params["common"].get("log_filename"),
         log_exceptions=params["common"].get("log_exceptions", True))
 
+    issue = params.get("patch", {}).get("current_issue", None)
+    patch = issue is not None
+
     # pull latest data
     download(params["indicator"]["ftp_credentials"],
-             params["indicator"]["input_dir"], logger)
+             params["indicator"]["input_dir"],
+             logger,
+             issue=issue)
 
     # find the latest files (these have timestamps)
-    claims_file = get_latest_filename(params["indicator"]["input_dir"], logger)
+    claims_file = get_latest_filename(params["indicator"]["input_dir"], logger, patch=patch)
 
     # modify data
     modify_and_write(claims_file, logger)

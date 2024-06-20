@@ -5,7 +5,7 @@
 import datetime
 from pathlib import Path
 
-def get_latest_filename(dir_path, logger):
+def get_latest_filename(dir_path, logger, patch=False):
     """Get the latest filename from the list of downloaded raw files."""
     current_date = datetime.datetime.now()
     files = list(Path(dir_path).glob("*"))
@@ -24,7 +24,8 @@ def get_latest_filename(dir_path, logger):
                     latest_timestamp = timestamp
                     latest_filename = file
 
-    assert current_date.date() == latest_timestamp.date(), "no drop for today"
+    if not patch:
+        assert current_date.date() == latest_timestamp.date(), "no drop for today"
 
     logger.info("Latest claims file", filename=latest_filename)
 

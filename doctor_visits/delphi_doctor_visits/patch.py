@@ -1,6 +1,8 @@
 """
 This module is used for patching data in the delphi_doctor_visits package.
+
 To use this module, you need to specify the range of issue dates in params.json.
+
 It will generate data for that range of issue dates, and store them in batch issue format:
 [name-of-patch]/issue_[issue-date]/nssp/actual_data_file.csv
 """

@@ -6,6 +6,13 @@ from delphi_doctor_visits.run import run_module
 from datetime import datetime, timedelta
 
 if __name__ == "__main__":
+    '''
+    Run the doctor visits indicator for a range of issue dates, specified in params.json using following keys:
+    - "patch": Only used for patching data
+        + start_date: str, YYYY-MM-DD format, first issue date
+        + end_date: str, YYYY-MM-DD format, last issue date
+        + patch_dir: str, directory to write all issues output
+    '''
     params = read_params()
     logger = get_structured_logger(__name__, filename=params["common"]["log_filename"])
 

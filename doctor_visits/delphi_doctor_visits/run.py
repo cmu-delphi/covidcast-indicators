@@ -42,11 +42,11 @@ def run_module(params):  # pylint: disable=too-many-statements
             - "se": bool, whether to write out standard errors
             - "obfuscated_prefix": str, prefix for signal name if write_se is True.
             - "parallel": bool, whether to update sensor in parallel.
-        - "patch": Only used for patching data
-            - start_date: str, YYYY-MM-DD format, first issue date
-            - end_date: str, YYYY-MM-DD format, last issue date
-            - patch_dir: str, directory to write all issues output
-            - current_issue: str, YYYY-MM-DD format, current issue date to patch
+        - "patch": Only used for patching data, remove if not patching.
+                   Check out patch.py and README for more details on how to run patches.
+            - "start_date": str, YYYY-MM-DD format, first issue date
+            - "end_date": str, YYYY-MM-DD format, last issue date
+            - "patch_dir": str, directory to write all issues output
     """
     start_time = time.time()
     logger = get_structured_logger(

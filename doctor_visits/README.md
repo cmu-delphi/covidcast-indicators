@@ -53,3 +53,9 @@ The output will show the number of unit tests that passed and failed, along
 with the percentage of code covered by the tests. None of the tests should
 fail and the code lines that are not covered by unit tests should be small and
 should not include critical sub-routines.
+
+## Running Patches:
+To get data issued during specific date range, output in batch issue format, adjust `params.json` in accordance with `patch.py`, then run
+```
+env/bin/python delphi_doctor_visits/patch.py
+```

@@ -155,14 +155,13 @@ class ClaimsHospIndicatorUpdater:
 
         # handle if we need to adjust by weekday
         wd_params = (
-            Weekday.get_params(
+            Weekday.get_params_legacy(
                 data_frame,
                 "den",
                 ["num"],
                 Config.DATE_COL,
                 [1, 1e5],
                 logger,
-                cp.ECOS,
             )
             if self.weekday
             else None

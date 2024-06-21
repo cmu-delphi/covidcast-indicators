@@ -57,10 +57,7 @@ def run_module(params):  # pylint: disable=too-many-statements
     patch = issue is not None
 
     # pull latest data
-    download(params["indicator"]["ftp_credentials"],
-             params["indicator"]["input_dir"],
-             logger,
-             issue=issue)
+    download(params["indicator"]["ftp_credentials"], params["indicator"]["input_dir"], logger, issue=issue)
 
     # find the latest files (these have timestamps)
     claims_file = get_latest_filename(params["indicator"]["input_dir"], logger, patch=patch)

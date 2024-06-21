@@ -6,10 +6,11 @@ To use this module, you need to specify the range of issue dates in params.json.
 It will generate data for that range of issue dates, and store them in batch issue format:
 [name-of-patch]/issue_[issue-date]/nssp/actual_data_file.csv
 """
+
 from datetime import datetime, timedelta
 from os import makedirs
 
-from delphi_utils import read_params, get_structured_logger
+from delphi_utils import get_structured_logger, read_params
 
 from .run import run_module
 

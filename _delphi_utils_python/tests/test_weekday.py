@@ -28,7 +28,7 @@ class TestWeekday:
     def test_get_params_legacy(self):
         TEST_LOGGER = logging.getLogger()
 
-        result = Weekday.get_params(self.TEST_DATA, "den", ["num"], "date", [1], TEST_LOGGER)
+        result = Weekday.get_params_legacy(self.TEST_DATA, "den", ["num"], "date", [1], TEST_LOGGER)
         print(result)
         expected_result = [
             -0.05993665,

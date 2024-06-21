@@ -87,39 +87,43 @@ def run_module(params):
     df_pull = pull_nwss_data(socrata_token, logger)
     geomapper = GeoMapper()
     # iterate over the providers and the normalizations that they specifically provide
-    for provider, normalization in zip(
-        PROVIDER_NORMS["provider"], PROVIDER_NORMS["normalization"]
-    ):
-        # copy by only taking the relevant subsection
-        df_prov_norm = df_pull[
-            (df_pull.provider == provider) & (df_pull.normalization == normalization)
-        ]
-        df_prov_norm = df_prov_norm.drop(["provider", "normalization"], axis=1)
-        for sensor in [*SIGNALS, *METRIC_SIGNALS]:
-            full_sensor_name = sensor + "_" + provider + "_" + normalization
-            for geo in GEOS:
-                logger.info(
-                    "Generating signal and exporting to CSV", metric=full_sensor_name
-                )
-                if geo == "nation":
-                    df_prov_norm["nation"] = "us"
-                agg_df = geomapper.aggregate_by_weighted_sum(
-                    df_prov_norm,
-                    geo,
-                    sensor,
-                    "timestamp",
-                    "population_served",
-                )
-                agg_df = agg_df.rename(
-                    columns={geo: "geo_id", f"weighted_{sensor}": "val"}
-                )
-                # add se, sample_size, and na codes
-                agg_df = add_needed_columns(agg_df)
-                # actual export
-                dates = create_export_csv(
-                    agg_df, geo_res=geo, export_dir=export_dir, sensor=full_sensor_name
-                )
-                if len(dates) > 0:
-                    run_stats.append((max(dates), len(dates)))
+    for provider, normalizations in PROVIDER_NORMS.items():
+        for normalization in normalizations:
+            # copy by only taking the relevant subsection
+            df_prov_norm = df_pull[
+                (df_pull.provider == provider)
+                & (df_pull.normalization == normalization)
+            ]
+            df_prov_norm = df_prov_norm.drop(["provider", "normalization"], axis=1)
+            for sensor in [*SIGNALS, *METRIC_SIGNALS]:
+                full_sensor_name = sensor + "_" + provider + "_" + normalization
+                for geo in GEOS:
+                    logger.info(
+                        "Generating signal and exporting to CSV",
+                        metric=full_sensor_name,
+                    )
+                    if geo == "nation":
+                        df_prov_norm["nation"] = "us"
+                    agg_df = geomapper.aggregate_by_weighted_sum(
+                        df_prov_norm,
+                        geo,
+                        sensor,
+                        "timestamp",
+                        "population_served",
+                    )
+                    agg_df = agg_df.rename(
+                        columns={geo: "geo_id", f"weighted_{sensor}": "val"}
+                    )
+                    # add se, sample_size, and na codes
+                    agg_df = add_needed_columns(agg_df)
+                    # actual export
+                    dates = create_export_csv(
+                        agg_df,
+                        geo_res=geo,
+                        export_dir=export_dir,
+                        sensor=full_sensor_name,
+                    )
+                    if len(dates) > 0:
+                        run_stats.append((max(dates), len(dates)))
     ## log this indicator run
     logging(start_time, run_stats, logger)

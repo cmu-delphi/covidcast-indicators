@@ -5,7 +5,14 @@ import numpy as np
 import pandas as pd
 from sodapy import Socrata
 
-from .constants import METRIC_SIGNALS, PROVIDER_NORMS, SIG_DIGITS, SIGNALS, TYPE_DICT, TYPE_DICT_METRIC
+from .constants import (
+    METRIC_SIGNALS,
+    PROVIDER_NORMS,
+    SIG_DIGITS,
+    SIGNALS,
+    TYPE_DICT,
+    TYPE_DICT_METRIC,
+)
 
 
 def sig_digit_round(value, n_digits):
@@ -49,10 +56,13 @@ received={''.join(sorted(df.columns))}
 def reformat(df, df_metric):
     """Combine df_metric and df
 
-    Move population and METRIC_SIGNAL columns from df_metric to df, and rename date_start to timestamp.
+    Move population and METRIC_SIGNAL columns from df_metric to df, and rename
+    date_start to timestamp.
     """
     # drop unused columns from df_metric
-    df_metric_core = df_metric.loc[:, ["key_plot_id", "date_end", "population_served", *METRIC_SIGNALS]]
+    df_metric_core = df_metric.loc[
+        :, ["key_plot_id", "date_end", "population_served", *METRIC_SIGNALS]
+    ]
     # get matching keys
     df_metric_core = df_metric_core.rename(columns={"date_end": "timestamp"})
     df_metric_core = df_metric_core.set_index(["key_plot_id", "timestamp"])
@@ -67,13 +77,17 @@ def reformat(df, df_metric):
 def add_identifier_columns(df):
     """Parse `key_plot_id` to create several key columns
 
-    `key_plot_id` is of format "<provider>_<state>_<plant id>_wwtp_id". We split by `_` and put each resulting item into its own column.    Add columns to get more detail than key_plot_id gives;
-    specifically, state, and `provider_normalization`, which gives the signal identifier
+    `key_plot_id` is of format "<provider>_<state>_<plant id>_wwtp_id".
+    We split by `_` and put each resulting item into its own column.
+    Add columns to get more detail than key_plot_id gives; specifically, state, and
+    `provider_normalization`, which gives the signal identifier
     """
     df = df.copy()
-    # a pair of alphanumerics surrounded by _; for example, it matches "_al_", and not "_3a_" and returns just the two letters "al"
+    # a pair of alphanumerics surrounded by _; for example, it matches "_al_",
+    #    and not "_3a_" and returns just the two letters "al"
     df["state"] = df.key_plot_id.str.extract(r"_(\w\w)_")
-    # anything followed by state as described just above. For example "CDC_VERILY_al" pulls out "CDC_VERILY"
+    # anything followed by state as described just above.
+    # For example "CDC_VERILY_al" pulls out "CDC_VERILY"
     df["provider"] = df.key_plot_id.str.extract(r"(.*)_[a-z]{2}_")
     df["signal_name"] = df.provider + "_" + df.normalization
     return df
@@ -89,8 +103,14 @@ def check_expected_signals(df):
         .sort_values(["provider", "normalization"])
         .reset_index(drop=True)
     )
-    if not unique_provider_norms.equals(pd.DataFrame(PROVIDER_NORMS)):
-        raise ValueError(f"There are new providers and/or norms. They are\n{unique_provider_norms}")
+    for provider, normalization in zip(
+        unique_provider_norms["provider"], unique_provider_norms["normalization"]
+    ):
+        if not normalization in PROVIDER_NORMS[provider]:
+            raise ValueError(
+                f"There are new providers and/or norms."
+                f"The full new set is\n{unique_provider_norms}"
+            )
 
 
 def pull_nwss_data(token: str, logger):

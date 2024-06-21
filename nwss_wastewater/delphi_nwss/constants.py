@@ -13,15 +13,11 @@ GEOS = [
 SIGNALS = ["pcr_conc_smoothed"]
 METRIC_SIGNALS = ["detect_prop_15d", "percentile", "ptc_15d"]
 PROVIDER_NORMS = {
-    "provider": ["CDC_VERILY", "CDC_VERILY", "NWSS", "NWSS", "WWS"],
-    "normalization": [
-        "flow-population",
-        "microbial",
-        "flow-population",
-        "microbial",
-        "microbial",
-    ],
+    "CDC_VERILY": ("flow-population", "microbial"),
+    "NWSS": ("flow-population", "microbial"),
+    "WWS": ("microbial",),
 }
+
 SIG_DIGITS = 4
 
 TYPE_DICT = {key: float for key in SIGNALS}

@@ -53,7 +53,6 @@ def change_date_format(name):
 
 def download(ftp_credentials, out_path, logger, issue=None):
     """Pull the latest raw files."""
-
     if issue is None:
         current_time = datetime.datetime.now()
     else:

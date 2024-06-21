@@ -53,7 +53,8 @@ class Weekday:
     @staticmethod
     def get_params_legacy(data, denominator_col, numerator_cols, date_col, scales, logger):
         r"""
-        This preserves the older default behavior of using the ECOS solver.
+        Preserves older default behavior of using the ECOS solver.
+
         NOTE: "ECOS" solver will not be installed by default as of cvxpy 1.6
         """
         return Weekday.get_params(

@@ -10,8 +10,6 @@ Created: 2020-09-27
 import logging
 from multiprocessing import Pool, cpu_count
 
-import cvxpy as cp
-
 # third party
 import numpy as np
 import pandas as pd

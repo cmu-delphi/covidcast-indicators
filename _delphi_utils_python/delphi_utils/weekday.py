@@ -12,19 +12,14 @@ class Weekday:
     """Class to handle weekday effects."""
 
     @staticmethod
-    def get_params_legacy(data, denominator_col, numerator_cols, date_col, scales, logger):
-        # This preserves the older default behavior of using the ECOS solver.
-        # NOTE: "ECOS" solver will not be installed by default as of cvxpy 1.6
-        return get_params(data, denominator_col, numerator_cols, date_col, scales, logger, solver_override=cp.ECOS)
-
-    @staticmethod
     def get_params(data, denominator_col, numerator_cols, date_col, scales, logger, solver_override=None):
         r"""Fit weekday correction for each col in numerator_cols.
 
         Return a matrix of parameters: the entire vector of betas, for each time
         series column in the data.
 
-        solver: Historically used "ECOS" but due to numerical stability issues, "CLARABEL" (introduced in cvxpy 1.3) is now the default solver in cvxpy 1.5.
+        solver: Historically used "ECOS" but due to numerical stability issues, "CLARABEL"
+        (introduced in cvxpy 1.3)is now the default solver in cvxpy 1.5.
         """
         if solver_override is None:
             solver = cp.CLARABEL
@@ -54,6 +49,14 @@ class Weekday:
                 params[i,:] = result
 
         return params
+
+    @staticmethod
+    def get_params_legacy(data, denominator_col, numerator_cols, date_col, scales, logger):
+        r"""
+        This preserves the older default behavior of using the ECOS solver.
+        NOTE: "ECOS" solver will not be installed by default as of cvxpy 1.6
+        """
+        return get_params(data, denominator_col, numerator_cols, date_col, scales, logger, solver_override=cp.ECOS)
 
     @staticmethod
     def _fit(X, scales, npnums, npdenoms, solver):

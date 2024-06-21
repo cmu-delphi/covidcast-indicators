@@ -56,7 +56,7 @@ class Weekday:
         This preserves the older default behavior of using the ECOS solver.
         NOTE: "ECOS" solver will not be installed by default as of cvxpy 1.6
         """
-        return get_params(data, denominator_col, numerator_cols, date_col, scales, logger, solver_override=cp.ECOS)
+        return Weekday.get_params(data, denominator_col, numerator_cols, date_col, scales, logger, solver_override=cp.ECOS)
 
     @staticmethod
     def _fit(X, scales, npnums, npdenoms, solver):

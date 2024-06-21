@@ -57,5 +57,5 @@ should not include critical sub-routines.
 ## Running Patches:
 To get data issued during specific date range, output in batch issue format, adjust `params.json` in accordance with `patch.py`, then run
 ```
-env/bin/python delphi_doctor_visits/patch.py
+env/bin/python -m delphi_doctor_visits.patch
 ```

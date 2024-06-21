@@ -11,7 +11,7 @@ from os import makedirs
 
 from delphi_utils import read_params, get_structured_logger
 
-from delphi_doctor_visits.run import run_module
+from .run import run_module
 
 if __name__ == "__main__":
     # Run the doctor visits indicator for a range of issue dates, specified in params.json using following keys:

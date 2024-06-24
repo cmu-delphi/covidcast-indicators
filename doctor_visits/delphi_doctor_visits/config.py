@@ -26,26 +26,30 @@ class Config:
     HRR_COLS = ["Pat HRR Name", "Pat HRR ID"]
     ID_COLS = [DATE_COL] + [GEO_COL] + HRR_COLS + [AGE_COL]
     FILT_COLS = ID_COLS + COUNT_COLS
-    DTYPES = {"ServiceDate": str,
-              "PatCountyFIPS": str,
-              "Denominator": int,
-              "Flu1": int,
-              "Covid_like": int,
-              "Flu_like": int,
-              "Mixed": int,
-              "PatAgeGroup": str,
-              "Pat HRR Name": str,
-              "Pat HRR ID": float,
-              "servicedate": str,
-              "patCountyFIPS": str,
-              "patAgeGroup": str,
-              "patHRRname": str,
-              "patHRRid": float}
-    DEVIANT_COLS_MAP = {"servicedate": "ServiceDate",
-                        "patCountyFIPS": "PatCountyFIPS",
-                        "patHRRname": "Pat HRR Name",
-                        "patAgeGroup": "PatAgeGroup",
-                        "patHRRid": "Pat HRR ID"}
+    DTYPES = {
+        "ServiceDate": str,
+        "PatCountyFIPS": str,
+        "Denominator": int,
+        "Flu1": int,
+        "Covid_like": int,
+        "Flu_like": int,
+        "Mixed": int,
+        "PatAgeGroup": str,
+        "Pat HRR Name": str,
+        "Pat HRR ID": float,
+        "servicedate": str,
+        "patCountyFIPS": str,
+        "patAgeGroup": str,
+        "patHRRname": str,
+        "patHRRid": float
+    }
+    DEVIANT_COLS_MAP = {
+        "servicedate": "ServiceDate",
+        "patCountyFIPS": "PatCountyFIPS",
+        "patHRRname": "Pat HRR Name",
+        "patAgeGroup": "PatAgeGroup",
+        "patHRRid": "Pat HRR ID"
+    }
 
     SMOOTHER_BANDWIDTH = 100  # bandwidth for the linear left Gaussian filter
     MAX_BACKFILL_WINDOW = 7  # maximum number of days used to average a backfill correction

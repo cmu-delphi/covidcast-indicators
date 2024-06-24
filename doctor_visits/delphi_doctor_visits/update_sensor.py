@@ -90,7 +90,7 @@ def update_sensor(
         filepath,
         dtype=Config.DTYPES,
     )
-    data.rename(columns=Config.DEVIANT_COLS, inplace=True)
+    data.rename(columns=Config.DEVIANT_COLS_MAP, inplace=True)
     data = data[Config.FILT_COLS]
     data[Config.DATE_COL] = data[Config.DATE_COL].apply(pd.to_datetime)
 

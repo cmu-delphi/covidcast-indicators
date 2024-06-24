@@ -16,7 +16,6 @@ from delphi_utils import get_structured_logger
 # first party
 from .update_sensor import update_sensor, write_to_csv
 from .download_claims_ftp_files import download
-from .modify_claims_drops import modify_and_write
 from .get_latest_claims_name import get_latest_filename
 
 
@@ -54,9 +53,6 @@ def run_module(params):  # pylint: disable=too-many-statements
 
     # find the latest files (these have timestamps)
     claims_file = get_latest_filename(params["indicator"]["input_dir"], logger)
-
-    # modify data
-    modify_and_write(claims_file, logger)
 
     ## get end date from input file
     # the filename is expected to be in the format:

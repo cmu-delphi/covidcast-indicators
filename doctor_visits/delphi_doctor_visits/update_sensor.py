@@ -88,10 +88,12 @@ def update_sensor(
     # value cols: Denominator, Covid_like, Flu_like, Flu1, Mixed
     data = pd.read_csv(
         filepath,
-        usecols=Config.FILT_COLS,
         dtype=Config.DTYPES,
-        parse_dates=[Config.DATE_COL],
     )
+    data.rename(columns=Config.DEVIANT_COLS, inplace=True)
+    data = data[Config.FILT_COLS]
+    data[Config.DATE_COL] = data[Config.DATE_COL].apply(pd.to_datetime)
+
     assert (
             np.sum(data.duplicated(subset=Config.ID_COLS)) == 0
     ), "Duplicated data! Check the input file"

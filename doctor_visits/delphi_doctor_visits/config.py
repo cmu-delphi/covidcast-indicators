@@ -33,9 +33,7 @@ class Config:
               "Pat HRR Name": str, "Pat HRR ID": float,
               "servicedate": str, "patCountyFIPS": str,
               "patAgeGroup": str, "patHRRname": str, "patHRRid": float}
-    DATE_COLS = ["servicedate", "ServiceDate"]
-    FIPS_COLS = {"PatCountyFIPS": str, "patCountyFIPS": str}
-    DEVIANT_COLS = {"servicedate": "ServiceDate", "patCountyFIPS": "PatCountyFIPS",
+    DEVIANT_COLS_MAP = {"servicedate": "ServiceDate", "patCountyFIPS": "PatCountyFIPS",
                      "patHRRname": "Pat HRR Name", "patAgeGroup": "PatAgeGroup",
                      "patHRRid": "Pat HRR ID"}
 

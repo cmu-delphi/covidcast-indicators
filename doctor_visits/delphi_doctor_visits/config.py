@@ -41,14 +41,14 @@ class Config:
         "patCountyFIPS": str,
         "patAgeGroup": str,
         "patHRRname": str,
-        "patHRRid": float
+        "patHRRid": float,
     }
     DEVIANT_COLS_MAP = {
         "servicedate": "ServiceDate",
         "patCountyFIPS": "PatCountyFIPS",
         "patHRRname": "Pat HRR Name",
         "patAgeGroup": "PatAgeGroup",
-        "patHRRid": "Pat HRR ID"
+        "patHRRid": "Pat HRR ID",
     }
 
     SMOOTHER_BANDWIDTH = 100  # bandwidth for the linear left Gaussian filter

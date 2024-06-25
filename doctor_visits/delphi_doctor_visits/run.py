@@ -53,13 +53,13 @@ def run_module(params):  # pylint: disable=too-many-statements
         __name__, filename=params["common"].get("log_filename"),
         log_exceptions=params["common"].get("log_exceptions", True))
 
-    issue = params.get("patch", {}).get("current_issue", None)
+    issue_date = params.get("patch", {}).get("current_issue", None)
 
     # pull latest data
-    download(params["indicator"]["ftp_credentials"], params["indicator"]["input_dir"], logger, issue=issue)
+    download(params["indicator"]["ftp_credentials"], params["indicator"]["input_dir"], logger, issue_date=issue_date)
 
     # find the latest files (these have timestamps)
-    claims_file = get_latest_filename(params["indicator"]["input_dir"], logger, issue=issue)
+    claims_file = get_latest_filename(params["indicator"]["input_dir"], logger, issue_date=issue_date)
 
     # modify data
     modify_and_write(claims_file, logger)

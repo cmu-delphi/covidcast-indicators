@@ -4,7 +4,7 @@ This module is used for patching data in the delphi_doctor_visits package.
 To use this module, you need to specify the range of issue dates in params.json.
 
 It will generate data for that range of issue dates, and store them in batch issue format:
-[name-of-patch]/issue_[issue-date]/nssp/actual_data_file.csv
+[name-of-patch]/issue_[issue-date]/doctor-visits/actual_data_file.csv
 """
 
 from datetime import datetime, timedelta
@@ -40,7 +40,7 @@ if __name__ == "__main__":
         params["patch"]["current_issue"] = current_issue.strftime("%Y-%m-%d")
 
         current_issue_yyyymmdd = current_issue.strftime("%Y%m%d")
-        current_issue_dir = f"""{params["patch"]["patch_dir"]}/issue_{current_issue_yyyymmdd}/nssp"""
+        current_issue_dir = f"""{params["patch"]["patch_dir"]}/issue_{current_issue_yyyymmdd}/doctor-visits"""
         makedirs(f"{current_issue_dir}", exist_ok=True)
         params["common"]["export_dir"] = f"""{current_issue_dir}"""
 

@@ -7,7 +7,10 @@ from pathlib import Path
 
 def get_latest_filename(dir_path, logger, patch=False):
     """Get the latest filename from the list of downloaded raw files."""
-    current_date = datetime.datetime.now()
+    if patch:
+        current_date = datetime.datetime.strptime(issue, "%Y-%m-%d").replace(hour=23, minute=59, second=59)
+    else:
+        current_date = datetime.datetime.now()
     files = list(Path(dir_path).glob("*"))
 
     latest_timestamp = datetime.datetime(1900, 1, 1)
@@ -24,8 +27,7 @@ def get_latest_filename(dir_path, logger, patch=False):
                     latest_timestamp = timestamp
                     latest_filename = file
 
-    if not patch:
-        assert current_date.date() == latest_timestamp.date(), "no drop for today"
+    assert current_date.date() == latest_timestamp.date(), f"no drop for {current_date}"
 
     logger.info("Latest claims file", filename=latest_filename)
 

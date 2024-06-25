@@ -25,6 +25,31 @@ class TestWeekday:
                                     -0.81464459, -0.76322013, -0.7667211,-0.8251475]])
         assert np.allclose(result, expected_result)
 
+    def test_get_params_legacy(self):
+        TEST_LOGGER = logging.getLogger()
+
+        result = Weekday.get_params_legacy(self.TEST_DATA, "den", ["num"], "date", [1], TEST_LOGGER)
+        print(result)
+        expected_result = [
+            -0.05993665,
+            -0.0727396,
+            -0.05618517,
+            0.0343405,
+            0.12534997,
+            0.04561813,
+            -2.27669028,
+            -1.89564374,
+            -1.5695407,
+            -1.29838116,
+            -1.08216513,
+            -0.92089259,
+            -0.81456355,
+            -0.76317802,
+            -0.76673598,
+            -0.82523745,
+        ]
+        assert np.allclose(result, expected_result)
+
     def test_calc_adjustment_with_zero_parameters(self):
         params = np.array([[0, 0, 0, 0, 0, 0, 0]])
 

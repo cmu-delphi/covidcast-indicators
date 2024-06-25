@@ -12,11 +12,6 @@
       "maintainers": ["U01AP8GSWG3","U01069KCRS7"],
       "retired-signals": ["smoothed_covid19","smoothed_adj_covid19"]
     },
-    "chng": {
-      "max_age": 6,
-      "maintainers": ["U01AP8GSWG3","U01069KCRS7"],
-      "retired-signals": ["7dav_outpatient_covid","7dav_inpatient_covid"]
-    },
     "google-symptoms": {
       "max_age": 6,
       "maintainers": ["U01AP8GSWG3","U01069KCRS7"],
@@ -45,10 +40,6 @@
     },
     "nchs-mortality": {
       "max_age":19,
-      "maintainers": []
-    },
-    "hhs": {
-      "max_age":15,
       "maintainers": []
     },
     "nssp": {

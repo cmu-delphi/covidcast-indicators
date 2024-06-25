@@ -20,7 +20,7 @@ from .modify_claims_drops import modify_and_write
 from .get_latest_claims_name import get_latest_filename
 
 
-def run_module(params):  # pylint: disable=too-many-statements
+def run_module(params, logger=None):  # pylint: disable=too-many-statements
     """
     Run doctor visits indicator.
 
@@ -49,11 +49,11 @@ def run_module(params):  # pylint: disable=too-many-statements
             - "patch_dir": str, directory to write all issues output
     """
     start_time = time.time()
-    logger = get_structured_logger(
-        __name__, filename=params["common"].get("log_filename"),
-        log_exceptions=params["common"].get("log_exceptions", True))
-
     issue_date = params.get("patch", {}).get("current_issue", None)
+    if not logger:
+        logger = get_structured_logger(
+            __name__, filename=params["common"].get("log_filename"),
+            log_exceptions=params["common"].get("log_exceptions", True))
 
     # pull latest data
     download(params["indicator"]["ftp_credentials"], params["indicator"]["input_dir"], logger, issue_date=issue_date)

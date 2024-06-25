@@ -21,7 +21,7 @@ if __name__ == "__main__":
     #     - "end_date": str, YYYY-MM-DD format, last issue date
     #     - "patch_dir": str, directory to write all issues output
     params = read_params()
-    logger = get_structured_logger(__name__, filename=params["common"]["log_filename"])
+    logger = get_structured_logger("delphi_doctor_visits.patch", filename=params["common"]["log_filename"])
 
     start_issue = datetime.strptime(params["patch"]["start_issue"], "%Y-%m-%d")
     end_issue = datetime.strptime(params["patch"]["end_issue"], "%Y-%m-%d")
@@ -44,5 +44,5 @@ if __name__ == "__main__":
         makedirs(f"{current_issue_dir}", exist_ok=True)
         params["common"]["export_dir"] = f"""{current_issue_dir}"""
 
-        run_module(params)
+        run_module(params, logger)
         current_issue += timedelta(days=1)

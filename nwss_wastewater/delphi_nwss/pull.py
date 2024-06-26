@@ -12,6 +12,9 @@ from .constants import (
     SIGNALS,
     TYPE_DICT,
     TYPE_DICT_METRIC,
+    SOURCE_URL,
+    CONCENTRATION_TABLE_ID,
+    METRIC_TABLE_ID,
 )
 
 
@@ -134,9 +137,9 @@ def pull_nwss_data(token: str, logger):
         Dataframe as described above.
     """
     # Pull data from Socrata API
-    client = Socrata("data.cdc.gov", token)
-    results_concentration = client.get("g653-rqe2", limit=10**10)
-    results_metric = client.get("2ew6-ywp6", limit=10**10)
+    client = Socrata(SOURCE_URL, token)
+    results_concentration = client.get(CONCENTRATION_TABLE_ID, limit=10**10)
+    results_metric = client.get(METRIC_TABLE_ID, limit=10**10)
     df_metric = pd.DataFrame.from_records(results_metric)
     df_concentration = pd.DataFrame.from_records(results_concentration)
     df_concentration = df_concentration.rename(columns={"date": "timestamp"})

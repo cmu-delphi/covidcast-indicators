@@ -38,3 +38,7 @@ TYPE_DICT_METRIC.update(
         "sample_location_specify": float,
     }
 )
+
+SOURCE_URL = "data.cdc.gov"
+CONCENTRATION_TABLE_ID = "g653-rqe2"
+METRIC_TABLE_ID = "2ew6-ywp6"

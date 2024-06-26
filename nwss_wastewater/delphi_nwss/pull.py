@@ -54,7 +54,7 @@ received={''.join(sorted(df.columns))}
 
 
 def reformat(df, df_metric):
-    """Combine df_metric and df
+    """Combine df_metric and df.
 
     Move population and METRIC_SIGNAL columns from df_metric to df, and rename
     date_start to timestamp.
@@ -75,7 +75,7 @@ def reformat(df, df_metric):
 
 
 def add_identifier_columns(df):
-    """Parse `key_plot_id` to create several key columns
+    """Parse `key_plot_id` to create several key columns.
 
     `key_plot_id` is of format "<provider>_<state>_<plant id>_wwtp_id".
     We split by `_` and put each resulting item into its own column.

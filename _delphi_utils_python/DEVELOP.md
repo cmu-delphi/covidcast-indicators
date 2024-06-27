@@ -54,3 +54,5 @@ When you are finished, the virtual environment can be deactivated and
 deactivate
 rm -r env
 ```
+## Releasing the module
+If you have made enough changes that it warrants updating [the PyPi project](https://pypi.org/project/delphi-utils/), currently this is done as part of merging from `main` to `prod`.

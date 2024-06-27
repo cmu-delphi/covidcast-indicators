@@ -1,20 +1,12 @@
-from datetime import datetime, date
-import json
-from unittest.mock import patch
-import tempfile
-import os
-import time
-from datetime import datetime
-
 import pandas as pd
 import pandas.api.types as ptypes
 
 from delphi_nwss.pull import (
-    construct_typedicts,
+    add_identifier_columns,
     sig_digit_round,
-    add_population,
-    warn_string,
+    reformat,
 )
+from delphi_nwss.constants import TYPE_DICT, TYPE_DICT_METRIC
 import numpy as np
 
 
@@ -29,32 +21,10 @@ def test_sig_digit():
     ).all()
 
 
-def test_column_type_dicts():
-    type_dict, type_dict_metric = construct_typedicts()
-    assert type_dict == {"pcr_conc_smoothed": float, "timestamp": "datetime64[ns]"}
-    assert type_dict_metric == {
-        "date_start": "datetime64[ns]",
-        "date_end": "datetime64[ns]",
-        "detect_prop_15d": float,
-        "percentile": float,
-        "ptc_15d": float,
-        "wwtp_jurisdiction": "category",
-        "wwtp_id": int,
-        "reporting_jurisdiction": "category",
-        "sample_location": "category",
-        "county_names": "category",
-        "county_fips": "category",
-        "population_served": float,
-        "sampling_prior": bool,
-        "sample_location_specify": float,
-    }
-
-
 def test_column_conversions_concentration():
-    type_dict, type_dict_metric = construct_typedicts()
     df = pd.read_csv("test_data/conc_data.csv", index_col=0)
     df = df.rename(columns={"date": "timestamp"})
-    converted = df.astype(type_dict)
+    converted = df.astype(TYPE_DICT)
     assert all(
         converted.columns
         == pd.Index(["key_plot_id", "timestamp", "pcr_conc_smoothed", "normalization"])
@@ -64,9 +34,8 @@ def test_column_conversions_concentration():
 
 
 def test_column_conversions_metric():
-    type_dict, type_dict_metric = construct_typedicts()
     df = pd.read_csv("test_data/metric_data.csv", index_col=0)
-    converted = df.astype(type_dict_metric)
+    converted = df.astype(TYPE_DICT_METRIC)
     assert all(
         converted.columns
         == pd.Index(
@@ -112,16 +81,14 @@ def test_column_conversions_metric():
 
 
 def test_formatting():
-    type_dict, type_dict_metric = construct_typedicts()
     df_metric = pd.read_csv("test_data/metric_data.csv", index_col=0)
-    df_metric = df_metric.astype(type_dict_metric)
+    df_metric = df_metric.astype(TYPE_DICT_METRIC)
 
-    type_dict, type_dict_metric = construct_typedicts()
     df = pd.read_csv("test_data/conc_data.csv", index_col=0)
     df = df.rename(columns={"date": "timestamp"})
-    df = df.astype(type_dict)
+    df = df.astype(TYPE_DICT)
 
-    df_formatted = add_population(df, df_metric)
+    df_formatted = reformat(df, df_metric)
 
     assert all(
         df_formatted.columns
@@ -132,6 +99,28 @@ def test_formatting():
                 "pcr_conc_smoothed",
                 "normalization",
                 "population_served",
+                "detect_prop_15d",
+                "percentile",
+                "ptc_15d",
             ]
         )
+    )
+
+
+def test_identifier_colnames():
+    test_df = pd.read_csv("test_data/conc_data.csv", index_col=0)
+    test_df = add_identifier_columns(test_df)
+    assert all(test_df.state.unique() == ["ak", "tn"])
+    assert all(test_df.provider.unique() == ["CDC_BIOBOT", "WWS"])
+    # the only cases where the signal name is wrong is when normalization isn't defined
+    assert all(
+        (test_df.signal_name == test_df.provider + "_" + test_df.normalization)
+        | (test_df.normalization.isna())
+    )
+    assert all(
+        (
+            test_df.signal_name.unique()
+            == ["CDC_BIOBOT_flow-population", np.nan, "WWS_microbial"]
+        )
+        | (pd.isna(test_df.signal_name.unique()))
     )

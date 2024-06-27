@@ -160,10 +160,16 @@ def pull_nwss_data(token: str, logger):
     for signal in [*SIGNALS, *METRIC_SIGNALS]:
         df[signal] = sig_digit_round(df[signal], SIG_DIGITS)
 
-    # if there are population NA's, assume the previous value is accurate (most
-    # likely introduced by dates only present in one and not the other; even
-    # otherwise, best to assume some value rather than break the data)
-    df.population_served = df.population_served.ffill()
+    # For each location, fill missing population values with a previous
+    # population value.
+    # Missing population values seem to be introduced by dates present in only
+    # one of the two (concentration and metric) datastes. This `ffill` approach
+    # assumes that the population on a previous date is still accurate. However,
+    # population served by a given sewershed can and does change over time. The
+    # effect is presumably minimal since contiguous dates with missing
+    # population should be limited in length such that incorrect
+    # population values are quickly corrected.
+    df.population_served = df.population_served.groupby(by = ["key_plot_id"]).ffill()
     check_expected_signals(df)
 
     keep_columns = [

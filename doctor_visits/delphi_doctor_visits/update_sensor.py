@@ -11,6 +11,7 @@ Modified:
 # standard packages
 from datetime import timedelta
 from multiprocessing import Pool, cpu_count
+from pathlib import Path
 
 # third party
 import numpy as np
@@ -86,14 +87,16 @@ def update_sensor(
     # as of 2020-05-11, input file expected to have 10 columns
     # id cols: ServiceDate, PatCountyFIPS, PatAgeGroup, Pat HRR ID/Pat HRR Name
     # value cols: Denominator, Covid_like, Flu_like, Flu1, Mixed
+    filename = Path(filepath).name
     data = pd.read_csv(
         filepath,
         dtype=Config.DTYPES,
     )
+    logger.info(f"Starting processing {filename} ")
     data.rename(columns=Config.DEVIANT_COLS_MAP, inplace=True)
     data = data[Config.FILT_COLS]
     data[Config.DATE_COL] = data[Config.DATE_COL].apply(pd.to_datetime)
-
+    logger.info(f"finished processing {filename} ")
     assert (
             np.sum(data.duplicated(subset=Config.ID_COLS)) == 0
     ), "Duplicated data! Check the input file"

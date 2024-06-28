@@ -6,9 +6,6 @@ Created: 2020-10-14
 
 """
 
-# standard packages
-import logging
-
 # third party
 import numpy as np
 import pandas as pd

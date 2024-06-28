@@ -56,6 +56,9 @@ nchs_mortality_token: "{{ vault_cdc_socrata_token }}"
 # NWSS
 nwss_wastewater_token: "{{ vault_cdc_socrata_token }}"
 
+# nssp
+nssp_token: "{{ vault_cdc_socrata_token }}"
+
 # SirCAL
 sir_complainsalot_api_key: "{{ vault_sir_complainsalot_api_key }}"
 sir_complainsalot_slack_token: "{{ vault_sir_complainsalot_slack_token }}"

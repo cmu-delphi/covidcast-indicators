@@ -2,13 +2,14 @@ from setuptools import setup
 from setuptools import find_packages
 
 required = [
-    "pandas",
-    "pytest",
-    "pytest-cov",
-    "pylint==2.8.3",
+    "covidcast",
+    "darker[isort]~=2.1.1",
     "delphi-utils",
+    "pandas",
+    "pylint==2.8.3",
+    "pytest-cov",
+    "pytest",
     "slackclient",
-    "covidcast"
 ]
 
 setup(

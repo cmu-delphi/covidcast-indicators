@@ -2,14 +2,15 @@ name: Build indicator container images and upload to registry
 
 on:
   push:
-    branches: [ main, prod ]
+    branches: [main, prod]
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        packages: [ backfill_corrections ]
+        packages: [backfill_corrections]
     steps:
       - name: Checkout code
         uses: actions/checkout@v2

@@ -2,10 +2,11 @@ from dataclasses import dataclass, field
 from io import StringIO, BytesIO
 from os import listdir, mkdir
 from os.path import join
-from typing import Any, Dict, List
+from typing import Dict, List
 
 from boto3 import Session
-from git import Repo, exc
+from git import Repo
+from git.exc import InvalidGitRepositoryError
 import mock
 from moto import mock_s3
 import numpy as np
@@ -16,6 +17,7 @@ import pytest
 from delphi_utils.archive import ArchiveDiffer, GitArchiveDiffer, S3ArchiveDiffer,\
     archiver_from_params
 from delphi_utils.nancodes import Nans
+from testing import set_df_dtypes
 
 CSV_DTYPES = {
     "geo_id": str, "val": float, "se": float, "sample_size": float,
@@ -26,19 +28,11 @@ class Example:
     def __init__(self, before, after, diff):
         def fix_df(df):
             if isinstance(df, pd.DataFrame):
-                return Example._set_df_datatypes(df, CSV_DTYPES)
+                return set_df_dtypes(df, CSV_DTYPES)
             return df
         self.before = fix_df(before)
         self.after = fix_df(after)
         self.diff = fix_df(diff)
-
-    @staticmethod
-    def _set_df_datatypes(df: pd.DataFrame, dtypes: Dict[str, Any]) -> pd.DataFrame:
-        df = df.copy()
-        for k, v in dtypes.items():
-            if k in df.columns:
-                df[k] = df[k].astype(v)
-        return df
 
 @dataclass
 class Expecteds:
@@ -194,9 +188,6 @@ EXPECTEDS = Expecteds(
 assert set(EXPECTEDS.new) == set(f"{csv_name}.csv" for csv_name, dfs in CSVS.items() if dfs.before is None), \
     "Bad programmer: added more new files to CSVS.after without updating EXPECTEDS.new"
 
-def _assert_frames_equal_ignore_row_order(df1, df2, index_cols: List[str] = None):
-    return assert_frame_equal(df1.set_index(index_cols).sort_index(), df2.set_index(index_cols).sort_index())
-
 class ArchiveDifferTestlike:
     def set_up(self, tmp_path):
         cache_dir = join(str(tmp_path), "cache")
@@ -209,10 +200,10 @@ class ArchiveDifferTestlike:
         assert set(listdir(export_dir)) == set(EXPECTEDS.filtered_exports)
         for f in EXPECTEDS.filtered_exports:
             example = CSVS[f.replace(".csv", "")]
-            _assert_frames_equal_ignore_row_order(
-                pd.read_csv(join(export_dir, f), dtype=CSV_DTYPES),
-                example.after if example.diff is None else example.diff,
-                index_cols=["geo_id"]
+            example = example.after if example.diff is None else example.diff
+            assert_frame_equal(
+                pd.read_csv(join(export_dir, f), dtype=CSV_DTYPES).sort_values("geo_id", ignore_index=True),
+                example.sort_values("geo_id", ignore_index=True)
             )
 
 class TestArchiveDiffer(ArchiveDifferTestlike):
@@ -264,13 +255,12 @@ class TestArchiveDiffer(ArchiveDifferTestlike):
 
         # Check that the diff files look as expected
         for key, diff_name in EXPECTEDS.common_diffs.items():
-            if diff_name is None: continue
-            _assert_frames_equal_ignore_row_order(
-                pd.read_csv(join(export_dir, diff_name), dtype=CSV_DTYPES),
-                CSVS[key.replace(".csv", "")].diff,
-                index_cols=["geo_id"]
+            if diff_name is None:
+                continue
+            assert_frame_equal(
+                pd.read_csv(join(export_dir, diff_name), dtype=CSV_DTYPES).sort_values("geo_id", ignore_index=True),
+                CSVS[key.replace(".csv", "")].diff.sort_values("geo_id", ignore_index=True)
             )
-
 
         # Test filter_exports
         # ===================
@@ -406,7 +396,7 @@ class TestGitArchiveDiffer(ArchiveDifferTestlike):
             GitArchiveDiffer(cache_dir, export_dir,
                              override_dirty=False, commit_partial_success=True)
 
-        with pytest.raises(exc.InvalidGitRepositoryError):
+        with pytest.raises(InvalidGitRepositoryError):
             GitArchiveDiffer(cache_dir, export_dir)
 
         repo = Repo.init(cache_dir)

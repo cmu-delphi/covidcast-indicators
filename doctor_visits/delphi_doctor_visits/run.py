@@ -20,7 +20,7 @@ from .modify_claims_drops import modify_and_write
 from .get_latest_claims_name import get_latest_filename
 
 
-def run_module(params):
+def run_module(params):  # pylint: disable=too-many-statements
     """
     Run doctor visits indicator.
 

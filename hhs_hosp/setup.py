@@ -2,16 +2,17 @@ from setuptools import setup
 from setuptools import find_packages
 
 required = [
+    "covidcast",
+    "darker[isort]~=2.1.1",
+    "delphi-epidata",
+    "delphi-utils",
     "freezegun",
     "numpy",
     "pandas",
     "pydocstyle",
-    "pytest",
-    "pytest-cov",
     "pylint==2.8.3",
-    "delphi-utils",
-    "covidcast",
-    "delphi-epidata"
+    "pytest-cov",
+    "pytest",
 ]
 
 setup(

@@ -1,0 +1,257 @@
+---
+title: "Correlation Analyses for COVID-19 Indicators"
+author: "Delphi Group"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+output:
+  html_document:
+    code_folding: hide
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(message = FALSE, warning = FALSE, fig.width = 8, 
+                      fig.height = 7)
+```
+
+### Getting data 
+This requires that you've already run the nssp pipeline. See the `nssp` directory for instructions on doing that.
+First loading some libraries and reading the results from the pipeline:
+```{r}
+library(covidcast)
+library(epidatr)
+library(dplyr)
+library(ggplot2)
+
+library(purrr)
+library(tidyverse)
+library(dplyr)
+library(readr)
+files <- list.files(here::here("nssp/receiving"), pattern="\\.csv$", full.names = TRUE)
+read_row <- function(filename) {
+  split_name <- filename %>%
+    tools::file_path_sans_ext() %>%
+    strsplit("/") %>% `[[`(1) %>% tail(n=1) %>%
+    strsplit("_") %>% `[[`(1)
+  week_number <- split_name[[2]]
+  geo_type <- split_name[[3]]
+  col_name <- split_name[-(1:3)] %>% paste(collapse = "_")
+  read_csv(filename, show_col_types = FALSE) %>%
+    as_tibble %>%
+    mutate(signal = col_name,
+           geo_type = geo_type,
+           week_number = week_number) %>%
+    mutate(across(geo_id, factor)) %>%
+    rename(geo_value = geo_id, time_value = week_number) %>%
+    select(-missing_se, -se, -sample_size, -missing_sample_size) %>%
+    return
+}
+res <- map(files, read_row)
+nssp_data <- bind_rows(res)
+nssp_state <- nssp_data %>%
+  filter(geo_type == "state") %>%
+  mutate(time_value = epidatr:::parse_api_week(time_value)) %>%
+  as_epi_df(time_type = "week", geo_type = "state") %>%
+  select(-missing_val, -geo_type) 
+unique(nssp_data$time_value)
+```
+And epidatr versions of hhs for comparison
+```{r}
+library(epidatr)
+eval_time <- epidatr::epirange(from = "2020-01-01", to = Sys.Date())
+fetch_args <- epidatr::fetch_args_list(return_empty = TRUE, timeout_seconds = 300)
+
+flu_hhs <- epidatr::pub_covidcast(
+    source = "hhs",
+    signals =  "confirmed_admissions_influenza_1d_prop_7dav",
+    geo_type = "state",
+    time_type = "day",
+    geo_values = "*",
+    time_values = eval_time,
+    fetch_args = fetch_args
+    ) %>%
+  select(-signal, -source, - time_type)
+
+covid_hhs <- epidatr::pub_covidcast(
+    source = "hhs",
+    signals =  "confirmed_admissions_covid_1d_prop_7dav",
+    geo_type = "state",
+    time_type = "day",
+    geo_values = "*",
+    time_values = eval_time,
+    fetch_args = fetch_args
+    ) %>%
+  select(-signal, -source, - time_type)
+
+
+nchs <- epidatr::pub_covidcast(
+    source = "nchs-mortality",
+    signals =  "deaths_allcause_incidence_num",
+    geo_type = "state",
+    time_type = "week",
+    geo_values = "*",
+    time_values = epidatr::epirange(from = "202001", to = "202418"),
+    fetch_args = epidatr::fetch_args_list(return_empty = TRUE, timeout_seconds = 300)
+    )
+```
+# Flu
+```{r}
+library(epiprocess)
+nssp_flu_state <- nssp_state %>% filter(signal == "pct_ed_visits_influenza") %>% select(-signal) %>% drop_na %>% rename(pct_flu_visits = val) %>% as_epi_df(time_type = "week", geo_type = "state")
+week_starts <- nssp_flu_state$time_value %>% unique()
+flu_hhs_weekly <- flu_hhs %>% select(geo_value, time_value, value) %>% filter(time_value %in% week_starts) %>% rename(conf_admission = value) %>% drop_na %>% as_epi_df(time_type = "week", geo_type = "state")
+joined <- nssp_flu_state %>% left_join(flu_hhs_weekly)
+```
+
+After the necessary joining, lets look at the average correlations
+```{r}
+cor(joined$pct_flu_visits, joined$conf_admission, method = "spearman")
+```
+So the overall correlation is pretty high.
+
+## Correlations sliced by state
+```{r}
+correlations_space_flu <- epi_cor(joined, pct_flu_visits, conf_admission, cor_by = "geo_value", use = "complete.obs", method = "spearman")
+library(maps) # For map data
+states_map <- map_data("state")
+mapped <- states_map %>% as_tibble %>% mutate(geo_value = setNames(tolower(state.abb), tolower(state.name))[region]) %>% right_join(correlations_space_flu) %>% arrange(group, order)
+library(viridis)
+ggplot(mapped, aes(x = long, y = lat, group = group, fill = cor)) +
+  geom_polygon(colour = "black") +
+  scale_fill_viridis(discrete=FALSE, option="viridis", limits = c(0,1)) +
+  coord_map("polyconic") +
+  labs(title = "Spearman Correlations between Flu ER visits and Flu hospital admissions")
+ggsave("flu_ER_admissions_state_correlations.pdf")
+```
+Over space, hospital admissions look like they're highly correlated with ER visits (which makes sense, frequently when one is admitted it is via the ER).
+The lowest overall correlation is
+```{r}
+correlations_space_flu %>% summarize(across(where(is.numeric), .fns = list(min = min, median = median, mean = mean, std = sd, q25 = ~quantile(.,0.25), q75 = ~quantile(.,0.75), max = max)))
+```
+### Lag evaluation
+```{r}
+library(purrr)
+lags <- 0:35
+
+lagged_flu_state <- map_dfr(lags, function(lag) {
+  epi_cor(joined, pct_flu_visits, conf_admission, cor_by = geo_value, dt1 = lag, use = "complete.obs", method = "spearman") %>%
+    mutate(lag = .env$lag)
+})
+
+lagged_flu_state %>%
+  group_by(lag) %>%
+  summarize(mean = mean(cor, na.rm = TRUE)) %>%
+  ggplot(aes(x = lag, y = mean)) +
+  geom_line() +
+  geom_point() +
+  labs(x = "Lag", y = "Mean correlation", title = "Lag comparison for state spearman correlations for flu ER and Hosp admissions")
+ggsave("flu_ER_admissions_state_lag_cor.pdf")
+```
+Somewhat unsurprisingly, the correlation is highest immediately afterward.
+## Correlations sliced by time
+```{r}
+correlations_time_flu <- epi_cor(joined, pct_flu_visits, conf_admission, cor_by = "time_value", use = "complete.obs", method = "spearman")
+correlations_time_flu
+ggplot(correlations_time_flu, aes(x = time_value, y = cor)) + geom_line() + lims(y=c(0,1)) + labs(title = "Spearman Correlations between Flu ER visits and Flu hospital admissions")
+ggsave("flu_ER_admissions_time_correlations.pdf")
+```
+Strangely, sliced by time, we get significantly lower correlations
+```{r}
+correlations_time_flu %>% summarize(across(where(is.numeric), .fns = list(min = min, median = median, mean = mean, std = sd, q25 = ~quantile(.,0.25), q75 = ~quantile(.,0.75), max = max)))
+```
+Seems like we have a Simpson's paradox adjacent result, since for any given location the signals are fairly well correlated when averaged over time, but at a given time, averaging over different locations suggests they're not very well correlated.
+If the typical explanation applies, this means that there are large differences in the number of points.
+
+so, getting the counts:
+```{r}
+joined %>% group_by(geo_value) %>% count %>% arrange(n) %>% ungroup %>% summarise(across(where(is.numeric), .fns = list(min = min, max = max)))
+```
+Each location has 82
+
+```{r}
+joined %>% group_by(time_value) %>% count %>% arrange(n) %>% ungroup %>% summarise(across(where(is.numeric), .fns = list(min = min, max = max)))
+```
+# Covid
+```{r}
+library(epiprocess)
+nssp_data %>% pull(signal) %>% unique
+nssp_state <- nssp_data %>%
+  filter(geo_type == "state") %>%
+  mutate(time_value = epidatr:::parse_api_week(time_value)) %>%
+  as_epi_df(time_type = "week", geo_type = "state") %>%
+  select(-missing_val, -geo_type) 
+nssp_covid_state <- nssp_state %>% filter(signal == "pct_ed_visits_covid") %>% select(-signal) %>% drop_na %>% rename(pct_covid_visits = val) %>% as_epi_df(time_type = "week", geo_type = "state")
+week_starts <- nssp_covid_state$time_value %>% unique()
+covid_hhs_weekly <- covid_hhs %>% select(geo_value, time_value, value) %>% filter(time_value %in% week_starts) %>% rename(conf_admission = value) %>% drop_na %>% as_epi_df(time_type = "week", geo_type = "state")
+joined_covid <- nssp_covid_state %>% left_join(covid_hhs_weekly)
+```
+
+After the necessary joining, lets look at the average correlations
+```{r}
+cor(joined_covid$pct_covid_visits, joined_covid$conf_admission, method = "spearman")
+```
+So the overall correlation is pretty high, but lower than flu.
+
+## Correlations sliced by state
+```{r}
+correlations_space_covid <- epi_cor(joined_covid, pct_covid_visits, conf_admission, cor_by = "geo_value", use = "complete.obs", method = "spearman")
+library(maps) # For map data
+states_map <- map_data("state")
+mapped <- states_map %>% as_tibble %>% mutate(geo_value = setNames(tolower(state.abb), tolower(state.name))[region]) %>% right_join(correlations_space_covid) %>% arrange(group, order)
+library(viridis)
+ggplot(mapped, aes(x = long, y = lat, group = group, fill = cor)) +
+  geom_polygon(colour = "black") +
+  scale_fill_viridis(discrete=FALSE, option="viridis", limits = c(0,1)) +
+  coord_map("polyconic") +
+  labs(title = "Spearman Correlations between covid ER visits and covid hospital admissions")
+ggsave("covid_ER_admissions_state_correlations.pdf")
+ggsave("covid_ER_admissions_state_correlations.png")
+```
+Over space, hospital admissions look like they're highly correlated with ER visits (which makes sense, frequently when one is admitted it is via the ER).
+The lowest overall correlation is
+```{r}
+correlations_space_covid %>% summarize(across(where(is.numeric), .fns = list(min = min, median = median, mean = mean, std = sd, q25 = ~quantile(.,0.25), q75 = ~quantile(.,0.75), max = max)))
+```
+### Lag evaluation
+```{r}
+library(purrr)
+lags <- 0:35
+
+lagged_covid_state <- map_dfr(lags, function(lag) {
+  epi_cor(joined_covid, pct_covid_visits, conf_admission, cor_by = geo_value, dt1 = -lag, use = "complete.obs", method = "spearman") %>%
+    mutate(lag = .env$lag)
+})
+
+lagged_covid_state %>%
+  group_by(lag) %>%
+  summarize(mean = mean(cor, na.rm = TRUE)) %>%
+  ggplot(aes(x = lag, y = mean)) +
+  geom_line() +
+  geom_point() +
+  labs(x = "Lag", y = "Mean correlation", title = "Lag comparison for state spearman correlations for covid ER and Hosp admissions")
+ggsave("covid_ER_admissions_state_lag_cor.pdf")
+ggsave("covid_ER_admissions_state_lag_cor.png")
+```
+Somewhat unsurprisingly, the correlation is highest immediately afterward, though its significantly lower than in the flu case.
+## Correlations sliced by time
+```{r}
+correlations_time_covid <- epi_cor(joined_covid, pct_covid_visits, conf_admission, cor_by = "time_value", use = "complete.obs", method = "spearman")
+correlations_time_covid
+ggplot(correlations_time_covid, aes(x = time_value, y = cor)) + geom_line() + lims(y=c(0,1)) + labs(title = "Spearman Correlations between covid ER visits and covid hospital admissions")
+ggsave("covid_ER_admissions_time_correlations.pdf")
+ggsave("covid_ER_admissions_time_correlations.png")
+```
+Strangely, sliced by time, we get significantly lower correlations, some of them are even negative
+```{r}
+correlations_time_covid %>% summarize(across(where(is.numeric), .fns = list(min = min, median = median, mean = mean, std = sd, q25 = ~quantile(.,0.25), q75 = ~quantile(.,0.75), max = max)))
+```
+Seems like we have a Simpson's paradox adjacent result, since for any given location the signals are fairly well correlated when averaged over time, but at a given time, averaging over different locations suggests they're not very well correlated.
+If the typical explanation applies, this means that there are large differences in the number of points.
+
+so, getting the counts:
+```{r}
+joined_covid %>% group_by(geo_value) %>% count %>% arrange(n) %>% ungroup %>% summarise(across(where(is.numeric), .fns = list(min = min, max = max)))
+```
+Each location has 82
+
+```{r}
+joined_covid %>% group_by(time_value) %>% count %>% arrange(n) %>% ungroup %>% summarise(across(where(is.numeric), .fns = list(min = min, max = max)))
+```

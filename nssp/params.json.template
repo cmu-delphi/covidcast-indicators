@@ -1,0 +1,30 @@
+{
+  "common": {
+    "export_dir": "./receiving",
+    "log_filename": "./nssp.log",
+    "log_exceptions": false
+  },
+  "indicator": {
+    "wip_signal": true,
+    "static_file_dir": "./static",
+    "socrata_token": ""
+  },
+  "validation": {
+    "common": {
+      "data_source": "nssp",
+      "api_credentials": "{{ validation_api_key }}",
+      "span_length": 15,
+      "min_expected_lag": {"all": "7"},
+      "max_expected_lag": {"all": "13"},
+      "dry_run": true,
+      "suppressed_errors": []
+    },
+    "static": {
+      "minimum_sample_size": 0,
+      "missing_se_allowed": true,
+      "missing_sample_size_allowed": true
+    },
+    "dynamic": {}
+  }
+}
+

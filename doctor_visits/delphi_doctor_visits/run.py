@@ -85,7 +85,6 @@ def run_module(params):  # pylint: disable=too-many-statements
     ## geographies
     geos = ["state", "msa", "hrr", "county", "hhs", "nation"]
 
-
     ## print out other vars
     logger.info("outpath:\t\t%s", export_dir)
     logger.info("parallel:\t\t%s", params["indicator"]["parallel"])
@@ -104,9 +103,9 @@ def run_module(params):  # pylint: disable=too-many-statements
                 logger.info("starting %s, no adj", geo)
             sensor = update_sensor(
                 filepath=claims_file,
-                startdate=startdate,
-                enddate=enddate,
-                dropdate=dropdate,
+                startdate=startdate_dt,
+                enddate=enddate_dt,
+                dropdate=dropdate_dt,
                 geo=geo,
                 parallel=params["indicator"]["parallel"],
                 weekday=weekday,

@@ -11,6 +11,7 @@ required = [
     "pytest-cov",
     "pytest",
     "scikit-learn",
+    "dask",
 ]
 
 setup(

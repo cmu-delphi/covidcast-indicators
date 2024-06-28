@@ -14,8 +14,10 @@ from multiprocessing import Pool, cpu_count
 from pathlib import Path
 
 # third party
+import dask.dataframe as dd
 import numpy as np
 import pandas as pd
+
 
 # first party
 from delphi_utils import Weekday
@@ -89,22 +91,31 @@ def update_sensor(
     # value cols: Denominator, Covid_like, Flu_like, Flu1, Mixed
     filename = Path(filepath).name
     data = pd.read_csv(
+    ddata = dd.read_csv(
         filepath,
+        compression="gzip",
         dtype=Config.DTYPES,
+        blocksize=None,
     )
-    logger.info(f"Starting processing {filename} ")
-    data.rename(columns=Config.DEVIANT_COLS_MAP, inplace=True)
-    data = data[Config.FILT_COLS]
+
+    ddata = ddata.dropna()
+    ddata = ddata.rename(columns=Config.DEVIANT_COLS_MAP)
+    ddata = ddata[Config.FILT_COLS]
+
+
+    data = ddata.compute()
+
+    # data.dropna(inplace=True)  # drop rows with any missing entries
+
+    # data.columns = data.columns.to_series().replace(Config.DEVIANT_COLS_MAP)
+    #
+    # data = data[Config.FILT_COLS]
+    #
+    # # drop HRR columns - unused for now since we assign HRRs by FIPS
+    # data.drop(columns=Config.HRR_COLS, inplace=True)
+    # data.dropna(inplace=True)  # drop rows with any missing entries
+
     data[Config.DATE_COL] = data[Config.DATE_COL].apply(pd.to_datetime)
-    logger.info(f"finished processing {filename} ")
-    assert (
-            np.sum(data.duplicated(subset=Config.ID_COLS)) == 0
-    ), "Duplicated data! Check the input file"
-
-    # drop HRR columns - unused for now since we assign HRRs by FIPS
-    data.drop(columns=Config.HRR_COLS, inplace=True)
-    data.dropna(inplace=True)  # drop rows with any missing entries
-
     # aggregate age groups (so data is unique by service date and FIPS)
     data = data.groupby([Config.DATE_COL, Config.GEO_COL]).sum(numeric_only=True).reset_index()
     assert np.sum(data.duplicated()) == 0, "Duplicates after age group aggregation"

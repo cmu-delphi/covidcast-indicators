@@ -26,6 +26,9 @@ class Config:
     HRR_COLS = ["Pat HRR Name", "Pat HRR ID"]
     ID_COLS = [DATE_COL] + [GEO_COL] + HRR_COLS + [AGE_COL]
     FILT_COLS = ID_COLS + COUNT_COLS
+    # as of 2020-05-11, input file expected to have 10 columns
+    # id cols: ServiceDate, PatCountyFIPS, PatAgeGroup, Pat HRR ID/Pat HRR Name
+    # value cols: Denominator, Covid_like, Flu_like, Flu1, Mixed
     DTYPES = {
         "ServiceDate": str,
         "PatCountyFIPS": str,

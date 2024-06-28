@@ -9,10 +9,8 @@ Modified:
 """
 
 # standard packages
-from datetime import timedelta
+from datetime import timedelta, datetime
 from multiprocessing import Pool, cpu_count
-from pathlib import Path
-
 # third party
 import dask.dataframe as dd
 import numpy as np
@@ -68,10 +66,49 @@ def write_to_csv(output_df: pd.DataFrame, geo_level, se, out_name, logger, outpu
                 out_n += 1
     logger.debug(f"wrote {out_n} rows for {geo_level}")
 
+#TODO clean the date params
+def process_csv(filepath: str, startdate: datetime, enddate: datetime, dropdate: datetime) -> pd.DataFrame:
+    '''
+    Reads csv using Dask and filters out based on date range and currently unused column,
+    then converts back into pandas dataframe.
+    Parameters
+    ----------
+      filepath: path to the aggregated doctor-visits data
+      startdate: first sensor date (YYYY-mm-dd)
+      enddate: last sensor date (YYYY-mm-dd)
+      dropdate: data drop date (YYYY-mm-dd)
+
+    Returns
+    -------
+    cleaned dataframe
+    '''
+
+    ddata = dd.read_csv(
+        filepath,
+        compression="gzip",
+        dtype=Config.DTYPES,
+        blocksize=None,
+    )
+
+    ddata = ddata.dropna()
+    ddata = ddata.rename(columns=Config.DEVIANT_COLS_MAP)
+    ddata = ddata[Config.FILT_COLS]
+    ddata[Config.DATE_COL] = dd.to_datetime(ddata[Config.DATE_COL])
+
+    # restrict to training start and end date
+    startdate = startdate - Config.DAY_SHIFT
+
+    assert startdate > Config.FIRST_DATA_DATE, "Start date <= first day of data"
+    assert startdate < enddate, "Start date >= end date"
+    assert enddate <= dropdate, "End date > drop date"
+
+    date_filter = ((ddata[Config.DATE_COL] >= Config.FIRST_DATA_DATE) & (ddata[Config.DATE_COL] < dropdate))
+
+    return ddata[date_filter].compute()
 
 def update_sensor(
-        filepath, startdate, enddate, dropdate, geo, parallel,
-        weekday, se, logger
+        filepath:str, startdate:datetime, enddate:datetime, dropdate:datetime, geo:str, parallel: bool,
+        weekday:bool, se:bool, logger
 ):
     """Generate sensor values.
 
@@ -86,54 +123,16 @@ def update_sensor(
       se: boolean to write out standard errors, if true, use an obfuscated name
       logger: the structured logger
     """
-    # as of 2020-05-11, input file expected to have 10 columns
-    # id cols: ServiceDate, PatCountyFIPS, PatAgeGroup, Pat HRR ID/Pat HRR Name
-    # value cols: Denominator, Covid_like, Flu_like, Flu1, Mixed
-    filename = Path(filepath).name
-    data = pd.read_csv(
-    ddata = dd.read_csv(
-        filepath,
-        compression="gzip",
-        dtype=Config.DTYPES,
-        blocksize=None,
-    )
+    data = process_csv(filepath, startdate, enddate, dropdate)
 
-    ddata = ddata.dropna()
-    ddata = ddata.rename(columns=Config.DEVIANT_COLS_MAP)
-    ddata = ddata[Config.FILT_COLS]
-
-
-    data = ddata.compute()
-
-    # data.dropna(inplace=True)  # drop rows with any missing entries
-
-    # data.columns = data.columns.to_series().replace(Config.DEVIANT_COLS_MAP)
-    #
-    # data = data[Config.FILT_COLS]
-    #
-    # # drop HRR columns - unused for now since we assign HRRs by FIPS
-    # data.drop(columns=Config.HRR_COLS, inplace=True)
-    # data.dropna(inplace=True)  # drop rows with any missing entries
-
-    data[Config.DATE_COL] = data[Config.DATE_COL].apply(pd.to_datetime)
     # aggregate age groups (so data is unique by service date and FIPS)
     data = data.groupby([Config.DATE_COL, Config.GEO_COL]).sum(numeric_only=True).reset_index()
     assert np.sum(data.duplicated()) == 0, "Duplicates after age group aggregation"
     assert (data[Config.COUNT_COLS] >= 0).all().all(), "Counts must be nonnegative"
 
-    ## collect dates
-    # restrict to training start and end date
     drange = lambda s, e: np.array([s + timedelta(days=x) for x in range((e - s).days)])
-    startdate = pd.to_datetime(startdate) - Config.DAY_SHIFT
-    burnindate = startdate - Config.DAY_SHIFT
-    enddate = pd.to_datetime(enddate)
-    dropdate = pd.to_datetime(dropdate)
-    assert startdate > Config.FIRST_DATA_DATE, "Start date <= first day of data"
-    assert startdate < enddate, "Start date >= end date"
-    assert enddate <= dropdate, "End date > drop date"
-    data = data[(data[Config.DATE_COL] >= Config.FIRST_DATA_DATE) & \
-                (data[Config.DATE_COL] < dropdate)]
     fit_dates = drange(Config.FIRST_DATA_DATE, dropdate)
+    burnindate = startdate - Config.DAY_SHIFT
     burn_in_dates = drange(burnindate, dropdate)
     sensor_dates = drange(startdate, enddate)
     # The ordering of sensor dates corresponds to the order of burn-in dates

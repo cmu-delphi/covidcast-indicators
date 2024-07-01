@@ -51,7 +51,6 @@ def write_to_csv(output_df: pd.DataFrame, geo_level: str, se:bool, out_name: str
     logger.debug(f"wrote {out_n} rows for {geo_level}")
 
 
-#TODO clean the date params
 def csv_to_df(filepath: str, startdate: datetime, enddate: datetime, dropdate: datetime, logger) -> pd.DataFrame:
     '''
     Reads csv using Dask and filters out based on date range and currently unused column,
@@ -65,8 +64,9 @@ def csv_to_df(filepath: str, startdate: datetime, enddate: datetime, dropdate: d
 
     -------
     '''
-    filename = Path(filepath).name
-    logger.info(f"Processing {filename}")
+    filepath = Path(filepath)
+    logger.info(f"Processing {filepath}")
+
     ddata = dd.read_csv(
         filepath,
         compression="gzip",
@@ -75,7 +75,9 @@ def csv_to_df(filepath: str, startdate: datetime, enddate: datetime, dropdate: d
     )
 
     ddata = ddata.dropna()
+    # rename inconsistent column names to match config column names
     ddata = ddata.rename(columns=Config.DEVIANT_COLS_MAP)
+
     ddata = ddata[Config.FILT_COLS]
     ddata[Config.DATE_COL] = dd.to_datetime(ddata[Config.DATE_COL])
 
@@ -89,5 +91,11 @@ def csv_to_df(filepath: str, startdate: datetime, enddate: datetime, dropdate: d
     date_filter = ((ddata[Config.DATE_COL] >= Config.FIRST_DATA_DATE) & (ddata[Config.DATE_COL] < dropdate))
 
     df = ddata[date_filter].compute()
-    logger.info(f"Done processing {filename}")
+
+    # aggregate age groups (so data is unique by service date and FIPS)
+    df = df.groupby([Config.DATE_COL, Config.GEO_COL]).sum(numeric_only=True).reset_index()
+    assert np.sum(df.duplicated()) == 0, "Duplicates after age group aggregation"
+    assert (df[Config.COUNT_COLS] >= 0).all().all(), "Counts must be nonnegative"
+
+    logger.info(f"Done processing {filepath}")
     return df

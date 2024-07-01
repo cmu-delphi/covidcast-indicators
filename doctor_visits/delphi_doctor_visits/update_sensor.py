@@ -15,8 +15,6 @@ from multiprocessing import Pool, cpu_count
 # third party
 import numpy as np
 import pandas as pd
-import dask.dataframe as dd
-
 
 # first party
 from delphi_utils import Weekday
@@ -42,10 +40,6 @@ def update_sensor(
       se: boolean to write out standard errors, if true, use an obfuscated name
       logger: the structured logger
     """
-    # aggregate age groups (so data is unique by service date and FIPS)
-    data = data.groupby([Config.DATE_COL, Config.GEO_COL]).sum(numeric_only=True).reset_index()
-    assert np.sum(data.duplicated()) == 0, "Duplicates after age group aggregation"
-    assert (data[Config.COUNT_COLS] >= 0).all().all(), "Counts must be nonnegative"
 
     drange = lambda s, e: np.array([s + timedelta(days=x) for x in range((e - s).days)])
     fit_dates = drange(Config.FIRST_DATA_DATE, dropdate)

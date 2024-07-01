@@ -23,8 +23,8 @@ class TestPatchModule(unittest.TestCase):
 
             patch()
 
-            self.assertIn('current_issue', mock_read_params.return_value)
-            self.assertEqual(mock_read_params.return_value['current_issue'], '2021-01-02')
+            self.assertIn('current_issue', mock_read_params.return_value['patch'])
+            self.assertEqual(mock_read_params.return_value['patch']['current_issue'], '2021-01-02')
 
             self.assertTrue(os.path.isdir('./patch_dir'))
             self.assertTrue(os.path.isdir('./patch_dir/issue_20210101/doctor-visits'))

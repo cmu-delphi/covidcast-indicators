@@ -17,5 +17,33 @@ Submodules:
 - `validator`: Data sanity checks and anomaly detection.
 
 
-Source code can be found here: 
+Source code can be found here:
 [https://github.com/cmu-delphi/covidcast-indicators/](https://github.com/cmu-delphi/covidcast-indicators/)
+
+## Logger Usage
+
+Single-thread usage.
+
+```py
+from delphi_utils.logger import get_structured_logger
+
+logger = get_structured_logger('my_logger')
+logger.info('Hello, world!')
+```
+
+Multi-thread usage.
+
+```py
+from delphi_utils.logger import get_structured_logger, pool_and_threadedlogger
+
+def f(x, threaded_logger):
+    threaded_logger.info(f'x={x}')
+    return x*x
+
+logger = get_structured_logger('my_logger')
+logger.info('Hello, world!')
+with pool_and_threadedlogger(logger, n_cpu) as (pool, threaded_logger):
+    pool_results = []
+    for i in range(10):
+        pool.apply_async(f, args=(i, threaded_logger))
+```

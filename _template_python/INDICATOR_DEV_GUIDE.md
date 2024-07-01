@@ -74,13 +74,15 @@ While some of this process might have been done already (i.e. it was already dec
 * Georesolution
 * Limitations
 
-Jupyter notebooks work particularly well for exploratory analysis but feel free to use whatever IDE/methodology works best for you.
+Jupyter notebooks work particularly well for exploratory analysis but feel free to use whatever IDE/methodology works best for you. Some of this analysis may be useful during statistical review later, so save your code!
+
+If anything unusual comes up, discuss with the stakeholder (usually the original requestor of the data source, can also be @RoniRos). The goal is to figure out how to handle any issues before getting into the details of implementation.
 
 ### Fetching the data
 
 Download the data in whatever format suits you. A one-off manual download is fine. Don’t worry too much about productionizing the data-fetching step at this point. (Although any code you write can be used later.)
 
-Check to see whether the data is coming from an existing source, e.g. the wastewater data and NCHS data are accessed the same way, so when adding wastewater data, we could reuse the  API key and only needed to lightly modify the API calls for the new dataset.
+Also check to see whether the data is coming from an existing source, e.g. the wastewater data and NCHS data are accessed the same way, so when adding wastewater data, we could reuse the  API key and only needed to lightly modify the API calls for the new dataset.
 
 Reading from a local file:
 
@@ -118,11 +120,12 @@ At this stage we want to answer the questions below (and any others that seem re
       * Consider creating a PRD ([here](https://drive.google.com/drive/u/1/folders/155cGrc9Y7NWwygslCcU8gjL2AQbu5rFF) or [here](https://drive.google.com/drive/u/1/folders/13wUoIl-FjjCkbn2O8qH1iXOCBo2eF2-d)) to present design options.
 * What is the sample size? Is this a privacy concern for us or for the data provider?
 * How often is data missing?
-   * E.g. for privacy, some sources only report when sample size is above a certain threshold
+   * For privacy, some sources only report when sample size is above a certain threshold
+   * Missingness due to reporting pattern (e.g. no weekend reports)?
    * Will we want to and is it feasible to [interpolate missing values](https://github.com/cmu-delphi/covidcast-indicators/issues/1539)?
 * Are there any aberrant values that don’t make sense? e.g. negative counts, out of range percentages, “manual” missingness codes (9999, -9999, etc)
 * Does the data source revise their data? How often?
-   * See raw data saved in Step 0
+   * See raw data saved in [Step 0](#step-0-keep-revision-history-important)
 * What is the reporting schedule of the data?
 * What order of magnitude is the signal? (If it’s sufficiently small, [this issue on how rounding is done](https://github.com/cmu-delphi/covidcast-indicators/issues/1945) needs to be addressed first)
 * How is the data processed by the data source? E.g. normalization, censoring values with small sample sizes, censoring values associated with low-population areas, smoothing, adding jitter, etc.
@@ -237,7 +240,32 @@ The column is described [here](https://cmu-delphi.github.io/delphi-epidata/api/m
 
 As a general rule, it helps to decompose your functions into operations for which you can write unit tests. To run the tests, use `make test` in the top-level indicator directory.
 
-### Statistical Analysis
+### Statistical review
+
+The data produced by the new indicator needs to be sanity-checked. Think of this as doing [exploratory data analysis](#step-1-exploratory-analysis) again, but on the pipeline output. Some of this does overlap with work done in Step 1, but should be revisited following our processing of the data. Aspects of this investigation will be useful to include in the signal documentation.
+
+The analysis doesn't need to be formatted as a report, but should be all in one place, viewable by all Delphi members, and in a format that makes it easy to comment on. Some good options are the GitHub issue originally requesting the data source and the GitHub pull request adding the indicator.
+
+There is not a formal process for this, and you're free to do whatever you think is reasonable and sufficient. A thorough analysis would cover the following topics:
+
+* Run the [correlations notebook](https://github.com/cmu-delphi/covidcast/blob/5f15f71/R-notebooks/cor_dashboard.Rmd) ([example output](https://cmu-delphi.github.io/covidcast/R-notebooks/signal_correlations.html#)).
+   * This helps evaluate the potential value of the signals for modeling.
+   * Choropleths give another way to plot the data to look for weird patterns.
+   * Good starting point for further analyses.
+* Compare the new signals against pre-existing relevant signals
+   * For signals that are ostensibly measuring the same thing, this helps us see issues and benefits of one versus the other and how well they agree (e.g. [JHU cases vs USAFacts cases](https://github.com/cmu-delphi/covidcast-indicators/issues/991)).
+   * For signals that we expect to be related, we should see correlations of the right sign and magnitude.
+* Plot all signals over time.
+   * (unlikely) Do we need to do any interpolation?
+   * (unlikely) Think about if we should do any filtering/cleaning, e.g. [low sample size](https://github.com/cmu-delphi/covidcast-indicators/issues/1513#issuecomment-1036326474) in covid tests causing high variability in test positivity rate.
+* Plot all signals for all geos over time and space (via choropleth).
+   * Look for anomalies, missing geos, missing-not-at-random values, etc.
+   * Verify that DC and any territories are being handled as expected.
+* Think about [limitations](https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/jhu-csse.html#limitations), gotchas, and lag and backfill characteristics.
+
+[Example analysis 1](https://github.com/cmu-delphi/covidcast-indicators/pull/1495#issuecomment-1039477646), [example analysis 2](https://github.com/cmu-delphi/covidcast-indicators/issues/367#issuecomment-717415555).
+
+Once the analysis is complete, have the stakeholder (usually the original requestor of the data source, can also be @RoniRos) review it.
 
 ### Documentation
 

@@ -1,13 +1,14 @@
 # Pipeline Development Manual
 
+
 ## A step-by-step guide to writing a pipeline
 
 TODO:
 
-[] Geomapper guide
-[] Setting up development environment
-[] Deployment guide
-[] Manual for R?
+* Geomapper guide
+* Setting up development environment
+* Deployment guide
+* Manual for R?
 
 
 ## Introduction
@@ -16,7 +17,14 @@ This document provides a comprehensive guide on how to write a data pipeline in 
 
 ### Related documents:
 
-We also have a guide on [adding new API endpoints](https://cmu-delphi.github.io/delphi-epidata/new_endpoint_tutorial.html) (of which COVIDcast is a single example).
+[Adding new API endpoints](https://cmu-delphi.github.io/delphi-epidata/new_endpoint_tutorial.html) (of which COVIDcast is a single example).
+
+Most new data sources will be added as indicators within the main endpoint (called COVIDcast as of 20240628). In rare cases, it may be preferable to add a dedicated endpoint for a new indicator. This would mainly be done if the format of the new data weren't compatible with the format used by the main endpoint, for example, if an indicator reports the same signal for many demographic groups, or if the reported geographic levels are nonstandard in some way.
+
+[Setting up an S3 ArchiveDiffer](https://docs.google.com/document/d/1VcnvfeiO-GUUf88RosmNUfiPMoby-SnwH9s12esi4sI/edit#heading=h.e4ul15t3xmfj)
+
+[Indicator debugging guide](https://docs.google.com/document/d/1vaNgQ2cDrMvAg0FbSurbCemF9WqZVrirPpWEK0RdATQ/edit): somewhat out-of-date but might still be useful
+
 
 ## Basic steps of an indicator
 
@@ -25,7 +33,7 @@ This is the general extract-transform-load procedure used by all COVIDcast indic
 1. Download data from the source. 
    * This could be via an API query, scraping the website, an SFTP or S3 dropbox, an email attachment, etc.
 2. Process the source data to extract one or more time-series signals. 
-   * A signal includes a value, standard error (data-dependent), and sample size (data-dependent) for each region for each unit of time (a day or an epidemiological week "epi-week").
+   * A signal includes a value, standard deviation (data-dependent), and sample size (data-dependent) for each region for each unit of time (a day or an epidemiological week "epi-week").
 3. Aggregate each signal to all possible standard higher geographic levels. 
    * For example, we generate data at the state level by combining data at the county level.
 4. Output each signal into a set of CSV files with a fixed format.
@@ -34,6 +42,7 @@ This is the general extract-transform-load procedure used by all COVIDcast indic
 6. (Data-dependent) Compare today's output with a cached version of what's currently in the API.
    * This converts dense output to a diff and reduces the size of each update.
 7. Deliver the CSV output files to the `receiving/` directory on the API server.
+
 
 ## Step 0: Keep revision history (important!)
 
@@ -48,6 +57,7 @@ This step has a few goals:
 The data should be saved in _raw_ form – do not do any processing. Our own processing (cleaning, aggregation, normalization, etc) of the data may change as the pipeline code develops and doing any processing up front could make the historical data incompatible with the final procedure.
 
 Check back in a couple weeks to compare data versions for revisions.
+
 
 ## Step 1: Exploratory Analysis
 
@@ -103,7 +113,7 @@ At this stage we want to answer the questions below (and any others that seem re
    * For example, some data sources report NYC as separate from New York State.
    * Others require special handling: D.C. and territories (Puerto Rico, Guam, U.S. Virgin Islands).
    * ! Sampling site, facility, or other data-specific or proprietary geographic division
-      * The data may not be appropriate for inclusion in the main endpoint (as of 20240628 called COVIDcast). Talk to @dshemetov (geomapper), @melange396 (epidata, DB), and @RoniRos (PI) for discussion.
+      * The data may not be appropriate for inclusion in the main endpoint (called COVIDcast as of 20240628). Talk to @dshemetov (geomapper), @melange396 (epidata, DB), and @RoniRos (PI) for discussion.
       * Should the data have its own endpoint?
       * Consider creating a PRD ([here](https://drive.google.com/drive/u/1/folders/155cGrc9Y7NWwygslCcU8gjL2AQbu5rFF) or [here](https://drive.google.com/drive/u/1/folders/13wUoIl-FjjCkbn2O8qH1iXOCBo2eF2-d)) to present design options.
 * What is the sample size? Is this a privacy concern for us or for the data provider?
@@ -121,6 +131,7 @@ For any issues that come up, consider now if
 * We’ve seen them before in another dataset and, if so, how we handled it. Is there code around that we can reuse?
 * If it’s a small issue, how would you address it? Do you need an extra function to handle it?
 * If it’s a big issue, talk to others and consider making a PRD to present potential solutions.
+
 
 ## Step 2: Pipeline Code
 
@@ -276,8 +287,3 @@ Another thing to do is setting up the params.json template file in accordance wi
 Apparently adding to a google spreadsheet, need to talk to someone (Carlyn) about the specifics
 
 Github page signal documentation talk to @nmdefries and @tinatownes
-
-## Appendix
-
-* [Setting up an S3 ArchiveDiffer](https://docs.google.com/document/d/1VcnvfeiO-GUUf88RosmNUfiPMoby-SnwH9s12esi4sI/edit#heading=h.e4ul15t3xmfj)
-* [Indicator debugging guide](https://docs.google.com/document/d/1vaNgQ2cDrMvAg0FbSurbCemF9WqZVrirPpWEK0RdATQ/edit): somewhat out-of-date but might still be useful

@@ -159,7 +159,7 @@ Some stubs to consider:
 * Construct an SQL query
 * Run an SQL query
 * Keep a list of columns
-* Geographic transformations (will tend to be wrappers around [`delphi_utils.geomapper`](https://github.com/cmu-delphi/covidcast-indicators/blob/6912077acba97e835aff7d0cd3d64309a1a9241d/_delphi_utils_python/delphi_utils/geomap.py) functions)
+* Geographic transformations (tend to be wrappers around [`delphi_utils.geomapper`](https://github.com/cmu-delphi/covidcast-indicators/blob/6912077acba97e835aff7d0cd3d64309a1a9241d/_delphi_utils_python/delphi_utils/geomap.py) functions)
 
 Example stub:
 
@@ -237,30 +237,32 @@ As a general rule, it helps to decompose your functions into operations for whic
 * Using Delphi utils and functionality 
 * What happens to the data after it gets put in /receiving:
 
-Next, the acquisition:covidcast component of the delphi-epidata codebase does the following immediately after an indicator run (You do need to set acquisition job up):
+Next, the `acquisition.covidcast` component of the `delphi-epidata` codebase does the following immediately after an indicator run (you need to set acquisition job up):
 
-Look in the receiving/ folder to see if any new data files are available. If there are, then:
-1. Import the new data into the epimetric_full table of the epidata.covid database, filling in the columns as follows:
-   1. `source`: parsed from the name of the subdirectory of `receiving/`
-   2. `signal`: parsed from the filename
-   3. `time_type`: parsed from the filename
-   4. `time_value`: parsed from the filename
-   5. `geo_type`: parsed from the filename
-   6. `geo_value`: parsed from each row of the csv file
-   7. `value`: parsed from each row of the csv file
-   8. `se`: parsed from each row of the csv file
-   9. `sample_size`: parsed from each row of the csv file
-   10. `issue`: whatever now is in time_type units
-   11. `lag`: the difference in time_type units from now to time_value
-   12. `value_updated_timestamp`: now
-2. Update the `epimetric_latest` table with any new keys or new versions of existing keys.
+1. Look in the receiving/ folder to see if any new data files are available. If there are, then:
+   1. Import the new data into the epimetric_full table of the epidata.covid database, filling in the columns as follows:
+      1. `source`: parsed from the name of the subdirectory of `receiving/`
+      2. `signal`: parsed from the filename
+      3. `time_type`: parsed from the filename
+      4. `time_value`: parsed from the filename
+      5. `geo_type`: parsed from the filename
+      6. `geo_value`: parsed from each row of the csv file
+      7. `value`: parsed from each row of the csv file
+      8. `se`: parsed from each row of the csv file
+      9. `sample_size`: parsed from each row of the csv file
+      10. `issue`: whatever now is in time_type units
+      11. `lag`: the difference in time_type units from now to time_value
+      12. `value_updated_timestamp`: now
+   2. Update the `epimetric_latest` table with any new keys or new versions of existing keys.
 
 ### Staging
 
 After developing the pipeline code, but before deploying in development, the pipeline should be run on staging for at least a week. This involves setting up some cronicle jobs as follows: first the indicator run
 
 Then the acquisition run
+
 https://cronicle-prod-01.delphi.cmu.edu/#Schedule?sub=edit_event&id=elr5clgy6rs
+
 https://cronicle-prod-01.delphi.cmu.edu/#Schedule?sub=edit_event&id=elr5ctl7art
 
 Note the staging hostname and how the acquisition job is chained to run right after the indicator job. Do a few test runs. 
@@ -273,9 +275,9 @@ Another thing to do is setting up the params.json template file in accordance wi
 
 Apparently adding to a google spreadsheet, need to talk to someone (Carlyn) about the specifics
 
-Github page signal documentation talk to Nat and Tina
+Github page signal documentation talk to @nmdefries and @tinatownes
 
 ## Appendix
 
 * [Setting up an S3 ArchiveDiffer](https://docs.google.com/document/d/1VcnvfeiO-GUUf88RosmNUfiPMoby-SnwH9s12esi4sI/edit#heading=h.e4ul15t3xmfj)
-* [Indicator debugging guide](https://docs.google.com/document/d/1vaNgQ2cDrMvAg0FbSurbCemF9WqZVrirPpWEK0RdATQ/edit), somewhat out-of-date but might still be useful
+* [Indicator debugging guide](https://docs.google.com/document/d/1vaNgQ2cDrMvAg0FbSurbCemF9WqZVrirPpWEK0RdATQ/edit): somewhat out-of-date but might still be useful

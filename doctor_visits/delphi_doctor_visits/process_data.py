@@ -6,6 +6,52 @@ from pathlib import Path
 
 from .config import Config
 
+def format_df(df: pd.DataFrame, geo_id: str, se: bool, logger):
+    '''
+
+    Parameters
+    ----------
+    df
+    geo_id
+    se
+    logger
+
+    Returns
+    -------
+
+    '''
+    # report in percentage
+    df['val'] = df['val'] * 100
+    df["se"] = df["se"] * 100
+
+    val_isnull = df["val"].isnull()
+    df_val_null = df[val_isnull]
+    if not df_val_null.empty:
+        logger.info("sensor value is nan, check pipeline")
+    filtered_df = df[~val_isnull]
+
+    se_too_high = filtered_df['se'] >= 5
+    df_se_too_high = filtered_df[se_too_high]
+    if len(df_se_too_high.empty) > 0:
+        logger.info(f"standard error suspiciously high! investigate {geo_id}")
+    filtered_df = filtered_df[~se_too_high]
+
+    sensor_too_high = filtered_df['val'] >= 90
+    df_sensor_too_high = filtered_df[sensor_too_high]
+    if len(df_sensor_too_high) > 0:
+        logger.info(f"standard error suspiciously high! investigate {geo_id}")
+    filtered_df = filtered_df[~sensor_too_high]
+
+    if se:
+        valid_cond = filtered_df['se'] > 0 & filtered_df['val'] > 0
+        invalid_df = filtered_df[~valid_cond]
+        if len(invalid_df) > 0:
+            logger.info(f"p=0, std_err=0 invalid")
+        filtered_df = filtered_df[valid_cond]
+    else:
+        filtered_df.drop(columns=['se'], inplace=True)
+
+
 
 def write_to_csv(output_df: pd.DataFrame, geo_level: str, se:bool, out_name: str, logger, output_path="."):
     """Write sensor values to csv.
@@ -27,27 +73,7 @@ def write_to_csv(output_df: pd.DataFrame, geo_level: str, se:bool, out_name: str
                                         geo_level,
                                         out_name)
         single_date_df = output_df[output_df["date"] == d]
-        with open(filename, "w") as outfile:
-            outfile.write("geo_id,val,se,direction,sample_size\n")
 
-            for line in single_date_df.itertuples():
-                geo_id = line.geo_id
-                sensor = 100 * line.val  # report percentages
-                se_val = 100 * line.se
-                assert not np.isnan(sensor), "sensor value is nan, check pipeline"
-                assert sensor < 90, f"strangely high percentage {geo_id, sensor}"
-                if not np.isnan(se_val):
-                    assert se_val < 5, f"standard error suspiciously high! investigate {geo_id}"
-
-                if se:
-                    assert sensor > 0 and se_val > 0, "p=0, std_err=0 invalid"
-                    outfile.write(
-                        "%s,%f,%s,%s,%s\n" % (geo_id, sensor, se_val, "NA", "NA"))
-                else:
-                    # for privacy reasons we will not report the standard error
-                    outfile.write(
-                        "%s,%f,%s,%s,%s\n" % (geo_id, sensor, "NA", "NA", "NA"))
-                out_n += 1
     logger.debug(f"wrote {out_n} rows for {geo_level}")
 
 

@@ -14,12 +14,17 @@ from delphi_utils import get_structured_logger, read_params
 
 from .run import run_module
 
-if __name__ == "__main__":
-    # Run the doctor visits indicator for a range of issue dates, specified in params.json using following keys:
-    # - "patch": Only used for patching data
-    #     - "start_date": str, YYYY-MM-DD format, first issue date
-    #     - "end_date": str, YYYY-MM-DD format, last issue date
-    #     - "patch_dir": str, directory to write all issues output
+
+def patch():
+    """
+    Run the doctor visits indicator for a range of issue dates.
+
+    The range of issue dates is specified in params.json using the following keys:
+    - "patch": Only used for patching data
+        - "start_date": str, YYYY-MM-DD format, first issue date
+        - "end_date": str, YYYY-MM-DD format, last issue date
+        - "patch_dir": str, directory to write all issues output
+    """
     params = read_params()
     logger = get_structured_logger("delphi_doctor_visits.patch", filename=params["common"]["log_filename"])
 
@@ -46,3 +51,7 @@ if __name__ == "__main__":
 
         run_module(params, logger)
         current_issue += timedelta(days=1)
+
+
+if __name__ == "__main__":
+    patch()

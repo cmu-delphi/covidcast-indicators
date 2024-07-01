@@ -15,24 +15,24 @@ from multiprocessing import Pool, cpu_count
 # third party
 import numpy as np
 import pandas as pd
+import dask.dataframe as dd
 
 
 # first party
 from delphi_utils import Weekday
 from .config import Config
 from .geo_maps import GeoMaps
-from .process_data import csv_to_df
 from .sensor import DoctorVisitsSensor
 
 
 def update_sensor(
-        filepath:str, startdate:datetime, enddate:datetime, dropdate:datetime, geo:str, parallel: bool,
+        data:pd.DataFrame, startdate:datetime, enddate:datetime, dropdate:datetime, geo:str, parallel: bool,
         weekday:bool, se:bool, logger
 ):
     """Generate sensor values.
 
     Args:
-      filepath: path to the aggregated doctor-visits data
+      data: dataframe of the cleaned claims file
       startdate: first sensor date (YYYY-mm-dd)
       enddate: last sensor date (YYYY-mm-dd)
       dropdate: data drop date (YYYY-mm-dd)
@@ -42,8 +42,6 @@ def update_sensor(
       se: boolean to write out standard errors, if true, use an obfuscated name
       logger: the structured logger
     """
-    data = csv_to_df(filepath, startdate, enddate, dropdate, logger)
-
     # aggregate age groups (so data is unique by service date and FIPS)
     data = data.groupby([Config.DATE_COL, Config.GEO_COL]).sum(numeric_only=True).reset_index()
     assert np.sum(data.duplicated()) == 0, "Duplicates after age group aggregation"

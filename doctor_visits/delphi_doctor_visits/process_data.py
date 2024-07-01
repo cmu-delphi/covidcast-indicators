@@ -63,9 +63,7 @@ def csv_to_df(filepath: str, startdate: datetime, enddate: datetime, dropdate: d
       enddate: last sensor date (YYYY-mm-dd)
       dropdate: data drop date (YYYY-mm-dd)
 
-    Returns
     -------
-    cleaned dataframe
     '''
     filename = Path(filepath).name
     logger.info(f"Processing {filename}")

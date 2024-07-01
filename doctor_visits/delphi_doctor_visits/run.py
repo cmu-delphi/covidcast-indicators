@@ -14,7 +14,8 @@ from pathlib import Path
 from delphi_utils import get_structured_logger
 
 # first party
-from .update_sensor import update_sensor, write_to_csv
+from .update_sensor import update_sensor
+from .process_data import csv_to_df, write_to_csv
 from .download_claims_ftp_files import download
 from .get_latest_claims_name import get_latest_filename
 
@@ -85,6 +86,8 @@ def run_module(params):  # pylint: disable=too-many-statements
     ## geographies
     geos = ["state", "msa", "hrr", "county", "hhs", "nation"]
 
+    claims_df = csv_to_df(claims_file, startdate_dt, enddate_dt, dropdate_dt, logger)
+
     ## print out other vars
     logger.info("outpath:\t\t%s", export_dir)
     logger.info("parallel:\t\t%s", params["indicator"]["parallel"])
@@ -102,7 +105,7 @@ def run_module(params):  # pylint: disable=too-many-statements
             else:
                 logger.info("starting %s, no adj", geo)
             sensor = update_sensor(
-                filepath=claims_file,
+                data=claims_df,
                 startdate=startdate_dt,
                 enddate=enddate_dt,
                 dropdate=dropdate_dt,

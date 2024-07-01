@@ -19,13 +19,17 @@ class Config:
     # data columns
     CLI_COLS = ["Covid_like", "Flu_like", "Mixed"]
     FLU1_COL = ["Flu1"]
-    COUNT_COLS = ["Denominator"] + FLU1_COL + CLI_COLS
+    COUNT_COLS = CLI_COLS + FLU1_COL + ["Denominator"]
     DATE_COL = "ServiceDate"
     GEO_COL = "PatCountyFIPS"
     AGE_COL = "PatAgeGroup"
     HRR_COLS = ["Pat HRR Name", "Pat HRR ID"]
+    # as of 2020-05-11, input file expected to have 10 columns
+    # id cols: ServiceDate, PatCountyFIPS, PatAgeGroup, Pat HRR ID/Pat HRR Name
+    # value cols: Denominator, Covid_like, Flu_like, Flu1, Mixed
     ID_COLS = [DATE_COL] + [GEO_COL] + HRR_COLS + [AGE_COL]
-    FILT_COLS = ID_COLS + COUNT_COLS
+    # drop HRR columns - unused for now since we assign HRRs by FIPS
+    FILT_COLS = [DATE_COL] + [GEO_COL] + [AGE_COL] + COUNT_COLS
     DTYPES = {
         "ServiceDate": str,
         "PatCountyFIPS": str,

@@ -52,8 +52,10 @@ def run_module(params, logger=None):  # pylint: disable=too-many-statements
     issue_date = params.get("patch", {}).get("current_issue", None)
     if not logger:
         logger = get_structured_logger(
-            __name__, filename=params["common"].get("log_filename"),
-            log_exceptions=params["common"].get("log_exceptions", True))
+            __name__,
+            filename=params["common"].get("log_filename"),
+            log_exceptions=params["common"].get("log_exceptions", True),
+        )
 
     # pull latest data
     download(params["indicator"]["ftp_credentials"], params["indicator"]["input_dir"], logger, issue_date=issue_date)

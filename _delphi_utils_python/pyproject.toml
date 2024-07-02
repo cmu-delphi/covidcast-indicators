@@ -7,7 +7,8 @@ name = "delphi-utils"
 version = "0.3.23"
 description = "Shared Utility Functions for Indicators"
 readme = "README.md"
-license = "MIT"
+requires-python = "== 3.8.*"
+license = {text = "MIT License"}
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
@@ -29,7 +30,7 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/cmu-delphi/"
+Homepage = "https://github.com/cmu-delphi/covidcast-indicators"
 
 
 [project.optional-dependencies]

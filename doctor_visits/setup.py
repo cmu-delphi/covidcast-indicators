@@ -12,6 +12,7 @@ required = [
     "pytest",
     "scikit-learn",
     "dask",
+    "cvxpy>=1.5",
 ]
 
 setup(

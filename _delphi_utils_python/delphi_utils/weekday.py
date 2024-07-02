@@ -12,12 +12,19 @@ class Weekday:
     """Class to handle weekday effects."""
 
     @staticmethod
-    def get_params(data, denominator_col, numerator_cols, date_col, scales, logger):
+    def get_params(data, denominator_col, numerator_cols, date_col, scales, logger, solver_override=None):
         r"""Fit weekday correction for each col in numerator_cols.
 
         Return a matrix of parameters: the entire vector of betas, for each time
         series column in the data.
+
+        solver: Historically used "ECOS" but due to numerical stability issues, "CLARABEL"
+        (introduced in cvxpy 1.3)is now the default solver in cvxpy 1.5.
         """
+        if solver_override is None:
+            solver = cp.CLARABEL
+        else:
+            solver = solver_override
         tmp = data.reset_index()
         denoms = tmp.groupby(date_col).sum()[denominator_col]
         nums = tmp.groupby(date_col).sum()[numerator_cols]
@@ -35,7 +42,7 @@ class Weekday:
 
         # Loop over the available numerator columns and smooth each separately.
         for i in range(nums.shape[1]):
-            result = Weekday._fit(X, scales, npnums[:, i], npdenoms)
+            result = Weekday._fit(X, scales, npnums[:, i], npdenoms, solver)
             if result is None:
                 logger.error("Unable to calculate weekday correction")
             else:
@@ -44,7 +51,18 @@ class Weekday:
         return params
 
     @staticmethod
-    def _fit(X, scales, npnums, npdenoms):
+    def get_params_legacy(data, denominator_col, numerator_cols, date_col, scales, logger):
+        r"""
+        Preserves older default behavior of using the ECOS solver.
+
+        NOTE: "ECOS" solver will not be installed by default as of cvxpy 1.6
+        """
+        return Weekday.get_params(
+            data, denominator_col, numerator_cols, date_col, scales, logger, solver_override=cp.ECOS
+        )
+
+    @staticmethod
+    def _fit(X, scales, npnums, npdenoms, solver):
         r"""Correct a signal estimated as numerator/denominator for weekday effects.
 
         The ordinary estimate would be numerator_t/denominator_t for each time point
@@ -78,6 +96,8 @@ class Weekday:
 
         ll = (numerator * (X*b + log(denominator)) - sum(exp(X*b) + log(denominator)))
                 / num_days
+
+        solver: Historically use "ECOS" but due to numerical issues, "CLARABEL" is now default.
         """
         b = cp.Variable((X.shape[1]))
 
@@ -93,7 +113,7 @@ class Weekday:
         for scale in scales:
             try:
                 prob = cp.Problem(cp.Minimize((-ll + lmbda * penalty) / scale))
-                _ = prob.solve(solver=cp.CLARABEL)
+                _ = prob.solve(solver=solver)
                 return b.value
             except SolverError:
                 # If the magnitude of the objective function is too large, an error is

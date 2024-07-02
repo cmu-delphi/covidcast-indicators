@@ -215,7 +215,7 @@ TODO: A list of assumptions that the server makes about various columns would be
 In an ideal case, the data exists at one of our already covered geos:
 
 * State: state_code or state_id
-* FIPS (state+county codes)
+* FIPS (state+county codes, 5-digit string)
 * ZIP
 * MSA (metro statistical area, int)
 * HRR (hospital referral region, int)
@@ -240,9 +240,43 @@ The column is described [here](https://cmu-delphi.github.io/delphi-epidata/api/m
 
 As a general rule, it helps to decompose your functions into operations for which you can write unit tests. To run the tests, use `make test` in the top-level indicator directory.
 
+#### Naming
+
+Indicator and signal names need to be approved by @RoniRos.
+
+The data source name as specified during an API call (e.g. in `epidatr::pub_covidcast(source = "jhu-csse", ...)`, "jhu-csse" is the data source name) should match the wildcard portion of the module name ("jhu" in `delphi_jhu`) _and_ the top-level directory name in `covidcast-indicators` ("jhu"). (Ideally, these would all also match how we casually refer to the indicator ("JHU"), but that's hard to foresee and enforce.)
+
+Ideally, the indicator name should:
+
+* Make it easy to tell where the data is coming from
+* Make it easy to tell what type of data it is and/or what is unique about it
+* Be uniquely identifying enough that if we added another indicator from the same organization, we could tell the two apart
+* Be fairly short
+* Be descriptive
+
+Based on these guidelines, the `jhu-csse` indicator would be better as `jhu-csse` everywhere (module name could be `delphi_jhu_csse`), rather than having a mix of `jhu-csse` and `jhu`.
+
+Signal names should not be too long, but the most important feature is that they are descriptive.
+
+Some standard tags used in signal names:
+
+* `raw`: unsmoothed, _no longer used; if no smoothing is specified the signal is assumed to be "raw"_
+* `7dav`: smoothed using a average over a rolling 7-day window; comes at the end of the name
+* `smoothed`: smoothed using a more complex smoothing algorithm
+* `prop`: counts per 100k population
+* `pct`: percentage between 0 and 100
+* `num`: counts, _no longer used; if no value type is specified the signal is assumed to be a count_
+* `cli`: COVID-like illness
+* `ili`: influenza-like illness
+
+Using this tag dictionary, we can interpret the following signals as
+
+* `confirmed_admissions_influenza_1d_prop` = raw (unsmoothed) daily ("1d") confirmed influenza hospital admissions ("confirmed_admissions_influenza") per 100,000 population ("prop").
+* `confirmed_admissions_influenza_1d_prop_7dav` = the same as above, but smoothed with a 7-day moving average ("7dav").
+
 ### Statistical review
 
-The data produced by the new indicator needs to be sanity-checked. Think of this as doing [exploratory data analysis](#step-1-exploratory-analysis) again, but on the pipeline output. Some of this does overlap with work done in Step 1, but should be revisited following our processing of the data. Aspects of this investigation will be useful to include in the signal documentation.
+The data produced by the new indicator needs to be sanity-checked. Think of this as doing [exploratory data analysis](#step-1-exploratory-analysis) again, but on the pipeline _output_. Some of this does overlap with work done in Step 1, but should be revisited following our processing of the data. Aspects of this investigation will be useful to include in the signal documentation.
 
 The analysis doesn't need to be formatted as a report, but should be all in one place, viewable by all Delphi members, and in a format that makes it easy to comment on. Some good options are the GitHub issue originally requesting the data source and the GitHub pull request adding the indicator.
 

@@ -76,7 +76,7 @@ While some of this process might have been done already (i.e. it was already dec
 
 Jupyter notebooks work particularly well for exploratory analysis but feel free to use whatever IDE/methodology works best for you. Some of this analysis may be useful during statistical review later, so save your code!
 
-If anything unusual comes up, discuss with the stakeholder (usually the original requestor of the data source, can also be @RoniRos). The goal is to figure out how to handle any issues before getting into the details of implementation.
+If anything unusual comes up, discuss with the stakeholder (usually the original requestor of the data source, can also be [@RoniRos](https://www.github.com/RoniRos)). The goal is to figure out how to handle any issues before getting into the details of implementation.
 
 ### Fetching the data
 
@@ -115,7 +115,7 @@ At this stage we want to answer the questions below (and any others that seem re
    * For example, some data sources report NYC as separate from New York State.
    * Others require special handling: D.C. and territories (Puerto Rico, Guam, U.S. Virgin Islands).
    * ! Sampling site, facility, or other data-specific or proprietary geographic division
-      * The data may not be appropriate for inclusion in the main endpoint (called COVIDcast as of 20240628). Talk to @dshemetov (geomapper), @melange396 (epidata, DB), and @RoniRos (PI) for discussion.
+      * The data may not be appropriate for inclusion in the main endpoint (called COVIDcast as of 20240628). Talk to [@dshemetov](https://www.github.com/dshemetov) (geomapper), [@melange396](https://www.github.com/melange396) (epidata, DB), and [@RoniRos](https://www.github.com/RoniRos) (PI) for discussion.
       * Should the data have its own endpoint?
       * Consider creating a PRD ([here](https://drive.google.com/drive/u/1/folders/155cGrc9Y7NWwygslCcU8gjL2AQbu5rFF) or [here](https://drive.google.com/drive/u/1/folders/13wUoIl-FjjCkbn2O8qH1iXOCBo2eF2-d)) to present design options.
 * What is the sample size? Is this a privacy concern for us or for the data provider?
@@ -246,7 +246,7 @@ Unit tests are required for all functions. Integration tests are highly desired,
 
 #### Naming
 
-Indicator and signal names need to be approved by @RoniRos.
+Indicator and signal names need to be approved by [@RoniRos](https://www.github.com/RoniRos).
 
 The data source name as specified during an API call (e.g. in `epidatr::pub_covidcast(source = "jhu-csse", ...)`, "jhu-csse" is the data source name) should match the wildcard portion of the module name ("jhu" in `delphi_jhu`) _and_ the top-level directory name in `covidcast-indicators` ("jhu"). (Ideally, these would all also match how we casually refer to the indicator ("JHU"), but that's hard to foresee and enforce.)
 
@@ -303,7 +303,7 @@ There is not a formal process for this, and you're free to do whatever you think
 
 [Example analysis 1](https://github.com/cmu-delphi/covidcast-indicators/pull/1495#issuecomment-1039477646), [example analysis 2](https://github.com/cmu-delphi/covidcast-indicators/issues/367#issuecomment-717415555).
 
-Once the analysis is complete, have the stakeholder (usually the original requestor of the data source, can also be @RoniRos) review it.
+Once the analysis is complete, have the stakeholder (usually the original requestor of the data source, can also be [@RoniRos](https://www.github.com/RoniRos)) review it.
 
 ### Documentation
 
@@ -363,7 +363,7 @@ first the indicator run
 
 Then the acquisition run
 
-See @korlaxxalrok or @minhkhul for more information.
+See [@korlaxxalrok](https://www.github.com/korlaxxalrok) or [@minhkhul](https://www.github.com/minhkhul) for more information.
 
 https://cronicle-prod-01.delphi.cmu.edu/#Schedule?sub=edit_event&id=elr5clgy6rs
 
@@ -385,4 +385,4 @@ How to add to signal discovery app
 
 How to add to www-main signal dashboard
 
-Github page signal documentation talk to @nmdefries and @tinatownes
+Github page signal documentation talk to [@nmdefries](https://www.github.com/nmdefries) and [@tinatownes](https://www.github.com/tinatownes)

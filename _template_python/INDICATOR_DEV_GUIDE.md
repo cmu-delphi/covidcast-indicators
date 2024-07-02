@@ -335,11 +335,11 @@ At the time that you're writing the documentation, you are the expert on the dat
 
 * This is after we have a working one-off script 
 * Using Delphi utils and functionality 
-* What happens to the data after it gets put in /receiving:
+* What happens to the data after it gets put in `receiving/`:
 
 Next, the `acquisition.covidcast` component of the `delphi-epidata` codebase does the following immediately after an indicator run (you need to set acquisition job up):
 
-1. Look in the receiving/ folder to see if any new data files are available. If there are, then:
+1. Look in the `receiving/` folder to see if any new data files are available. If there are, then:
    1. Import the new data into the epimetric_full table of the epidata.covid database, filling in the columns as follows:
       1. `source`: parsed from the name of the subdirectory of `receiving/`
       2. `signal`: parsed from the filename

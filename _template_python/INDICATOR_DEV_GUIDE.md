@@ -161,6 +161,8 @@ Generally, indicators have:
 * `geo.py`: Do geo-aggregation. This tends to be simple wrappers around [`delphi_utils.geomapper`](https://github.com/cmu-delphi/covidcast-indicators/blob/6912077acba97e835aff7d0cd3d64309a1a9241d/_delphi_utils_python/delphi_utils/geomap.py) functions. Do other geo handling (e.g. finding and reporting DC as a state).
 * `constants.py`: Lists of geos to produce, signals to produce, dataset ids, data source URL, etc.
 
+Your code should be _extensively_ commented! Especially note sections where you took an unusual approach (make sure to say why and consider briefly discussing alternate approaches).
+
 #### Function stubs
 
 If you have many functions you want to implement and/or anticipate a complex pipeline, consider starting with [function stubs](https://en.wikipedia.org/wiki/Method_stub) with comments or pseudo code. Bonus: consider writing unit tests upfront based on the expected behavior of each function.
@@ -316,7 +318,7 @@ An indicator documentation page should contain as much detail (including technic
 * Links to any data source documentation you referenced
 * List of signal names, descriptions, with start dates
 * Prose description of how signals are calculated
-* Specific math showing how signals are calculated, if unusual or complex
+* Specific math showing how signals are calculated, if unusual or complex or you like equations
 * How smoothing is done, if any
 * Known limitations of the data source and the final signals
 * Missingness characteristics, especially if the data is missing with a pattern (on weekends, etc)
@@ -326,6 +328,8 @@ An indicator documentation page should contain as much detail (including technic
 and anything else that changes how users would use or interpret the data, impacts the usability of the signal, may be difficult to discover, recommended usecases, is unusual, any gotchas about the data or the data processing approach, etc. _More detail is better!_
 
 At the time that you're writing the documentation, you are the expert on the data source and the indicator. Making the documentation thorough and clear will make the data maximally usable for future users, and will make maintenance for Delphi easier.
+
+(For similar reasons, comment your code extensively!)
 
 ## Step 3: Deployment
 
@@ -373,6 +377,12 @@ Another thing to do is setting up the params.json template file in accordance wi
 
 ### Signal Documentation
 
+TODO
+
 Apparently adding to a google spreadsheet, need to talk to someone (Carlyn) about the specifics
+
+How to add to signal discovery app
+
+How to add to www-main signal dashboard
 
 Github page signal documentation talk to @nmdefries and @tinatownes

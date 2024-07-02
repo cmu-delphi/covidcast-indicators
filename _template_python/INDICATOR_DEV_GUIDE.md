@@ -215,7 +215,7 @@ TODO: A list of assumptions that the server makes about various columns would be
 In an ideal case, the data exists at one of our already covered geos:
 
 * State: state_code or state_id
-* FIPS (state+county codes, 5-digit string)
+* FIPS (state+county codes, string leftpadded to 5 digits with zeroes)
 * ZIP
 * MSA (metro statistical area, int)
 * HRR (hospital referral region, int)
@@ -239,6 +239,8 @@ The column is described [here](https://cmu-delphi.github.io/delphi-epidata/api/m
 #### Testing
 
 As a general rule, it helps to decompose your functions into operations for which you can write unit tests. To run the tests, use `make test` in the top-level indicator directory.
+
+Unit tests are required for all functions. Integration tests are highly desired, but may be difficult to set up depending on where the data is being fetched from. Mocking functions are useful in this case.
 
 #### Naming
 
@@ -266,8 +268,8 @@ Some standard tags used in signal names:
 * `prop`: counts per 100k population
 * `pct`: percentage between 0 and 100
 * `num`: counts, _no longer used; if no value type is specified the signal is assumed to be a count_
-* `cli`: COVID-like illness
-* `ili`: influenza-like illness
+* `cli`: COVID-like illness (fever, along with cough or shortness of breath or difficulty breathing)
+* `ili`: influenza-like illness (fever, along with cough or sore throat)
 
 Using this tag dictionary, we can interpret the following signals as
 
@@ -303,6 +305,27 @@ Once the analysis is complete, have the stakeholder (usually the original reques
 
 ### Documentation
 
+The [documentation site](https://cmu-delphi.github.io/delphi-epidata/) ([code here](https://github.com/cmu-delphi/delphi-epidata/tree/628e9655144934f3903c133b6713df4d4fcc613e/docs)) stores long-term long-form documentation pages for each indicator, including those that are inactive.
+
+Active and new indicators go in the [COVIDcast Main Endpoint -> Data Sources and Signals](https://cmu-delphi.github.io/delphi-epidata/api/covidcast_signals.html) section ([code here](https://github.com/cmu-delphi/delphi-epidata/tree/628e9655144934f3903c133b6713df4d4fcc613e/docs/api/covidcast-signals)). A [template doc page](https://github.com/cmu-delphi/delphi-epidata/blob/628e9655144934f3903c133b6713df4d4fcc613e/docs/api/covidcast-signals/_source-template.md) is available in the same directory.
+
+An indicator documentation page should contain as much detail (including technical detail) as possible. The following fields are required:
+
+* Description of the data source and data collection methods
+* Links to the data source (organization and specific dataset(s) used)
+* Links to any data source documentation you referenced
+* List of signal names, descriptions, with start dates
+* Prose description of how signals are calculated
+* Specific math showing how signals are calculated, if unusual or complex
+* How smoothing is done, if any
+* Known limitations of the data source and the final signals
+* Missingness characteristics, especially if the data is missing with a pattern (on weekends, etc)
+* Lag and revision characteristics
+* Licensing information
+
+and anything else that changes how users would use or interpret the data, impacts the usability of the signal, may be difficult to discover, recommended usecases, is unusual, any gotchas about the data or the data processing approach, etc. _More detail is better!_
+
+At the time that you're writing the documentation, you are the expert on the data source and the indicator. Making the documentation thorough and clear will make the data maximally usable for future users, and will make maintenance for Delphi easier.
 
 ## Step 3: Deployment
 
@@ -330,9 +353,13 @@ Next, the `acquisition.covidcast` component of the `delphi-epidata` codebase doe
 
 ### Staging
 
-After developing the pipeline code, but before deploying in development, the pipeline should be run on staging for at least a week. This involves setting up some cronicle jobs as follows: first the indicator run
+After developing the pipeline code, but before deploying in development, the pipeline should be run on staging for at least a week. This involves setting up some cronicle jobs as follows:
+
+first the indicator run
 
 Then the acquisition run
+
+See @korlaxxalrok or @minhkhul for more information.
 
 https://cronicle-prod-01.delphi.cmu.edu/#Schedule?sub=edit_event&id=elr5clgy6rs
 

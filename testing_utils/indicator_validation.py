@@ -2,7 +2,7 @@ from os import listdir, getcwd
 from os.path import isfile, join, basename
 from datetime import datetime
 
-import covidcast
+import delphi_utils.covidcast_port as covidcast
 from joblib import Memory
 import nest_asyncio
 from numpy.core.numeric import NaN

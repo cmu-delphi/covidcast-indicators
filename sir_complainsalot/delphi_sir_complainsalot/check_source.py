@@ -4,10 +4,10 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import List
 
-import covidcast
+import delphi_utils.covidcast_port as covidcast
 import pandas as pd
 
-covidcast.covidcast._ASYNC_CALL = True  # pylint: disable=protected-access
+covidcast._ASYNC_CALL = True  # pylint: disable=protected-access
 
 @dataclass
 class Complaint:

@@ -3,13 +3,15 @@
 
 import re
 import threading
+import warnings
 from os import listdir
 from os.path import isfile, join
-import warnings
-import requests
-import pandas as pd
+
 import numpy as np
-import covidcast
+import pandas as pd
+import requests
+
+from .. import covidcast_port as covidcast
 from .errors import APIDataFetchError, ValidationFailure
 
 FILENAME_REGEX = re.compile(

@@ -1,7 +1,21 @@
 """
 This module is used for patching data in the delphi_doctor_visits package.
 
-To use this module, you need to specify the range of issue dates in params.json.
+To use this module, you need to specify the range of issue dates in params.json, like so:
+
+{
+  "common": {
+    ...
+  },
+  "validation": {
+    ...
+  },
+  "patch": {
+    "patch_dir": "/Users/minhkhuele/Desktop/delphi/covidcast-indicators/doctor_visits/AprilPatch",
+    "start_issue": "2024-04-20",
+    "end_issue": "2024-04-21"
+  }
+}
 
 It will generate data for that range of issue dates, and store them in batch issue format:
 [name-of-patch]/issue_[issue-date]/doctor-visits/actual_data_file.csv

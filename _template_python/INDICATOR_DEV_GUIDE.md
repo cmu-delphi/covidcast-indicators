@@ -238,7 +238,7 @@ This example is taken from [`hhs_hosp`](https://github.com/cmu-delphi/covidcast-
 
 The column is described [here](https://cmu-delphi.github.io/delphi-epidata/api/missing_codes.html).
 
-#### Testing
+#### Local testing
 
 As a general rule, it helps to decompose your functions into operations for which you can write unit tests. To run the tests, use `make test` in the top-level indicator directory.
 
@@ -355,25 +355,124 @@ Next, the `acquisition.covidcast` component of the `delphi-epidata` codebase doe
       12. `value_updated_timestamp`: now
    2. Update the `epimetric_latest` table with any new keys or new versions of existing keys.
 
-### Staging
+### CI/CD:
+* Add module name to the `build` job in `.github/workflows/python-ci.yml`. This allows github actions to run on this indicator code, which includes unit tests and linting.
 
-After developing the pipeline code, but before deploying in development, the pipeline should be run on staging for at least a week. This involves setting up some cronicle jobs as follows:
+* Add top-level directory name to `indicator_list` in `Jenkinsfile`. This allows your code to be automatically deployed to staging after your branch is merged to main, and deployed to prod after `cocivcast-indicators` is released.
 
-first the indicator run
+* Create `ansible/templates/{top_level_directory_name}-params-prod.json.j2` based on your `params.json.template` with some adjustment:
+   * "export_dir": "/common/covidcast/receiving/{data-source-name}"
+   * "log_filename": "/var/log/indicators/{top_level_directory_name}.log"
 
-Then the acquisition run
+Pay attention to the receiving/export directory, as well as how you can store credentials in vault. Refer to [this guide](https://docs.google.com/document/d/1Bbuvtoxowt7x2_8USx_JY-yTo-Av3oAFlhyG-vXGG-c/edit#heading=h.8kkoy8sx3t7f) for more vault info.
+
+### Staging:
+
+After developing the pipeline code, but before release to prod, the pipeline should be run on staging for at least a week. 
+
+The indicator run code is automatically deployed on staging after your branch is merged into main. After merging, make sure you 1. have proper access to Cronicle and staging server `app-mono-dev-01.delphi.cmu.edu` and 2. can see your code on staging at `/home/indicators/runtime/`.
+
+Then, on Cronicle, create two jobs: First one to run the indicator and second one to load the output csv files into database.
+
+#### Indicator run job:
+This job ssh into our staging server and run the indicator, producing csv files output.
+
+Example script:
+```
+#!/bin/sh
+
+# vars
+user='automation'
+host='app-mono-dev-01.delphi.cmu.edu'
+ind_name='nchs_mortality'
+acq_ind_name='nchs-mortality'
+
+# chain_data to be sent to acquisition job
+chain_data=$(jo chain_data=$(jo acq_ind_name=${acq_ind_name} ind_name=${ind_name} user=${user} host=${host}));
+echo "${chain_data}";
+
+ssh -T -l ${user} ${host} "sudo -u indicators -s bash -c 'cd /home/indicators/runtime/${ind_name} && env/bin/python -m delphi_${ind_name}'";
+```
+
+Note the staging hostname in `host`.
+
+Note that `ind_name` variable here refer to the top-level directory name where code is located, while `acq_ind_name` refer to the directory name where output csv files are located, which corresponds to the name of `source` column in our database, as mentioned in step 3. 
+
+To automatically run acquisition job right after indicator job finishes successfully:
+1. In `Plugin` section, select `Interpret JSON in Output`.
+2. In `Chain Reaction` section, select your acquisition run job below to `Run Event on Success`
+You can read more about how the `chain_data` json object in the script above can be used in our subsequent acquisition job [here](https://github.com/jhuckaby/Cronicle/blob/master/docs/Plugins.md#chain-reaction-control).
+
+#### Acquisition job:
+
+The acquisition job use chained data from indicator job to determine where csv output files are, then load them into our database.
+
+Example script:
+```
+#!/usr/bin/python3
+
+import subprocess
+import json
+
+str_data = input()
+print(str_data)
+
+data = json.loads(str_data, strict=False)
+chain_data = data["chain_data"]
+user = chain_data["user"]
+host = chain_data["host"]
+acq_ind_name = chain_data["acq_ind_name"]
+
+cmd = f'''ssh -T -l {user} {host} "cd ~/driver && python3 -m delphi.epidata.acquisition.covidcast.csv_to_database --data_dir=/common/covidcast --indicator_name={acq_ind_name} --log_file=/var/log/epidata/csv_upload_{acq_ind_name}.log"'''
+
+std_err, std_out = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+
+print(std_err.decode('UTF-8'))
+print(std_out.decode('UTF-8'))
+```
+
+#### Staging database checks:
+Apart from checking the logs of staging indicator run and acquisition jobs to identify potential issues with the pipeline, one can also check the contents of staging database for abnormalities.
+
+At this point, acquisition job should have loaded data onto staging mysql db, specifically the `covid` database.
+```
+mysql> use covid;
+Database changed
+```
+Check `signal_dim` table to see if new source and signal names are all present and reasonable. For example:
+```
+mysql> select * from signal_dim where source='nssp';
++---------------+--------+----------------------------------+
+| signal_key_id | source | signal                           |
++---------------+--------+----------------------------------+
+|           817 | nssp   | pct_ed_visits_combined           |
+|           818 | nssp   | pct_ed_visits_covid              |
+|           819 | nssp   | pct_ed_visits_influenza          |
+|           820 | nssp   | pct_ed_visits_rsv                |
+|           821 | nssp   | smoothed_pct_ed_visits_combined  |
+|           822 | nssp   | smoothed_pct_ed_visits_covid     |
+|           823 | nssp   | smoothed_pct_ed_visits_influenza |
+|           824 | nssp   | smoothed_pct_ed_visits_rsv       |
++---------------+--------+----------------------------------+
+```
+
+Then, check if number of records ingested in db matches with number of rows in csv when running locally. For example, the below query sets the `issue` date being the day acquisition job was run, and `signal_key_id` correspond with signals from our new source. Check if this count matches with local run result.
+```
+mysql> SELECT count(*) FROM epimetric_full WHERE issue=202425 AND signal_key_id > 816 AND signal_key_id < 825;
++----------+
+| count(*) |
++----------+
+|  2620872 |
++----------+
+1 row in set (0.80 sec)
+```
+You can also check how data looks more specifically at each geo level or among different signal names depending on the quirks of the source.
 
 See [@korlaxxalrok](https://www.github.com/korlaxxalrok) or [@minhkhul](https://www.github.com/minhkhul) for more information.
 
-https://cronicle-prod-01.delphi.cmu.edu/#Schedule?sub=edit_event&id=elr5clgy6rs
 
-https://cronicle-prod-01.delphi.cmu.edu/#Schedule?sub=edit_event&id=elr5ctl7art
+If everything goes well make a prod version of the indicator run job and use that to run indicator on a daily basis.
 
-Note the staging hostname and how the acquisition job is chained to run right after the indicator job. Do a few test runs. 
-
-If everything goes well (check staging db if data is ingested properly), make a prod version of the indicator run job and use that to run indicator on a daily basis.
-
-Another thing to do is setting up the params.json template file in accordance with how you want to run the indicator and acquisition. Pay attention to the receiving directory, as well as how you can store credentials in vault. Refer to [this guide](https://docs.google.com/document/d/1Bbuvtoxowt7x2_8USx_JY-yTo-Av3oAFlhyG-vXGG-c/edit#heading=h.8kkoy8sx3t7f) for more vault info.
 
 ### Signal Documentation
 

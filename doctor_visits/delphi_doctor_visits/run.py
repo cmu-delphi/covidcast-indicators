@@ -118,13 +118,8 @@ def run_module(params):  # pylint: disable=too-many-statements
             if sensor is None:
                 logger.error("No sensors calculated, no output will be produced")
                 continue
-            # write out results
-            out_name = "smoothed_adj_cli" if weekday else "smoothed_cli"
-            if params["indicator"]["se"]:
-                assert prefix is not None, "template has no obfuscated prefix"
-                out_name = prefix + "_" + out_name
 
-            write_to_csv(sensor, geo, se, out_name, logger, export_dir)
+            write_to_csv(sensor, prefix, geo, weekday, se, logger, export_dir)
             max_dates.append(sensor.date.max())
             n_csv_export.append(sensor.date.unique().shape[0])
             logger.debug(f"wrote files to {export_dir}")

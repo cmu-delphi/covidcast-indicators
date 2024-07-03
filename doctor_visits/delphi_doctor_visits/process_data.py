@@ -6,19 +6,39 @@ from pathlib import Path
 
 from .config import Config
 
-def format_df(df: pd.DataFrame, geo_id: str, se: bool, logger):
+def format_outname(prefix: str, se: bool, weekday:bool):
     '''
 
     Parameters
     ----------
-    df
-    geo_id
+    prefix
     se
-    logger
+    weekday
 
     Returns
     -------
 
+    '''
+    # write out results
+    out_name = "smoothed_adj_cli" if weekday else "smoothed_cli"
+    if se:
+        assert prefix is not None, "template has no obfuscated prefix"
+        out_name = prefix + "_" + out_name
+    return out_name
+
+def format_df(df: pd.DataFrame, geo_id: str, se: bool, logger):
+    '''
+    format dataframe and checks for anomalies to write results
+    Parameters
+    ----------
+    df: dataframe from output from update_sensor
+    geo_id: geographic resolution, one of ["county", "state", "msa", "hrr", "nation", "hhs"]
+    se: boolean to write out standard errors, if true, use an obfuscated name
+    logger
+
+    Returns
+    -------
+    filtered and formatted dataframe
     '''
     # report in percentage
     df['val'] = df['val'] * 100
@@ -28,53 +48,61 @@ def format_df(df: pd.DataFrame, geo_id: str, se: bool, logger):
     df_val_null = df[val_isnull]
     if not df_val_null.empty:
         logger.info("sensor value is nan, check pipeline")
-    filtered_df = df[~val_isnull]
+    df = df[~val_isnull]
 
-    se_too_high = filtered_df['se'] >= 5
-    df_se_too_high = filtered_df[se_too_high]
-    if len(df_se_too_high.empty) > 0:
+    se_too_high = df['se'] >= 5
+    df_se_too_high = df[se_too_high]
+    if len(df_se_too_high) > 0:
         logger.info(f"standard error suspiciously high! investigate {geo_id}")
-    filtered_df = filtered_df[~se_too_high]
+    df = df[~se_too_high]
 
-    sensor_too_high = filtered_df['val'] >= 90
-    df_sensor_too_high = filtered_df[sensor_too_high]
+    sensor_too_high = df['val'] >= 90
+    df_sensor_too_high = df[sensor_too_high]
     if len(df_sensor_too_high) > 0:
         logger.info(f"standard error suspiciously high! investigate {geo_id}")
-    filtered_df = filtered_df[~sensor_too_high]
+    df = df[~sensor_too_high]
 
     if se:
-        valid_cond = filtered_df['se'] > 0 & filtered_df['val'] > 0
-        invalid_df = filtered_df[~valid_cond]
+        valid_cond = (df['se'] > 0) & (df['val'] > 0)
+        invalid_df = df[~valid_cond]
         if len(invalid_df) > 0:
             logger.info(f"p=0, std_err=0 invalid")
-        filtered_df = filtered_df[valid_cond]
+        df = df[valid_cond]
     else:
-        filtered_df.drop(columns=['se'], inplace=True)
+        df["se"] = np.NAN
 
+    df["direction"] = np.NAN
+    df["sample_size"] = np.NAN
+    return df
 
-
-def write_to_csv(output_df: pd.DataFrame, geo_level: str, se:bool, out_name: str, logger, output_path="."):
+def write_to_csv(output_df: pd.DataFrame, prefix: str, geo_id: str, weekday: bool, se:bool, logger, output_path="."):
     """Write sensor values to csv.
 
     Args:
       output_dict: dictionary containing sensor rates, se, unique dates, and unique geo_id
-      geo_level: geographic resolution, one of ["county", "state", "msa", "hrr", "nation", "hhs"]
+      geo_id: geographic resolution, one of ["county", "state", "msa", "hrr", "nation", "hhs"]
       se: boolean to write out standard errors, if true, use an obfuscated name
       out_name: name of the output file
       output_path: outfile path to write the csv (default is current directory)
     """
+    out_name = format_outname(prefix, se, weekday)
+    filtered_df = format_df(output_df, geo_id, se, logger)
+
     if se:
         logger.info(f"========= WARNING: WRITING SEs TO {out_name} =========")
 
-    out_n = 0
-    for d in set(output_df["date"]):
+    dates = set(list(output_df['date']))
+    grouped = filtered_df.groupby('date')
+    for d in dates:
         filename = "%s/%s_%s_%s.csv" % (output_path,
                                         (d + Config.DAY_SHIFT).strftime("%Y%m%d"),
-                                        geo_level,
+                                        geo_id,
                                         out_name)
-        single_date_df = output_df[output_df["date"] == d]
+        single_date_df = grouped.get_group(d)
+        single_date_df = single_date_df.drop(columns=['date'])
+        single_date_df.to_csv(filename, index=False, na_rep="NA")
 
-    logger.debug(f"wrote {out_n} rows for {geo_level}")
+        logger.debug(f"wrote {len(single_date_df)} rows for {geo_id}")
 
 
 def csv_to_df(filepath: str, startdate: datetime, enddate: datetime, dropdate: datetime, logger) -> pd.DataFrame:

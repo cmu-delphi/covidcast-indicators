@@ -10,7 +10,8 @@ install: venv
 
 install-ci: venv
 	. env/bin/activate; \
-	pip install 'build[virtualenv]' pylint pytest pydocstyle wheel twine
+	pip install 'build[virtualenv]' pylint pytest pydocstyle wheel twine ; \
+	pip install '.[dev]'
 
 lint:
 	. env/bin/activate; pylint delphi_utils --rcfile=../pyproject.toml

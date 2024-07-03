@@ -8,6 +8,7 @@ required = [
     "boto3",
     "cvxpy",
     "darker[isort]~=2.1.1",
+    "delphi-epidata==4.1.20",
     "epiweeks",
     "freezegun",
     "gitpython",

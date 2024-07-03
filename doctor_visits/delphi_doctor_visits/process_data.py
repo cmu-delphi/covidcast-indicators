@@ -1,34 +1,42 @@
-import dask.dataframe as dd
+"""Module providing functions for processing and wrangling data."""
+
 from datetime import datetime
+from pathlib import Path
+
+import dask.dataframe as dd
 import numpy as np
 import pandas as pd
-from pathlib import Path
 
 from .config import Config
 
-def format_outname(prefix: str, se: bool, weekday:bool):
-    '''
+
+def format_outname(prefix: str, se: bool, weekday: bool):
+    """
+    Write out results.
 
     Parameters
     ----------
-    prefix
-    se
-    weekday
+    prefix:
+    se: boolean to write out standard errors, if true, use an obfuscated name
+    weekday: boolean for weekday adjustments.
+             signals will be generated with weekday adjustments (True) or without
+                adjustments (False)
 
     Returns
     -------
-
-    '''
-    # write out results
+    outname str
+    """
     out_name = "smoothed_adj_cli" if weekday else "smoothed_cli"
     if se:
         assert prefix is not None, "template has no obfuscated prefix"
         out_name = prefix + "_" + out_name
     return out_name
 
+
 def format_df(df: pd.DataFrame, geo_id: str, se: bool, logger):
-    '''
-    format dataframe and checks for anomalies to write results
+    """
+    Format dataframe and checks for anomalies to write results.
+
     Parameters
     ----------
     df: dataframe from output from update_sensor
@@ -39,9 +47,9 @@ def format_df(df: pd.DataFrame, geo_id: str, se: bool, logger):
     Returns
     -------
     filtered and formatted dataframe
-    '''
+    """
     # report in percentage
-    df['val'] = df['val'] * 100
+    df["val"] = df["val"] * 100
     df["se"] = df["se"] * 100
 
     val_isnull = df["val"].isnull()
@@ -50,23 +58,23 @@ def format_df(df: pd.DataFrame, geo_id: str, se: bool, logger):
         logger.info("sensor value is nan, check pipeline")
     df = df[~val_isnull]
 
-    se_too_high = df['se'] >= 5
+    se_too_high = df["se"] >= 5
     df_se_too_high = df[se_too_high]
     if len(df_se_too_high) > 0:
         logger.info(f"standard error suspiciously high! investigate {geo_id}")
     df = df[~se_too_high]
 
-    sensor_too_high = df['val'] >= 90
+    sensor_too_high = df["val"] >= 90
     df_sensor_too_high = df[sensor_too_high]
     if len(df_sensor_too_high) > 0:
         logger.info(f"standard error suspiciously high! investigate {geo_id}")
     df = df[~sensor_too_high]
 
     if se:
-        valid_cond = (df['se'] > 0) & (df['val'] > 0)
+        valid_cond = (df["se"] > 0) & (df["val"] > 0)
         invalid_df = df[~valid_cond]
         if len(invalid_df) > 0:
-            logger.info(f"p=0, std_err=0 invalid")
+            logger.info("p=0, std_err=0 invalid")
         df = df[valid_cond]
     else:
         df["se"] = np.NAN
@@ -75,8 +83,10 @@ def format_df(df: pd.DataFrame, geo_id: str, se: bool, logger):
     df["sample_size"] = np.NAN
     return df
 
-def write_to_csv(output_df: pd.DataFrame, prefix: str, geo_id: str, weekday: bool, se:bool, logger, output_path="."):
-    """Write sensor values to csv.
+
+def write_to_csv(output_df: pd.DataFrame, prefix: str, geo_id: str, weekday: bool, se: bool, logger, output_path="."):
+    """
+    Write sensor values to csv.
 
     Args:
       output_dict: dictionary containing sensor rates, se, unique dates, and unique geo_id
@@ -91,24 +101,21 @@ def write_to_csv(output_df: pd.DataFrame, prefix: str, geo_id: str, weekday: boo
     if se:
         logger.info(f"========= WARNING: WRITING SEs TO {out_name} =========")
 
-    dates = set(list(output_df['date']))
-    grouped = filtered_df.groupby('date')
+    dates = set(list(output_df["date"]))
+    grouped = filtered_df.groupby("date")
     for d in dates:
-        filename = "%s/%s_%s_%s.csv" % (output_path,
-                                        (d + Config.DAY_SHIFT).strftime("%Y%m%d"),
-                                        geo_id,
-                                        out_name)
+        filename = "%s/%s_%s_%s.csv" % (output_path, (d + Config.DAY_SHIFT).strftime("%Y%m%d"), geo_id, out_name)
         single_date_df = grouped.get_group(d)
-        single_date_df = single_date_df.drop(columns=['date'])
+        single_date_df = single_date_df.drop(columns=["date"])
         single_date_df.to_csv(filename, index=False, na_rep="NA")
 
         logger.debug(f"wrote {len(single_date_df)} rows for {geo_id}")
 
 
 def csv_to_df(filepath: str, startdate: datetime, enddate: datetime, dropdate: datetime, logger) -> pd.DataFrame:
-    '''
-    Reads csv using Dask and filters out based on date range and currently unused column,
-    then converts back into pandas dataframe.
+    """
+    Read csv using Dask, filters unneeded data, then converts back into pandas dataframe.
+
     Parameters
     ----------
       filepath: path to the aggregated doctor-visits data
@@ -117,7 +124,7 @@ def csv_to_df(filepath: str, startdate: datetime, enddate: datetime, dropdate: d
       dropdate: data drop date (YYYY-mm-dd)
 
     -------
-    '''
+    """
     filepath = Path(filepath)
     logger.info(f"Processing {filepath}")
 
@@ -142,7 +149,7 @@ def csv_to_df(filepath: str, startdate: datetime, enddate: datetime, dropdate: d
     assert startdate < enddate, "Start date >= end date"
     assert enddate <= dropdate, "End date > drop date"
 
-    date_filter = ((ddata[Config.DATE_COL] >= Config.FIRST_DATA_DATE) & (ddata[Config.DATE_COL] < dropdate))
+    date_filter = (ddata[Config.DATE_COL] >= Config.FIRST_DATA_DATE) & (ddata[Config.DATE_COL] < dropdate)
 
     df = ddata[date_filter].compute()
 

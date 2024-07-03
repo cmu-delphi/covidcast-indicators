@@ -13,11 +13,12 @@ from pathlib import Path
 
 from delphi_utils import get_structured_logger
 
-# first party
-from .update_sensor import update_sensor
-from .process_data import csv_to_df, write_to_csv
 from .download_claims_ftp_files import download
 from .get_latest_claims_name import get_latest_filename
+from .process_data import csv_to_df, write_to_csv
+
+# first party
+from .update_sensor import update_sensor
 
 
 def run_module(params):  # pylint: disable=too-many-statements

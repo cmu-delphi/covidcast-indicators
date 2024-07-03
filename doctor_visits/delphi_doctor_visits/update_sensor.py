@@ -7,9 +7,8 @@ Modified:
  - 2020-04-30: Aaron Rumack (add megacounty code)
  - 2020-05-06: Aaron and Maria (weekday effects/other adjustments)
 """
-
 # standard packages
-from datetime import timedelta, datetime
+from datetime import datetime, timedelta
 from multiprocessing import Pool, cpu_count
 
 # third party
@@ -25,8 +24,15 @@ from .sensor import DoctorVisitsSensor
 
 
 def update_sensor(
-        data:pd.DataFrame, startdate:datetime, enddate:datetime, dropdate:datetime, geo:str, parallel: bool,
-        weekday:bool, se:bool, logger
+    data: pd.DataFrame,
+    startdate: datetime,
+    enddate: datetime,
+    dropdate: datetime,
+    geo: str,
+    parallel: bool,
+    weekday: bool,
+    se: bool,
+    logger,
 ):
     """Generate sensor values.
 
@@ -41,7 +47,6 @@ def update_sensor(
       se: boolean to write out standard errors, if true, use an obfuscated name
       logger: the structured logger
     """
-
     drange = lambda s, e: np.array([s + timedelta(days=x) for x in range((e - s).days)])
     fit_dates = drange(Config.FIRST_DATA_DATE, dropdate)
     burnindate = startdate - Config.DAY_SHIFT

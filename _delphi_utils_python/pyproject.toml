@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools"]
+requires = ["setuptools", "setuptools-scm>=8.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -53,8 +53,7 @@ include = ["delphi_utils"]
 namespaces = true
 
 [tool.setuptools.package-data]
-"delphi_utils.data" = ["*"]
-recipe = ["*.csv"]
+"delphi_utils.data" = ["20*/*.csv"]
 
 
 

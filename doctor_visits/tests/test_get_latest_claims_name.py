@@ -19,4 +19,4 @@ class TestGetLatestFileName:
 
     def test_get_latest_claims_name_with_issue_date(self):
         result = get_latest_filename(self.dir_path, self.logger, issue_date="2020-02-07")
-        assert str(result) == f"{self.dir_path}/SYNEDI_AGG_OUTPATIENT_07022020_1455CDT.csv"
+        assert str(result) == f"{self.dir_path}/SYNEDI_AGG_OUTPATIENT_07022020_1455CDT.csv.gz"

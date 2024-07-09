@@ -374,7 +374,38 @@ After developing the pipeline code, but before release to prod, the pipeline sho
 
 The indicator run code is automatically deployed on staging after your branch is merged into main. After merging, make sure you have proper access to Cronicle and staging server `app-mono-dev-01.delphi.cmu.edu` _and_ can see your code on staging at `/home/indicators/runtime/`.
 
-Then, on Cronicle, create two jobs: First one to run the indicator and second one to load the output csv files into database.
+Then, on Cronicle, create two jobs: First one to run the indicator and second one to load the output csv files into database. 
+
+We start by setting up the acquisition job.
+
+#### Acquisition job
+
+The indicator job loads the location of the relevant csv output files into chained data, which this acquisition job then loads into our database.
+
+Example script:
+
+```
+#!/usr/bin/python3
+
+import subprocess
+import json
+
+str_data = input()
+print(str_data)
+
+data = json.loads(str_data, strict=False)
+chain_data = data["chain_data"]
+user = chain_data["user"]
+host = chain_data["host"]
+acq_ind_name = chain_data["acq_ind_name"]
+
+cmd = f'''ssh -T -l {user} {host} "cd ~/driver && python3 -m delphi.epidata.acquisition.covidcast.csv_to_database --data_dir=/common/covidcast --indicator_name={acq_ind_name} --log_file=/var/log/epidata/csv_upload_{acq_ind_name}.log"'''
+
+std_err, std_out = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+
+print(std_err.decode('UTF-8'))
+print(std_out.decode('UTF-8'))
+```
 
 #### Indicator run job
 
@@ -408,35 +439,6 @@ To automatically run acquisition job right after indicator job finishes successf
 2. In `Chain Reaction` section, select your acquisition run job below to `Run Event on Success`
 
 You can read more about how the `chain_data` json object in the script above can be used in our subsequent acquisition job [here](https://github.com/jhuckaby/Cronicle/blob/master/docs/Plugins.md#chain-reaction-control).
-
-#### Acquisition job
-
-The indicator job loads the location of the relevant csv output files into chained data, which the acquisition job then loads into our database.
-
-Example script:
-
-```
-#!/usr/bin/python3
-
-import subprocess
-import json
-
-str_data = input()
-print(str_data)
-
-data = json.loads(str_data, strict=False)
-chain_data = data["chain_data"]
-user = chain_data["user"]
-host = chain_data["host"]
-acq_ind_name = chain_data["acq_ind_name"]
-
-cmd = f'''ssh -T -l {user} {host} "cd ~/driver && python3 -m delphi.epidata.acquisition.covidcast.csv_to_database --data_dir=/common/covidcast --indicator_name={acq_ind_name} --log_file=/var/log/epidata/csv_upload_{acq_ind_name}.log"'''
-
-std_err, std_out = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
-
-print(std_err.decode('UTF-8'))
-print(std_out.decode('UTF-8'))
-```
 
 #### Staging database checks
 

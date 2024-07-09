@@ -378,7 +378,7 @@ Then, on Cronicle, create two jobs: First one to run the indicator and second on
 
 #### Indicator run job
 
-This job ssh into our staging server and run the indicator, producing csv files output.
+This job signs into our staging server via ssh, runs the indicator, producing csv files as output.
 
 Example script:
 

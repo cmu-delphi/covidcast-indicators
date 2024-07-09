@@ -54,20 +54,17 @@ def format_df(df: pd.DataFrame, geo_id: str, se: bool, logger):
 
     val_isnull = df["val"].isnull()
     df_val_null = df[val_isnull]
-    if not df_val_null.empty:
-        logger.info("sensor value is nan, check pipeline")
+    assert len(df_val_null) == 0, "sensor value is nan, check pipeline"
     df = df[~val_isnull]
 
     se_too_high = df["se"] >= 5
     df_se_too_high = df[se_too_high]
-    if len(df_se_too_high) > 0:
-        logger.info(f"standard error suspiciously high! investigate {geo_id}")
+    assert len(df_se_too_high) == 0, f"standard error suspiciously high! investigate {geo_id}"
     df = df[~se_too_high]
 
     sensor_too_high = df["val"] >= 90
     df_sensor_too_high = df[sensor_too_high]
-    if len(df_sensor_too_high) > 0:
-        logger.info(f"standard error suspiciously high! investigate {geo_id}")
+    assert len(df_sensor_too_high) == 0, f"standard error suspiciously high! investigate {geo_id}"
     df = df[~sensor_too_high]
 
     if se:

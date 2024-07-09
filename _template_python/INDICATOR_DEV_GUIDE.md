@@ -444,7 +444,23 @@ Apart from checking the logs of staging indicator run and acquisition jobs to id
 
 At this point, acquisition job should have loaded data onto staging mysql db, specifically the `covid` database.
 
+From staging:
 ```
+[user@app-mono-dev-01 ~]$ mysql -u user -p
+Enter password: 
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 00000
+Server version: 8.0.36-28 Percona Server (GPL), Release 28, Revision 47601f19
+
+Copyright (c) 2009-2024 Percona LLC and/or its affiliates
+Copyright (c) 2000, 2024, Oracle and/or its affiliates.
+
+Oracle is a registered trademark of Oracle Corporation and/or its
+affiliates. Other names may be trademarks of their respective
+owners.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
 mysql> use covid;
 Database changed
 ```

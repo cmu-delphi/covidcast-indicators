@@ -181,7 +181,7 @@ To get started, Delphi has a [basic code template](https://github.com/cmu-delphi
 It can also be helpful to read through other indicators, especially if they share a data source or format.
 
 Indicators should be written in python for speed and maintainability.
-If you think you need to use R, please reconsider! and talk to other engineering team members.
+Don't use R.
 
 Generally, indicators have:
 
@@ -240,7 +240,7 @@ After that, generalize your code to be able to be run on all geos of interest, t
 Make sure you have a functional environment with python 3.8.15+.
 For local runs, the makefile’s make install target will set up a local virtual environment with necessary packages.
 
-(If working in R (not recommended), local runs can be run without a virtual environment or using the [`renv` package](https://rstudio.github.io/renv/articles/renv.html), but production runs should be set up to user Docker.)
+(If working in R (very much NOT recommended), local runs can be run without a virtual environment or using the [`renv` package](https://rstudio.github.io/renv/articles/renv.html), but production runs should be set up to use Docker.)
 
 #### Dealing with data-types
 
@@ -306,12 +306,13 @@ Ideally, the indicator name should:
 Based on these guidelines, the `jhu-csse` indicator would be better as `jhu-csse` everywhere (module name could be `delphi_jhu_csse`), rather than having a mix of `jhu-csse` and `jhu`.
 
 Signal names should not be too long, but the most important feature is that they are descriptive.
+If we're mirroring a processed dataset, consider keeping their signal names.
 
-Some standard tags used in signal names:
+Use the following standard tags when creating new signal names:
 
 * `raw`: unsmoothed, _no longer used; if no smoothing is specified the signal is assumed to be "raw"_
 * `7dav`: smoothed using a average over a rolling 7-day window; comes at the end of the name
-* `smoothed`: smoothed using a more complex smoothing algorithm
+* `smoothed`: smoothed using a more complex smoothing algorithm; comes at the end of the name
 * `prop`: counts per 100k population
 * `pct`: percentage between 0 and 100
 * `num`: counts, _no longer used; if no value type is specified the signal is assumed to be a count_

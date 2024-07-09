@@ -54,7 +54,7 @@ class TestProcessData:
         for f in files:
             filename = f.name
             actual = pd.read_csv(f)
-            comparison = pd.read_csv(f"{self.compare_path}/write_csv/{filename}")
+            comparison = pd.read_csv(f"{self.compare_path}/process_data/{filename}")
             pd.testing.assert_frame_equal(actual, comparison)
             os.remove(f)
 

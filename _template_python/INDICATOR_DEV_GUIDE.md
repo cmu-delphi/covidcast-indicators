@@ -360,7 +360,7 @@ Next, the `acquisition.covidcast` component of the `delphi-epidata` codebase doe
 * Add module name to the `build` job in `.github/workflows/python-ci.yml`.
   This allows github actions to run on this indicator code, which includes unit tests and linting.
 * Add top-level directory name to `indicator_list` in `Jenkinsfile`.
-  This allows your code to be automatically deployed to staging after your branch is merged to main, and deployed to prod after `cocivcast-indicators` is released.
+  This allows your code to be automatically deployed to staging after your branch is merged to main, and deployed to prod after `covidcast-indicators` is released.
 * Create `ansible/templates/{top_level_directory_name}-params-prod.json.j2` based on your `params.json.template` with some adjustment:
    * "export_dir": "/common/covidcast/receiving/{data-source-name}"
    * "log_filename": "/var/log/indicators/{top_level_directory_name}.log"

@@ -10,6 +10,7 @@ import requests
 import pandas as pd
 import numpy as np
 import covidcast
+from delphi_epidata import Epidata
 from .errors import APIDataFetchError, ValidationFailure
 
 FILENAME_REGEX = re.compile(
@@ -115,7 +116,16 @@ def get_geo_signal_combos(data_source, api_key):
     meta_response.raise_for_status()
     source_signal_mappings = {i['source']:i['db_source'] for i in
         meta_response.json()}
-    meta = covidcast.metadata()
+
+    response = Epidata._request("covidcast_meta")
+
+    if response["result"] != 1:
+        # Something failed in the API and we did not get real metadata
+        raise RuntimeError("Error when fetching metadata from the API",
+                           response["message"])
+
+    meta = pd.DataFrame.from_dict(response["epidata"])
+
     source_meta = meta[meta['data_source'] == data_source]
     # Need to convert np.records to tuples so they are hashable and can be used in sets and dicts.
     geo_signal_combos = list(map(tuple,
@@ -160,8 +170,38 @@ def fetch_api_reference(data_source, start_date, end_date, geo_type, signal_type
     """
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        api_df = covidcast.signal(
-            data_source, signal_type, start_date, end_date, geo_type)
+        # api_df = covidcast.signal(
+        #     data_source, signal_type, start_date, end_date, geo_type)
+
+        response = Epidata.covidcast(data_source, signal_type, time_type="day",
+                          geo_type=geo_type, time_values=[start_date, end_date],
+                          geo_value="*", as_of=None,
+                          issues=None, lag=None)
+
+        if response["result"] != 1:
+            # Something failed in the API and we did not get real metadata
+            raise RuntimeError("Error when fetching metadata from the API",
+                               response["message"])
+
+        api_df = pd.DataFrame.from_dict(response["epidata"])
+
+        # # Two possible error conditions: no data or too much data.
+        # if day_data["message"] == "no results":
+        #     warnings.warn(f"No {data_source} {signal} data found on {day_str} "
+        #                   f"for geography '{geo_type}'",
+        #                   NoDataWarning)
+        # if day_data["message"] not in {"success", "no results"}:
+        #     warnings.warn(f"Problem obtaining {data_source} {signal} data on {day_str} "
+        #                   f"for geography '{geo_type}': {day_data['message']}",
+        #                   RuntimeWarning)
+        #
+        # # In the too-much-data case, we continue to try putting the truncated
+        # # data in our results. In the no-data case, skip this day entirely,
+        # # since there is no "epidata" in the response.
+        # if day_data.get("epidata"):
+        #     dfs.append(pd.DataFrame.from_dict(day_data["epidata"]))
+        # cur_day += timedelta(1) if time_type == "day" else timedelta(7)
+        #
 
     error_context = f"when fetching reference data from {start_date} to {end_date} " +\
         f"for data source: {data_source}, signal type: {signal_type}, geo type: {geo_type}"

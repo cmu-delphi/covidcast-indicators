@@ -6,6 +6,7 @@ import re
 import pandas as pd
 import numpy as np
 import covidcast
+from delphi_epidata import Epidata
 from .errors import ValidationFailure
 from .datafetcher import get_geo_signal_combos, threaded_api_calls
 from .utils import relative_difference_by_min, TimeWindow, lag_converter
@@ -79,7 +80,7 @@ class DynamicValidator:
         outlier_lookbehind = timedelta(days=14)
 
         # Authenticate API
-        covidcast.use_api_key(self.params.api_key)
+        # Epidata.auth = ("epidata", api)
 
         # Get all expected combinations of geo_type and signal.
         geo_signal_combos = get_geo_signal_combos(self.params.data_source,

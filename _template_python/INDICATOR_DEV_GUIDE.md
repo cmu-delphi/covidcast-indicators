@@ -411,7 +411,7 @@ You can read more about how the `chain_data` json object in the script above can
 
 #### Acquisition job
 
-The acquisition job use chained data from indicator job to determine where csv output files are, then load them into our database.
+The indicator job loads the location of the relevant csv output files into chained data, which the acquisition job then loads into our database.
 
 Example script:
 

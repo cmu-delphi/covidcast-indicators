@@ -23,7 +23,7 @@ We will also discuss best practices for building reliable, scalable, and maintai
 
 [Adding new API endpoints](https://cmu-delphi.github.io/delphi-epidata/new_endpoint_tutorial.html) (of which COVIDcast is a single example).
 
-Most new data sources will be added as indicators within the main endpoint (called COVIDcast as of 20240628).
+Most new data sources will be added as indicators within the main endpoint (called COVIDcast as of 2024-06-28).
 In rare cases, it may be preferable to add a dedicated endpoint for a new indicator.
 This would mainly be done if the format of the new data weren't compatible with the format used by the main endpoint, for example, if an indicator reports the same signal for many demographic groups, or if the reported geographic levels are nonstandard in some way.
 
@@ -49,7 +49,7 @@ This is the general extract-transform-load procedure used by all COVIDcast indic
    * This converts dense output to a diff and reduces the size of each update.
 7. Deliver the CSV output files to the `receiving/` directory on the API server.
 
-
+Adding a new indicator typically means implementing steps 1-3. Step 4 is included via the function ` create_export_csv`. Steps 5 (the validator), 6 (the archive differ) and 7 (acquisition) are all handled by runners in production.
 ## Step 0: Keep revision history (important!)
 
 If the data provider doesn’t provide or it is unclear if they provide historical versions of the data, immediately set up a script (bash, Python, etc) to automatically (e.g. cron) download the data every day and save locally with versioning.
@@ -146,17 +146,17 @@ At this stage we want to answer the questions below (and any others that seem re
    * Missingness due to reporting pattern (e.g. no weekend reports)?
    * Will we want to and is it feasible to [interpolate missing values](https://github.com/cmu-delphi/covidcast-indicators/issues/1539)?
 * Are there any aberrant values that don’t make sense? e.g. negative counts, out of range percentages, “manual” missingness codes (9999, -9999, etc)
-* Does the data source revise their data? How often?
+* Does the data source revise their data? How often? By how much? Is the revision meaningful, or an artifact of data processing methods?
    * See raw data saved in [Step 0](#step-0-keep-revision-history-important)
 * What is the reporting schedule of the data?
-* What order of magnitude is the signal? (If it’s sufficiently small, [this issue on how rounding is done](https://github.com/cmu-delphi/covidcast-indicators/issues/1945) needs to be addressed first)
+* What order of magnitude is the signal? (If it’s too small or too large, [this issue on how rounding is done](https://github.com/cmu-delphi/covidcast-indicators/issues/1945) needs to be addressed first)
 * How is the data processed by the data source? E.g. normalization, censoring values with small sample sizes, censoring values associated with low-population areas, smoothing, adding jitter, etc.
   Keep any code and notes around! They will be helpful for later steps.
   For any issues that come up, consider now if
-* We’ve seen them before in another dataset and, if so, how we handled it.
-  Is there code around that we can reuse?
-* If it’s a small issue, how would you address it? Do you need an extra function to handle it?
-* If it’s a big issue, talk to others and consider making a PRD to present potential solutions.
+  * We’ve seen them before in another dataset and, if so, how we handled it.
+      Is there code around that we can reuse?
+  * If it’s a small issue, how would you address it? Do you need an extra function to handle it?
+  * If it’s a big issue, talk to others and consider making a PRD to present potential solutions.
 
 
 ## Step 2: Pipeline Code
@@ -253,7 +253,7 @@ E.g. which geo values are allowed, should every valid date be present in some wa
 
 #### Dealing with geos
 
-In an ideal case, the data exists at one of our already covered geos:
+In an ideal case, the data exists at one of our [already covered geos](https://cmu-delphi.github.io/delphi-epidata/api/covidcast_geography.html):
 
 * State: state_code or state_id
 * FIPS (state+county codes, string leftpadded to 5 digits with zeroes)
@@ -262,7 +262,7 @@ In an ideal case, the data exists at one of our already covered geos:
 * HRR (hospital referral region, int)
 
 If you want to map from one of these to another, the [`delphi_utils.geomapper`](https://github.com/cmu-delphi/covidcast-indicators/blob/6912077acba97e835aff7d0cd3d64309a1a9241d/_delphi_utils_python/delphi_utils/geomap.py) utility covers most cases.
-A brief example of adding states with their population:
+A brief example of aggregating from states to hhs regions via their population:
 
 ```{python}
 from delphi_utils.geomap import GeoMapper
@@ -290,6 +290,7 @@ Mocking functions are useful in this case.
 #### Naming
 
 Indicator and signal names need to be approved by [@RoniRos](https://www.github.com/RoniRos).
+It is better to start that conversation sooner rather than later.
 
 The data source name as specified during an API call (e.g. in `epidatr::pub_covidcast(source = "jhu-csse", ...)`, "jhu-csse" is the data source name) should match the wildcard portion of the module name ("jhu" in `delphi_jhu`) _and_ the top-level directory name in `covidcast-indicators` ("jhu").
 (Ideally, these would all also match how we casually refer to the indicator ("JHU"), but that's hard to foresee and enforce.)
@@ -372,7 +373,7 @@ The following fields are required:
 * Specific math showing how signals are calculated, if unusual or complex or you like equations
 * How smoothing is done, if any
 * Known limitations of the data source and the final signals
-* Missingness characteristics, especially if the data is missing with a pattern (on weekends, etc)
+* Missingness characteristics, especially if the data is missing with a pattern (on weekends, specific states, etc)
 * Lag and revision characteristics
 * Licensing information
 

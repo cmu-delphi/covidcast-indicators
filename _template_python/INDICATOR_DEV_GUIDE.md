@@ -37,7 +37,7 @@ This would mainly be done if the format of the new data weren't compatible with 
 This is the general extract-transform-load procedure used by all COVIDcast indicators:
 
 1. Download data from the source.
-   * This could be via an API query, scraping the website, an SFTP or S3 dropbox, an email attachment, etc.
+   * This could be via an [API query](https://github.com/cmu-delphi/covidcast-indicators/blob/fe39ebb1f8baa76670eb665d1dc99376ddfd3010/nssp/delphi_nssp/pull.py#L30), scraping a website, [an SFTP](https://github.com/cmu-delphi/covidcast-indicators/blob/fe39ebb1f8baa76670eb665d1dc99376ddfd3010/changehc/delphi_changehc/download_ftp_files.py#L19) or S3 dropbox, an email attachment, etc.
 2. Process the source data to extract one or more time-series signals.
    * A signal includes a value, standard deviation (data-dependent), and sample size (data-dependent) for each region for each unit of time (a day or an epidemiological week "epi-week").
 3. Aggregate each signal to all possible standard higher geographic levels.

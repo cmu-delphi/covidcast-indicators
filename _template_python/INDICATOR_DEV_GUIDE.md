@@ -27,7 +27,7 @@ Most new data sources will be added as indicators within the main endpoint (call
 In rare cases, it may be preferable to add a dedicated endpoint for a new indicator.
 This would mainly be done if the format of the new data weren't compatible with the format used by the main endpoint, for example, if an indicator reports the same signal for many demographic groups, or if the reported geographic levels are nonstandard in some way.
 
-[Setting up an S3 ArchiveDiffer](https://docs.google.com/document/d/1VcnvfeiO-GUUf88RosmNUfiPMoby-SnwH9s12esi4sI/edit#heading=h.e4ul15t3xmfj)
+[Setting up an S3 ArchiveDiffer](https://docs.google.com/document/d/1VcnvfeiO-GUUf88RosmNUfiPMoby-SnwH9s12esi4sI/edit#heading=h.e4ul15t3xmfj). Archive differs are used to compress data that has a long history that doesn't change that much. For example, the JHU CSSE indicator occasionally had revisions that could go back far in time, which meant that we needed to output all reference dates every day. Revisions didn't impact every location or reference date at a time, which meant that every issue would contain many values that were exactly the same as values issued the previous day. The archive differ removes those duplicates.
 
 [Indicator debugging guide](https://docs.google.com/document/d/1vaNgQ2cDrMvAg0FbSurbCemF9WqZVrirPpWEK0RdATQ/edit): somewhat out-of-date but might still be useful
 
@@ -97,7 +97,7 @@ A one-off manual download is fine.
 Don’t worry too much about productionizing the data-fetching step at this point.
 (Although any code you write can be used later.)
 
-Also check to see whether the data is coming from an existing source, e.g. the wastewater data and NCHS data are accessed the same way, so when adding wastewater data, we could reuse the  API key and only needed to lightly modify the API calls for the new dataset.
+Also check to see whether the data is coming from an existing source, e.g. NSSP and NCHS are accessed the same way, so when adding NSSP, we could reuse the API key and only needed to lightly modify the API calls for the new dataset.
 
 Reading from a local file:
 
@@ -255,8 +255,8 @@ E.g. which geo values are allowed, should every valid date be present in some wa
 
 In an ideal case, the data exists at one of our [already covered geos](https://cmu-delphi.github.io/delphi-epidata/api/covidcast_geography.html):
 
-* State: state_code or state_id
-* FIPS (state+county codes, string leftpadded to 5 digits with zeroes)
+* State: state_code (string, leftpadded to 2 digits with 0) or state_id (string)
+* FIPS (state+county codes, string leftpadded to 5 digits with 0)
 * ZIP
 * MSA (metro statistical area, int)
 * HRR (hospital referral region, int)

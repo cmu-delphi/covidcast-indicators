@@ -200,7 +200,7 @@ class CHCSensorUpdater:  # pylint: disable=too-many-instance-attributes
         data.reset_index(inplace=True)
         data_frame = self.geo_reindex(data)
         # handle if we need to adjust by weekday
-        wd_params = Weekday.get_params(
+        wd_params = Weekday.get_params_legacy(
             data_frame,
             "den",
             ["num"],

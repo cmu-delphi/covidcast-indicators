@@ -215,7 +215,7 @@ def pull_gs_data_one_geolevel(level, date_range):
     level: str
         "county" or "state"
     date_range: list[str]
-        ["YYYY-MM-DD"), "YYYY-MM-DD"] where dates are BigQuery-compatible.
+        ["YYYY-MM-DD", "YYYY-MM-DD"] where dates are BigQuery-compatible.
 
     Returns
     -------

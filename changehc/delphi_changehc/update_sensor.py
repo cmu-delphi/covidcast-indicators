@@ -208,7 +208,7 @@ class CHCSensorUpdater:  # pylint: disable=too-many-instance-attributes
                 Config.DATE_COL,
                 [1, 1e5],
                 self.logger,
-           )
+            )
         else:
             wd_params = None
         # run sensor fitting code (maybe in parallel)

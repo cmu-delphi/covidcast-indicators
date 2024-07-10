@@ -13,15 +13,21 @@ TODO:
 
 ## Introduction
 
-This document provides a comprehensive guide on how to write a data pipeline in Python for the Delphi group. It focuses on various aspects of building a pipeline, including ingestion, transformation, and storage. This document assumes basic knowledge of Python and a familiarity with Delphi’s data processing practices. Throughout the manual, we will use various python libraries to demonstrate how to build a data pipeline that can handle large volumes of data efficiently. We will also discuss best practices for building reliable, scalable, and maintainable data pipelines. 
+This document provides a comprehensive guide on how to write a data pipeline in Python for the Delphi group.
+It focuses on various aspects of building a pipeline, including ingestion, transformation, and storage.
+This document assumes basic knowledge of Python and a familiarity with Delphi’s data processing practices.
+Throughout the manual, we will use various python libraries to demonstrate how to build a data pipeline that can handle large volumes of data efficiently.
+We will also discuss best practices for building reliable, scalable, and maintainable data pipelines.
 
 ### Related documents:
 
 [Adding new API endpoints](https://cmu-delphi.github.io/delphi-epidata/new_endpoint_tutorial.html) (of which COVIDcast is a single example).
 
-Most new data sources will be added as indicators within the main endpoint (called COVIDcast as of 20240628). In rare cases, it may be preferable to add a dedicated endpoint for a new indicator. This would mainly be done if the format of the new data weren't compatible with the format used by the main endpoint, for example, if an indicator reports the same signal for many demographic groups, or if the reported geographic levels are nonstandard in some way.
+Most new data sources will be added as indicators within the main endpoint (called COVIDcast as of 2024-06-28).
+In rare cases, it may be preferable to add a dedicated endpoint for a new indicator.
+This would mainly be done if the format of the new data weren't compatible with the format used by the main endpoint, for example, if an indicator reports the same signal for many demographic groups, or if the reported geographic levels are nonstandard in some way.
 
-[Setting up an S3 ArchiveDiffer](https://docs.google.com/document/d/1VcnvfeiO-GUUf88RosmNUfiPMoby-SnwH9s12esi4sI/edit#heading=h.e4ul15t3xmfj)
+[Setting up an S3 ArchiveDiffer](https://docs.google.com/document/d/1VcnvfeiO-GUUf88RosmNUfiPMoby-SnwH9s12esi4sI/edit#heading=h.e4ul15t3xmfj). Archive differs are used to compress data that has a long history that doesn't change that much. For example, the JHU CSSE indicator occasionally had revisions that could go back far in time, which meant that we needed to output all reference dates every day. Revisions didn't impact every location or reference date at a time, which meant that every issue would contain many values that were exactly the same as values issued the previous day. The archive differ removes those duplicates.
 
 [Indicator debugging guide](https://docs.google.com/document/d/1vaNgQ2cDrMvAg0FbSurbCemF9WqZVrirPpWEK0RdATQ/edit): somewhat out-of-date but might still be useful
 
@@ -30,11 +36,11 @@ Most new data sources will be added as indicators within the main endpoint (call
 
 This is the general extract-transform-load procedure used by all COVIDcast indicators:
 
-1. Download data from the source. 
-   * This could be via an API query, scraping the website, an SFTP or S3 dropbox, an email attachment, etc.
-2. Process the source data to extract one or more time-series signals. 
+1. Download data from the source.
+   * This could be via an [API query](https://github.com/cmu-delphi/covidcast-indicators/blob/fe39ebb1f8baa76670eb665d1dc99376ddfd3010/nssp/delphi_nssp/pull.py#L30), scraping a website, [an SFTP](https://github.com/cmu-delphi/covidcast-indicators/blob/fe39ebb1f8baa76670eb665d1dc99376ddfd3010/changehc/delphi_changehc/download_ftp_files.py#L19) or S3 dropbox, an email attachment, etc.
+2. Process the source data to extract one or more time-series signals.
    * A signal includes a value, standard deviation (data-dependent), and sample size (data-dependent) for each region for each unit of time (a day or an epidemiological week "epi-week").
-3. Aggregate each signal to all possible standard higher geographic levels. 
+3. Aggregate each signal to all possible standard higher geographic levels.
    * For example, we generate data at the state level by combining data at the county level.
 4. Output each signal into a set of CSV files with a fixed format.
 5. Run a set of checks on the output.
@@ -43,7 +49,7 @@ This is the general extract-transform-load procedure used by all COVIDcast indic
    * This converts dense output to a diff and reduces the size of each update.
 7. Deliver the CSV output files to the `receiving/` directory on the API server.
 
-
+Adding a new indicator typically means implementing steps 1-3. Step 4 is included via the function ` create_export_csv`. Steps 5 (the validator), 6 (the archive differ) and 7 (acquisition) are all handled by runners in production.
 ## Step 0: Keep revision history (important!)
 
 If the data provider doesn’t provide or it is unclear if they provide historical versions of the data, immediately set up a script (bash, Python, etc) to automatically (e.g. cron) download the data every day and save locally with versioning.
@@ -54,16 +60,20 @@ This step has a few goals:
 2. Understand the revision behavior in detail
 3. If the data is revised, we want to save all possible versions, even before our pipeline is fully up
 
-The data should be saved in _raw_ form – do not do any processing. Our own processing (cleaning, aggregation, normalization, etc) of the data may change as the pipeline code develops and doing any processing up front could make the historical data incompatible with the final procedure.
+The data should be saved in _raw_ form – do not do any processing.
+Our own processing (cleaning, aggregation, normalization, etc) of the data may change as the pipeline code develops and doing any processing up front could make the historical data incompatible with the final procedure.
 
 Check back in a couple weeks to compare data versions for revisions.
 
 
 ## Step 1: Exploratory Analysis
 
-The goal for exploratory analysis is to decide how the dataset does and does not fit our needs. This information will be used in the [indicator documentation](https://cmu-delphi.github.io/delphi-epidata/api/covidcast_signals.html) and will warn us about potential difficulties in the pipeline, so this should be done thoroughly! Your goal is to become an expert on the ins and outs of the data source.
+The goal for exploratory analysis is to decide how the dataset does and does not fit our needs.
+This information will be used in the [indicator documentation](https://cmu-delphi.github.io/delphi-epidata/api/covidcast_signals.html) and will warn us about potential difficulties in the pipeline, so this should be done thoroughly! Your goal is to become an expert on the ins and outs of the data source.
 
-While some of this process might have been done already (i.e. it was already decided that the data is useful),  it is still important to understand the properties of the dataset. The main objective during this stage is to understand what the dataset looks like in its raw format, establish what transformations need to be done, and create a basic roadmap to accomplish all later setup tasks. 
+While some of this process might have been done already (i.e.
+it was already decided that the data is useful),  it is still important to understand the properties of the dataset.
+The main objective during this stage is to understand what the dataset looks like in its raw format, establish what transformations need to be done, and create a basic roadmap to accomplish all later setup tasks.
 
 **What you want to establish:**
 
@@ -74,15 +84,20 @@ While some of this process might have been done already (i.e. it was already dec
 * Georesolution
 * Limitations
 
-Jupyter notebooks work particularly well for exploratory analysis but feel free to use whatever IDE/methodology works best for you. Some of this analysis may be useful during statistical review later, so save your code!
+Jupyter notebooks work particularly well for exploratory analysis but feel free to use whatever IDE/methodology works best for you.
+Some of this analysis may be useful during statistical review later, so save your code!
 
-If anything unusual comes up, discuss with the stakeholder (usually the original requestor of the data source, can also be [@RoniRos](https://www.github.com/RoniRos)). The goal is to figure out how to handle any issues before getting into the details of implementation.
+If anything unusual comes up, discuss with the stakeholder (usually the original requestor of the data source, can also be [@RoniRos](https://www.github.com/RoniRos)).
+The goal is to figure out how to handle any issues before getting into the details of implementation.
 
 ### Fetching the data
 
-Download the data in whatever format suits you. A one-off manual download is fine. Don’t worry too much about productionizing the data-fetching step at this point. (Although any code you write can be used later.)
+Download the data in whatever format suits you.
+A one-off manual download is fine.
+Don’t worry too much about productionizing the data-fetching step at this point.
+(Although any code you write can be used later.)
 
-Also check to see whether the data is coming from an existing source, e.g. the wastewater data and NCHS data are accessed the same way, so when adding wastewater data, we could reuse the  API key and only needed to lightly modify the API calls for the new dataset.
+Also check to see whether the data is coming from an existing source, e.g. NSSP and NCHS are accessed the same way, so when adding NSSP, we could reuse the API key and only needed to lightly modify the API calls for the new dataset.
 
 Reading from a local file:
 
@@ -107,15 +122,22 @@ At this stage we want to answer the questions below (and any others that seem re
 
 * What raw signals are available in the data?
    * If the raw signals aren’t useful themselves, what useful signals could we create from these?
-   * Discuss with the data requestor or consult the data request GitHub issue which signals they are interested in. If there are multiple potential signals, are there any known pros/cons of each one?
-   * For each signal, we want to report a value, standard error (data-dependent), and sample size (data-dependent) for each region for each unit of time. Sample size is sometimes available as a separate “counts” signal.
+   * Discuss with the data requestor or consult the data request GitHub issue which signals they are interested in.
+     If there are multiple potential signals, are there any known pros/cons of each one?
+   * For each signal, we want to report a value, standard error (data-dependent), and sample size (data-dependent) for each region for each unit of time.
+     Sample size is sometimes available as a separate “counts” signal.
 * Are the signals available across different geographies? Can values be [meaningfully compared](https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/google-symptoms.html#limitations) between locations?
-   * Ideally, we want to report data at [county, MSA,  HRR, state, HHS, and nation levels](https://cmu-delphi.github.io/delphi-epidata/api/covidcast_geography.html) (US) or subregion level 2 (county, parish, etc), subregion level 1 (state, province, territory), and nation levels for other countries. Some data sources report these levels themselves. For those that don’t, we use the [`geomapper`](https://github.com/cmu-delphi/covidcast-indicators/blob/84d059751b646c0075f1a384741f2c1d80981269/_delphi_utils_python/delphi_utils/geomap.py) to aggregate up from smaller to larger geo types. For that tool to work, signals must be aggregatable (i.e. values have to be comparable between geos) and the data must be reported at supported geo types or at geo types that are mappable to supported geo types.
+   * Ideally, we want to report data at [county, MSA,  HRR, state, HHS, and nation levels](https://cmu-delphi.github.io/delphi-epidata/api/covidcast_geography.html) (US) or subregion level 2 (county, parish, etc), subregion level 1 (state, province, territory), and nation levels for other countries.
+     Some data sources report these levels themselves.
+     For those that don’t, we use the [`geomapper`](https://github.com/cmu-delphi/covidcast-indicators/blob/84d059751b646c0075f1a384741f2c1d80981269/_delphi_utils_python/delphi_utils/geomap.py) to aggregate up from smaller to larger geo types.
+     For that tool to work, signals must be aggregatable (i.e.
+   values have to be comparable between geos) and the data must be reported at supported geo types or at geo types that are mappable to supported geo types.
 * What geographies might be included that are not standard? 
    * For example, some data sources report NYC as separate from New York State.
    * Others require special handling: D.C. and territories (Puerto Rico, Guam, U.S. Virgin Islands).
    * ! Sampling site, facility, or other data-specific or proprietary geographic division
-      * The data may not be appropriate for inclusion in the main endpoint (called COVIDcast as of 20240628). Talk to [@dshemetov](https://www.github.com/dshemetov) (geomapper), [@melange396](https://www.github.com/melange396) (epidata, DB), and [@RoniRos](https://www.github.com/RoniRos) (PI) for discussion.
+      * The data may not be appropriate for inclusion in the main endpoint (called COVIDcast as of 20240628).
+        Talk to [@dshemetov](https://www.github.com/dshemetov) (geomapper), [@melange396](https://www.github.com/melange396) (epidata, DB), and [@RoniRos](https://www.github.com/RoniRos) (PI) for discussion.
       * Should the data have its own endpoint?
       * Consider creating a PRD ([here](https://drive.google.com/drive/u/1/folders/155cGrc9Y7NWwygslCcU8gjL2AQbu5rFF) or [here](https://drive.google.com/drive/u/1/folders/13wUoIl-FjjCkbn2O8qH1iXOCBo2eF2-d)) to present design options.
 * What is the sample size? Is this a privacy concern for us or for the data provider?
@@ -124,16 +146,17 @@ At this stage we want to answer the questions below (and any others that seem re
    * Missingness due to reporting pattern (e.g. no weekend reports)?
    * Will we want to and is it feasible to [interpolate missing values](https://github.com/cmu-delphi/covidcast-indicators/issues/1539)?
 * Are there any aberrant values that don’t make sense? e.g. negative counts, out of range percentages, “manual” missingness codes (9999, -9999, etc)
-* Does the data source revise their data? How often?
+* Does the data source revise their data? How often? By how much? Is the revision meaningful, or an artifact of data processing methods?
    * See raw data saved in [Step 0](#step-0-keep-revision-history-important)
 * What is the reporting schedule of the data?
-* What order of magnitude is the signal? (If it’s sufficiently small, [this issue on how rounding is done](https://github.com/cmu-delphi/covidcast-indicators/issues/1945) needs to be addressed first)
+* What order of magnitude is the signal? (If it’s too small or too large, [this issue on how rounding is done](https://github.com/cmu-delphi/covidcast-indicators/issues/1945) needs to be addressed first)
 * How is the data processed by the data source? E.g. normalization, censoring values with small sample sizes, censoring values associated with low-population areas, smoothing, adding jitter, etc.
-Keep any code and notes around! They will be helpful for later steps.
-For any issues that come up, consider now if
-* We’ve seen them before in another dataset and, if so, how we handled it. Is there code around that we can reuse?
-* If it’s a small issue, how would you address it? Do you need an extra function to handle it?
-* If it’s a big issue, talk to others and consider making a PRD to present potential solutions.
+  Keep any code and notes around! They will be helpful for later steps.
+  For any issues that come up, consider now if
+  * We’ve seen them before in another dataset and, if so, how we handled it.
+      Is there code around that we can reuse?
+  * If it’s a small issue, how would you address it? Do you need an extra function to handle it?
+  * If it’s a big issue, talk to others and consider making a PRD to present potential solutions.
 
 
 ## Step 2: Pipeline Code
@@ -142,30 +165,42 @@ Now that we know the substance and dimensions of our data, we can start planning
 
 ### Logic overview
 
-Broadly speaking, the objective here is to create a script that will download data, transform it (mainly by aggregating it to different geo levels), format it to match our standard format, and save the transformed data to the [receiving directory](https://github.com/cmu-delphi/covidcast-indicators/blob/d36352b/ansible/templates/changehc-params-prod.json.j2#L3) as a CSV. The indicator, [validation](https://github.com/cmu-delphi/covidcast-indicators/tree/6912077acba97e835aff7d0cd3d64309a1a9241d/_delphi_utils_python/delphi_utils/validator) (a series of quality checks), and [archive diffing](https://github.com/cmu-delphi/covidcast-indicators/blob/6912077acba97e835aff7d0cd3d64309a1a9241d/_delphi_utils_python/delphi_utils/archive.py) (compressing the data by only outputting rows changed between data versions) are run via the runner. Acquisition (ingestion of files from the receiving directory and into the database) is run separately (see the [`delphi-epidata repo`](https://github.com/cmu-delphi/delphi-epidata/tree/c65d8093d9e8fed97b3347e195cc9c40c1a5fcfa)).
+Broadly speaking, the objective here is to create a script that will download data, transform it (mainly by aggregating it to different geo levels), format it to match our standard format, and save the transformed data to the [receiving directory](https://github.com/cmu-delphi/covidcast-indicators/blob/d36352b/ansible/templates/changehc-params-prod.json.j2#L3) as a CSV.
+The indicator, [validation](https://github.com/cmu-delphi/covidcast-indicators/tree/6912077acba97e835aff7d0cd3d64309a1a9241d/_delphi_utils_python/delphi_utils/validator) (a series of quality checks), and [archive diffing](https://github.com/cmu-delphi/covidcast-indicators/blob/6912077acba97e835aff7d0cd3d64309a1a9241d/_delphi_utils_python/delphi_utils/archive.py) (compressing the data by only outputting rows changed between data versions) are run via the runner.
+Acquisition (ingestion of files from the receiving directory and into the database) is run separately (see the [`delphi-epidata repo`](https://github.com/cmu-delphi/delphi-epidata/tree/c65d8093d9e8fed97b3347e195cc9c40c1a5fcfa)).
 
-`params.json.template` is copied to `params.json` during a run. `params.json` is used to set parameters that modify a run and that we expect we’ll want to change in the future (e.g. date range to generate) or need to be obfuscated (e.g. API key).
+`params.json.template` is copied to `params.json` during a run.
+`params.json` is used to set parameters that modify a run and that we expect we’ll want to change in the future e.g. date range to generate) or need to be obfuscated (e.g. API key).
 
-Each indicator includes a makefile (using GNU make), which provides predefined routines for local setup, testing, linting, and running the indicator. At the moment, the makefiles use python 3.8.15+.
+Each indicator includes a makefile (using GNU make), which provides predefined routines for local setup, testing, linting, and running the indicator.
+At the moment, the makefiles use python 3.8.15+.
 
 ### Development
 
-To get started, Delphi has a [basic code template](https://github.com/cmu-delphi/covidcast-indicators/tree/6f46f2b4a0cf86137fda5bd58025997647c87b46/_template_python) that you should copy into a top-level directory in the [`covidcast-indicators` repo](https://github.com/cmu-delphi/covidcast-indicators/). It can also be helpful to read through other indicators, especially if they share a data source or format.
+To get started, Delphi has a [basic code template](https://github.com/cmu-delphi/covidcast-indicators/tree/6f46f2b4a0cf86137fda5bd58025997647c87b46/_template_python) that you should copy into a top-level directory in the [`covidcast-indicators` repo](https://github.com/cmu-delphi/covidcast-indicators/).
+It can also be helpful to read through other indicators, especially if they share a data source or format.
 
-Indicators should be written in python for speed and maintainability. If you think you need to use R, please reconsider! and talk to other engineering team members.
+Indicators should be written in python for speed and maintainability.
+Don't use R.
 
 Generally, indicators have:
 
-* `run.py`: Run through all the pipeline steps. Loops over all geo type-signal combinations we want to produce. Handles logging and saving to CSV using functions from [`delphi_utils`](https://github.com/cmu-delphi/covidcast-indicators/tree/6912077acba97e835aff7d0cd3d64309a1a9241d/_delphi_utils_python/delphi_utils).
-* `pull.py`: Fetch the data from the data source and do basic processing (e.g. drop unnecessary columns). Advanced processing (e.g. sensorization) should go elsewhere.
-* `geo.py`: Do geo-aggregation. This tends to be simple wrappers around [`delphi_utils.geomapper`](https://github.com/cmu-delphi/covidcast-indicators/blob/6912077acba97e835aff7d0cd3d64309a1a9241d/_delphi_utils_python/delphi_utils/geomap.py) functions. Do other geo handling (e.g. finding and reporting DC as a state).
+* `run.py`: Run through all the pipeline steps.
+  Loops over all geo type-signal combinations we want to produce.
+  Handles logging and saving to CSV using functions from [`delphi_utils`](https://github.com/cmu-delphi/covidcast-indicators/tree/6912077acba97e835aff7d0cd3d64309a1a9241d/_delphi_utils_python/delphi_utils).
+* `pull.py`: Fetch the data from the data source and do basic processing (e.g. drop unnecessary columns).
+  Advanced processing (e.g. sensorization) should go elsewhere.
+* `geo.py`: Do geo-aggregation.
+  This tends to be simple wrappers around [`delphi_utils.geomapper`](https://github.com/cmu-delphi/covidcast-indicators/blob/6912077acba97e835aff7d0cd3d64309a1a9241d/_delphi_utils_python/delphi_utils/geomap.py) functions.
+  Do other geo handling (e.g. finding and reporting DC as a state).
 * `constants.py`: Lists of geos to produce, signals to produce, dataset ids, data source URL, etc.
 
 Your code should be _extensively_ commented! Especially note sections where you took an unusual approach (make sure to say why and consider briefly discussing alternate approaches).
 
 #### Function stubs
 
-If you have many functions you want to implement and/or anticipate a complex pipeline, consider starting with [function stubs](https://en.wikipedia.org/wiki/Method_stub) with comments or pseudo code. Bonus: consider writing unit tests upfront based on the expected behavior of each function.
+If you have many functions you want to implement and/or anticipate a complex pipeline, consider starting with [function stubs](https://en.wikipedia.org/wiki/Method_stub) with comments or pseudo code.
+Bonus: consider writing unit tests upfront based on the expected behavior of each function.
 
 Some stubs to consider: 
 
@@ -181,28 +216,31 @@ Example stub:
 
 ```{python}
 def api_call(args)
-    #implement api call 
-    return df 
+    #implement api call
+    return df
 ```
 
-Next, populate the function stubs with the intention of using them for a single pre-defined run (ignoring params.json, other geo levels, etc). If you fetched data programmatically in Step 0, you can reuse that in your data-fetching code. If you reformatted data in Step 1, you can reuse that too.
-Below is an example of the function stub that has been populated with code for a one-off run. 
+Next, populate the function stubs with the intention of using them for a single pre-defined run (ignoring params.json, other geo levels, etc).
+If you fetched data programmatically in Step 0, you can reuse that in your data-fetching code.
+If you reformatted data in Step 1, you can reuse that too.
+Below is an example of the function stub that has been populated with code for a one-off run.
 
 ```{python}
 def api_call(token: str):
     client = Socrata('healthdata.gov', token)
     results = client.get("di4u-7yu6", limit=5000)
     results_df = pd.DataFrame.from_records(results)
-    return results_df 
+    return results_df
 ```
 
 After that, generalize your code to be able to be run on all geos of interest, take settings from params.json, use constants for easy maintenance, with extensive documentation, etc.
 
 #### Development environment
 
-Make sure you have a functional environment with python 3.8.15+. For local runs, the makefile’s make install target will set up a local virtual environment with necessary packages.
+Make sure you have a functional environment with python 3.8.15+.
+For local runs, the makefile’s make install target will set up a local virtual environment with necessary packages.
 
-(If working in R (not recommended), local runs can be run without a virtual environment or using the [`renv` package](https://rstudio.github.io/renv/articles/renv.html), but production runs should be set up to user Docker.)
+(If working in R (very much NOT recommended), local runs can be run without a virtual environment or using the [`renv` package](https://rstudio.github.io/renv/articles/renv.html), but production runs should be set up to use Docker.)
 
 #### Dealing with data-types
 
@@ -210,19 +248,21 @@ Make sure you have a functional environment with python 3.8.15+. For local runs,
    * Problems that can arise and how to address them 
 * Basic conversion
 
-TODO: A list of assumptions that the server makes about various columns would be helpful. E.g. which geo values are allowed, should every valid date be present in some way, etc
+TODO: A list of assumptions that the server makes about various columns would be helpful.
+E.g. which geo values are allowed, should every valid date be present in some way, etc
 
 #### Dealing with geos
 
-In an ideal case, the data exists at one of our already covered geos:
+In an ideal case, the data exists at one of our [already covered geos](https://cmu-delphi.github.io/delphi-epidata/api/covidcast_geography.html):
 
-* State: state_code or state_id
-* FIPS (state+county codes, string leftpadded to 5 digits with zeroes)
+* State: state_code (string, leftpadded to 2 digits with 0) or state_id (string)
+* FIPS (state+county codes, string leftpadded to 5 digits with 0)
 * ZIP
 * MSA (metro statistical area, int)
 * HRR (hospital referral region, int)
 
-If you want to map from one of these to another, the [`delphi_utils.geomapper`](https://github.com/cmu-delphi/covidcast-indicators/blob/6912077acba97e835aff7d0cd3d64309a1a9241d/_delphi_utils_python/delphi_utils/geomap.py) utility covers most cases. A brief example of adding states with their population:
+If you want to map from one of these to another, the [`delphi_utils.geomapper`](https://github.com/cmu-delphi/covidcast-indicators/blob/6912077acba97e835aff7d0cd3d64309a1a9241d/_delphi_utils_python/delphi_utils/geomap.py) utility covers most cases.
+A brief example of aggregating from states to hhs regions via their population:
 
 ```{python}
 from delphi_utils.geomap import GeoMapper
@@ -240,15 +280,20 @@ The column is described [here](https://cmu-delphi.github.io/delphi-epidata/api/m
 
 #### Local testing
 
-As a general rule, it helps to decompose your functions into operations for which you can write unit tests. To run the tests, use `make test` in the top-level indicator directory.
+As a general rule, it helps to decompose your functions into operations for which you can write unit tests.
+To run the tests, use `make test` in the top-level indicator directory.
 
-Unit tests are required for all functions. Integration tests are highly desired, but may be difficult to set up depending on where the data is being fetched from. Mocking functions are useful in this case.
+Unit tests are required for all functions.
+Integration tests are highly desired, but may be difficult to set up depending on where the data is being fetched from.
+Mocking functions are useful in this case.
 
 #### Naming
 
 Indicator and signal names need to be approved by [@RoniRos](https://www.github.com/RoniRos).
+It is better to start that conversation sooner rather than later.
 
-The data source name as specified during an API call (e.g. in `epidatr::pub_covidcast(source = "jhu-csse", ...)`, "jhu-csse" is the data source name) should match the wildcard portion of the module name ("jhu" in `delphi_jhu`) _and_ the top-level directory name in `covidcast-indicators` ("jhu"). (Ideally, these would all also match how we casually refer to the indicator ("JHU"), but that's hard to foresee and enforce.)
+The data source name as specified during an API call (e.g. in `epidatr::pub_covidcast(source = "jhu-csse", ...)`, "jhu-csse" is the data source name) should match the wildcard portion of the module name ("jhu" in `delphi_jhu`) _and_ the top-level directory name in `covidcast-indicators` ("jhu").
+(Ideally, these would all also match how we casually refer to the indicator ("JHU"), but that's hard to foresee and enforce.)
 
 Ideally, the indicator name should:
 
@@ -261,12 +306,13 @@ Ideally, the indicator name should:
 Based on these guidelines, the `jhu-csse` indicator would be better as `jhu-csse` everywhere (module name could be `delphi_jhu_csse`), rather than having a mix of `jhu-csse` and `jhu`.
 
 Signal names should not be too long, but the most important feature is that they are descriptive.
+If we're mirroring a processed dataset, consider keeping their signal names.
 
-Some standard tags used in signal names:
+Use the following standard tags when creating new signal names:
 
 * `raw`: unsmoothed, _no longer used; if no smoothing is specified the signal is assumed to be "raw"_
 * `7dav`: smoothed using a average over a rolling 7-day window; comes at the end of the name
-* `smoothed`: smoothed using a more complex smoothing algorithm
+* `smoothed`: smoothed using a more complex smoothing algorithm; comes at the end of the name
 * `prop`: counts per 100k population
 * `pct`: percentage between 0 and 100
 * `num`: counts, _no longer used; if no value type is specified the signal is assumed to be a count_
@@ -280,11 +326,16 @@ Using this tag dictionary, we can interpret the following signals as
 
 ### Statistical review
 
-The data produced by the new indicator needs to be sanity-checked. Think of this as doing [exploratory data analysis](#step-1-exploratory-analysis) again, but on the pipeline _output_. Some of this does overlap with work done in Step 1, but should be revisited following our processing of the data. Aspects of this investigation will be useful to include in the signal documentation.
+The data produced by the new indicator needs to be sanity-checked.
+Think of this as doing [exploratory data analysis](#step-1-exploratory-analysis) again, but on the pipeline _output_.
+Some of this does overlap with work done in Step 1, but should be revisited following our processing of the data.
+Aspects of this investigation will be useful to include in the signal documentation.
 
-The analysis doesn't need to be formatted as a report, but should be all in one place, viewable by all Delphi members, and in a format that makes it easy to comment on. Some good options are the GitHub issue originally requesting the data source and the GitHub pull request adding the indicator.
+The analysis doesn't need to be formatted as a report, but should be all in one place, viewable by all Delphi members, and in a format that makes it easy to comment on.
+Some good options are the GitHub issue originally requesting the data source and the GitHub pull request adding the indicator.
 
-There is not a formal process for this, and you're free to do whatever you think is reasonable and sufficient. A thorough analysis would cover the following topics:
+There is not a formal process for this, and you're free to do whatever you think is reasonable and sufficient.
+A thorough analysis would cover the following topics:
 
 * Run the [correlations notebook](https://github.com/cmu-delphi/covidcast/blob/5f15f71/R-notebooks/cor_dashboard.Rmd) ([example output](https://cmu-delphi.github.io/covidcast/R-notebooks/signal_correlations.html#)).
    * This helps evaluate the potential value of the signals for modeling.
@@ -309,9 +360,11 @@ Once the analysis is complete, have the stakeholder (usually the original reques
 
 The [documentation site](https://cmu-delphi.github.io/delphi-epidata/) ([code here](https://github.com/cmu-delphi/delphi-epidata/tree/628e9655144934f3903c133b6713df4d4fcc613e/docs)) stores long-term long-form documentation pages for each indicator, including those that are inactive.
 
-Active and new indicators go in the [COVIDcast Main Endpoint -> Data Sources and Signals](https://cmu-delphi.github.io/delphi-epidata/api/covidcast_signals.html) section ([code here](https://github.com/cmu-delphi/delphi-epidata/tree/628e9655144934f3903c133b6713df4d4fcc613e/docs/api/covidcast-signals)). A [template doc page](https://github.com/cmu-delphi/delphi-epidata/blob/628e9655144934f3903c133b6713df4d4fcc613e/docs/api/covidcast-signals/_source-template.md) is available in the same directory.
+Active and new indicators go in the [COVIDcast Main Endpoint -> Data Sources and Signals](https://cmu-delphi.github.io/delphi-epidata/api/covidcast_signals.html) section ([code here](https://github.com/cmu-delphi/delphi-epidata/tree/628e9655144934f3903c133b6713df4d4fcc613e/docs/api/covidcast-signals)).
+A [template doc page](https://github.com/cmu-delphi/delphi-epidata/blob/628e9655144934f3903c133b6713df4d4fcc613e/docs/api/covidcast-signals/_source-template.md) is available in the same directory.
 
-An indicator documentation page should contain as much detail (including technical detail) as possible. The following fields are required:
+An indicator documentation page should contain as much detail (including technical detail) as possible.
+The following fields are required:
 
 * Description of the data source and data collection methods
 * Links to the data source (organization and specific dataset(s) used)
@@ -321,13 +374,15 @@ An indicator documentation page should contain as much detail (including technic
 * Specific math showing how signals are calculated, if unusual or complex or you like equations
 * How smoothing is done, if any
 * Known limitations of the data source and the final signals
-* Missingness characteristics, especially if the data is missing with a pattern (on weekends, etc)
+* Missingness characteristics, especially if the data is missing with a pattern (on weekends, specific states, etc)
 * Lag and revision characteristics
 * Licensing information
 
-and anything else that changes how users would use or interpret the data, impacts the usability of the signal, may be difficult to discover, recommended usecases, is unusual, any gotchas about the data or the data processing approach, etc. _More detail is better!_
+and anything else that changes how users would use or interpret the data, impacts the usability of the signal, may be difficult to discover, recommended usecases, is unusual, any gotchas about the data or the data processing approach, etc.
+_More detail is better!_
 
-At the time that you're writing the documentation, you are the expert on the data source and the indicator. Making the documentation thorough and clear will make the data maximally usable for future users, and will make maintenance for Delphi easier.
+At the time that you're writing the documentation, you are the expert on the data source and the indicator.
+Making the documentation thorough and clear will make the data maximally usable for future users, and will make maintenance for Delphi easier.
 
 (For similar reasons, comment your code extensively!)
 
@@ -339,7 +394,8 @@ At the time that you're writing the documentation, you are the expert on the dat
 
 Next, the `acquisition.covidcast` component of the `delphi-epidata` codebase does the following immediately after an indicator run (you need to set acquisition job up):
 
-1. Look in the `receiving/` folder to see if any new data files are available. If there are, then:
+1. Look in the `receiving/` folder to see if any new data files are available.
+   If there are, then:
    1. Import the new data into the epimetric_full table of the epidata.covid database, filling in the columns as follows:
       1. `source`: parsed from the name of the subdirectory of `receiving/`
       2. `signal`: parsed from the filename
@@ -354,6 +410,10 @@ Next, the `acquisition.covidcast` component of the `delphi-epidata` codebase doe
       11. `lag`: the difference in time_type units from now to time_value
       12. `value_updated_timestamp`: now
    2. Update the `epimetric_latest` table with any new keys or new versions of existing keys.
+
+Consider what settings to use in the `params.json.template` file in accordance with how you want to run the indicator and acquisition.
+Pay attention to the receiving directory, as well as how you can store credentials in vault.
+Refer to [this guide](https://docs.google.com/document/d/1Bbuvtoxowt7x2_8USx_JY-yTo-Av3oAFlhyG-vXGG-c/edit#heading=h.8kkoy8sx3t7f) for more vault info.
 
 ### CI/CD
 
@@ -370,11 +430,13 @@ Refer to [this guide](https://docs.google.com/document/d/1Bbuvtoxowt7x2_8USx_JY-
 
 ### Staging
 
-After developing the pipeline code, but before release to prod, the pipeline should be run on staging for at least a week.
+After developing the pipeline code, but before deploying in development, the pipeline should be tested on staging.
+Indicator runs should be set up to run automatically daily for at least a week.
 
-The indicator run code is automatically deployed on staging after your branch is merged into main. After merging, make sure you have proper access to Cronicle and staging server `app-mono-dev-01.delphi.cmu.edu` _and_ can see your code on staging at `/home/indicators/runtime/`.
+The indicator run code is automatically deployed on staging after your branch is merged into `main`.
+After merging, make sure you have proper access to Cronicle and staging server `app-mono-dev-01.delphi.cmu.edu` _and_ can see your code on staging at `/home/indicators/runtime/`.
 
-Then, on Cronicle, create two jobs: First one to run the indicator and second one to load the output csv files into database. 
+Then, on Cronicle, create two jobs: one to run the indicator and one to load the output csv files into database. 
 
 We start by setting up the acquisition job.
 
@@ -429,7 +491,7 @@ echo "${chain_data}";
 ssh -T -l ${user} ${host} "sudo -u indicators -s bash -c 'cd /home/indicators/runtime/${ind_name} && env/bin/python -m delphi_${ind_name}'";
 ```
 
-Note the staging hostname in `host`.
+Note the staging hostname in `host` and how the acquisition job is chained to run right after the indicator job.
 
 Note that `ind_name` variable here refer to the top-level directory name where code is located, while `acq_ind_name` refer to the directory name where output csv files are located, which corresponds to the name of `source` column in our database, as mentioned in step 3.
 
@@ -483,7 +545,7 @@ mysql> select * from signal_dim where source='nssp';
 +---------------+--------+----------------------------------+
 ```
 
-Then, check if number of records ingested in db matches with number of rows in csv when running locally.
+Then, check if the number of records ingested in db matches with the number of rows in csv when running locally.
 For example, the below query sets the `issue` date being the day acquisition job was run, and `signal_key_id` correspond with signals from our new source.
 Check if this count matches with local run result.
 
@@ -502,7 +564,6 @@ You can also check how data looks more specifically at each geo level or among d
 See [@korlaxxalrok](https://www.github.com/korlaxxalrok) or [@minhkhul](https://www.github.com/minhkhul) for more information.
 
 If everything goes well make a prod version of the indicator run job and use that to run indicator on a daily basis.
-
 
 ### Signal Documentation
 

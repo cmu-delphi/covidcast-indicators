@@ -20,7 +20,7 @@ from .modify_claims_drops import modify_and_write
 from .get_latest_claims_name import get_latest_filename
 
 
-def run_module(params):  # pylint: disable=too-many-statements
+def run_module(params, logger=None):  # pylint: disable=too-many-statements
     """
     Run doctor visits indicator.
 
@@ -42,18 +42,26 @@ def run_module(params):  # pylint: disable=too-many-statements
             - "se": bool, whether to write out standard errors
             - "obfuscated_prefix": str, prefix for signal name if write_se is True.
             - "parallel": bool, whether to update sensor in parallel.
+        - "patch": Only used for patching data, remove if not patching.
+                   Check out patch.py and README for more details on how to run patches.
+            - "start_date": str, YYYY-MM-DD format, first issue date
+            - "end_date": str, YYYY-MM-DD format, last issue date
+            - "patch_dir": str, directory to write all issues output
     """
     start_time = time.time()
-    logger = get_structured_logger(
-        __name__, filename=params["common"].get("log_filename"),
-        log_exceptions=params["common"].get("log_exceptions", True))
+    issue_date = params.get("patch", {}).get("current_issue", None)
+    if not logger:
+        logger = get_structured_logger(
+            __name__,
+            filename=params["common"].get("log_filename"),
+            log_exceptions=params["common"].get("log_exceptions", True),
+        )
 
     # pull latest data
-    download(params["indicator"]["ftp_credentials"],
-             params["indicator"]["input_dir"], logger)
+    download(params["indicator"]["ftp_credentials"], params["indicator"]["input_dir"], logger, issue_date=issue_date)
 
     # find the latest files (these have timestamps)
-    claims_file = get_latest_filename(params["indicator"]["input_dir"], logger)
+    claims_file = get_latest_filename(params["indicator"]["input_dir"], logger, issue_date=issue_date)
 
     # modify data
     modify_and_write(claims_file, logger)

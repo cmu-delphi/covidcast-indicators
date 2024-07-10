@@ -5,18 +5,16 @@ Author: Aaron Rumack
 Created: 2020-10-14
 """
 # standard packages
-import logging
 from multiprocessing import Pool, cpu_count
 
 # third party
 import numpy as np
 import pandas as pd
-from delphi_utils import GeoMapper, add_prefix, create_export_csv, Weekday
+from delphi_utils import GeoMapper, Weekday, add_prefix, create_export_csv
 
 # first party
 from .config import Config
-from .constants import SMOOTHED, SMOOTHED_ADJ, SMOOTHED_CLI, SMOOTHED_ADJ_CLI,\
-                       SMOOTHED_FLU, SMOOTHED_ADJ_FLU, NA
+from .constants import SMOOTHED, SMOOTHED_ADJ, SMOOTHED_ADJ_CLI, SMOOTHED_ADJ_FLU, SMOOTHED_CLI, SMOOTHED_FLU
 from .sensor import CHCSensor
 
 
@@ -173,10 +171,11 @@ class CHCSensorUpdater:  # pylint: disable=too-many-instance-attributes
         unique_geo_ids = pd.unique(data_frame[geo])
         data_frame.set_index([geo, Config.DATE_COL],inplace=True)
         # for each location, fill in all missing dates with 0 values
-        multiindex = pd.MultiIndex.from_product((unique_geo_ids, self.fit_dates),
-                                                names=[geo, Config.DATE_COL])
-        assert (len(multiindex) <= (len(gmpr.get_geo_values(gmpr.as_mapper_name(geo))) * len(self.fit_dates))
-                ), f"more loc-date pairs than maximum number of geographies x number of dates, length of multiindex is {len(multiindex)}, geo level is {geo}"
+        multiindex = pd.MultiIndex.from_product((unique_geo_ids, self.fit_dates), names=[geo, Config.DATE_COL])
+        assert len(multiindex) <= (len(gmpr.get_geo_values(gmpr.as_mapper_name(geo))) * len(self.fit_dates)), (
+            "more loc-date pairs than maximum number of geographies x number of dates, "
+            f"length of multiindex is {len(multiindex)}, geo level is {geo}"
+        )
 
         # fill dataframe with missing dates using 0
         data_frame = data_frame.reindex(multiindex, fill_value=0)
@@ -201,14 +200,17 @@ class CHCSensorUpdater:  # pylint: disable=too-many-instance-attributes
         data.reset_index(inplace=True)
         data_frame = self.geo_reindex(data)
         # handle if we need to adjust by weekday
-        wd_params = Weekday.get_params(
-            data_frame,
-            "den",
-            ["num"],
-            Config.DATE_COL,
-            [1, 1e5],
-            self.logger,
-        ) if self.weekday else None
+        if self.weekday:
+            wd_params = Weekday.get_params_legacy(
+                data_frame,
+                "den",
+                ["num"],
+                Config.DATE_COL,
+                [1, 1e5],
+                self.logger,
+            )
+        else:
+            wd_params = None
         # run sensor fitting code (maybe in parallel)
         if not self.parallel:
             dfs = []

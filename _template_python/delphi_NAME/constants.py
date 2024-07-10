@@ -1,5 +1,6 @@
-"""
-Registry for variations
+"""Registry for variations
+
+Lists of geos to produce, signals to produce, dataset ids, data source URL, etc.
 """
 
 ## example:

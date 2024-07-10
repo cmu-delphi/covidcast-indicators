@@ -200,14 +200,17 @@ class CHCSensorUpdater:  # pylint: disable=too-many-instance-attributes
         data.reset_index(inplace=True)
         data_frame = self.geo_reindex(data)
         # handle if we need to adjust by weekday
-        wd_params = Weekday.get_params_legacy(
-            data_frame,
-            "den",
-            ["num"],
-            Config.DATE_COL,
-            [1, 1e5],
-            self.logger,
-        ) if self.weekday else None
+        if self.weekday:
+            wd_params = Weekday.get_params_legacy(
+                data_frame,
+                "den",
+                ["num"],
+                Config.DATE_COL,
+                [1, 1e5],
+                self.logger,
+           )
+        else:
+            wd_params = None
         # run sensor fitting code (maybe in parallel)
         if not self.parallel:
             dfs = []

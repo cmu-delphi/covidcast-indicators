@@ -23,12 +23,14 @@ from delphi_utils import get_structured_logger
 from delphi_utils.export import create_export_csv
 from delphi_utils.geomap import GeoMapper
 
-from .constants import GEOS, SIGNALS, SMOOTHERS
+from .constants import GEOS, SIGNALS, SMOOTHERS, CSV_COLS
+from .pull import fetch_data
+from .utils import summary_log, add_needed_columns
 
 
 def run_module(params, logger=None):
     """
-    Runs the indicator
+    Run the indicator
 
     Arguments
     --------
@@ -48,7 +50,7 @@ def run_module(params, logger=None):
                 adjustments (False)
             - "se": bool, whether to write out standard errors
             - "obfuscated_prefix": str, prefix for signal name if write_se is True.
-            - "parallel": bool, whether to update sensor in parallel.
+            - "parallel": bool, whether to run in parallel.
         - "patch": Only used for patching data, remove if not patching.
                    Check patch.py and README for more details on how to run patches.
             - "start_date": str, YYYY-MM-DD format, first issue date
@@ -60,43 +62,68 @@ def run_module(params, logger=None):
     start_time = time.time()
     issue_date = params.get("patch", {}).get("current_issue", None)
 
+    export_dir = params["common"]["export_dir"]
+    # If authentication required, include as a secret in params.json
+    api_key = params["indicator"]["api_key"]
+
     logger = get_structured_logger(
         __name__, filename=params["common"].get("log_filename"),
         log_exceptions=params["common"].get("log_exceptions", True))
 
-    mapper = GeoMapper()
-
     run_stats = []
-    ## build the base version of the signal at the most detailed geo level you can get.
-    ## compute stuff here or farm out to another function or file
-    all_data = pd.DataFrame(columns=["timestamp", "val", "zip", "sample_size", "se"])
-    ## aggregate & smooth
-    ## TODO: add num/prop variations if needed
-    for sensor, smoother, geo in product(SIGNALS, SMOOTHERS, GEOS):
-        df = mapper.replace_geocode(all_data, "zip", geo, new_col="geo_id")
-        ## TODO: recompute sample_size, se here if not NA
+
+    # Build the base version of the signal at the most detailed geo level
+    # possible (usually zip or county).
+    base_geo = "zip"
+    all_data = fetch_data(api_key)
+
+    mapper = GeoMapper()
+    # Compute variations. Add num/prop variations if needed
+    for signal, smoother_name, geo in product(SIGNALS, SMOOTHERS, GEOS):
+        df = all_data.copy()
+        df["val"] = df[signal]
+
+        # Sometimes a source will report at several different geo levels
+        # (e.g. county and nation), but not all geo levels that we want. In
+        # that case, separate out processing by geo for those explicitly
+        # provided and use geomapper-based aggregation on everything else.
+        # Example:
+        #   if geo == "nation":
+        #       df = df[df["geography"] == "United States"]
+        #       df["geo_id"] = "us"
+
+        # Aggregate using sum from base_geo to new geo. Weighted sum also available.
+        df = mapper.replace_geocode(all_data, base_geo, geo, new_col="geo_id")
+
+        # Recompute sample_size, se here if not NA
+
+        smoother = SMOOTHERS_MAP[smoother_name]
+        signal_name = signal + smoother[0] # Add "num"/"prop" to name if used
         df["val"] = df[["geo_id", "val"]].groupby("geo_id")["val"].transform(
-            smoother[0].smooth
+            smoother[1].smooth
         )
-        sensor_name = sensor + smoother[1] ## TODO: +num/prop variation if used
-        # don't export first 6 days for smoothed signals since they'll be nan.
-        start_date = min(df.timestamp) + timedelta(6) if smoother[1] else min(df.timestamp)
+
+        start_date = min(df.timestamp)
+        if smoother_name == "smoothed":
+            # Don't export first n-1 days for smoothed signals since they'll
+            # be NaN/missing. Usually n = 7, since our standard smoother is a
+            # rolling 7-day average.
+            start_date += timedelta(6)
+
+        # Add se, sample_size, and NaN codes
+        missing_cols = set(CSV_COLS) - set(df.columns)
+        df = add_needed_columns(df, col_names=list(missing_cols))
+        df = df[CSV_COLS + ["timestamp"]]
+
         dates = create_export_csv(
             df,
-            params["common"]["export_dir"],
+            export_dir,
             geo,
-            sensor_name,
+            signal_name,
             start_date=start_date)
+
         if len(dates) > 0:
             run_stats.append((max(dates), len(dates)))
-    ## log this indicator run
-    elapsed_time_in_seconds = round(time.time() - start_time, 2)
-    min_max_date = run_stats and min(s[0] for s in run_stats)
-    csv_export_count = sum(s[-1] for s in run_stats)
-    max_lag_in_days = min_max_date and (datetime.now() - min_max_date).days
-    formatted_min_max_date = min_max_date and min_max_date.strftime("%Y-%m-%d")
-    logger.info("Completed indicator run",
-                elapsed_time_in_seconds = elapsed_time_in_seconds,
-                csv_export_count = csv_export_count,
-                max_lag_in_days = max_lag_in_days,
-                oldest_final_export_date = formatted_min_max_date)
+
+    # Log this indicator run
+    summary_log(start_time, run_stats, logger)

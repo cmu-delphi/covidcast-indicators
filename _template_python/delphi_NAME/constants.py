@@ -46,6 +46,18 @@ SIGNALS_MAP = {
 # Delphi output signal names
 SIGNALS = [val for (key, val) in SIGNALS_MAP.items()]
 
+# When reading in source data, be explicit about what types we expect
+TYPE_DICT = {key: float for key in SIGNALS}
+TYPE_DICT.update(
+    {
+        "timestamp": "datetime64[ns]",
+        "geography": str,
+        "county": str,
+        "fips": str,
+    }
+)
+
+
 GEO_RESOLUTIONS = [
     "county",
     "msa",
@@ -73,5 +85,14 @@ SMOOTHERS_MAP = {
                                    impute_method='zeros'),
 						  lambda d: d)
 }
+
+AUXILIARY_COLS = [
+    "se",
+    "sample_size",
+    "missing_val",
+    "missing_se",
+    "missing_sample_size",
+]
+CSV_COLS = ["geo_id", "val"] + AUXILIARY_COLS
 
 NEWLINE = "\n"

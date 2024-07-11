@@ -8,6 +8,9 @@ from datetime import timedelta
 
 from delphi_utils import Smoother
 
+
+DATA_SOURCE_NAME = "NAME"
+
 # Fixed URL where data is located
 SOURCE_URL = "data.cdc.gov"
 # Fixed ID of dataset within data source system

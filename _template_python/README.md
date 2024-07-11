@@ -60,3 +60,10 @@ with the percentage of code covered by the tests.
 
 None of the linting or unit tests should fail, and the code lines that are not covered by unit tests should be small and
 should not include critical sub-routines. 
+
+## Running Patches
+
+To get data issued during specific date range, output in batch issue format, adjust `params.json` in accordance with `patch.py`, then run
+```
+env/bin/python -m delphi_doctor_visits.patch
+```

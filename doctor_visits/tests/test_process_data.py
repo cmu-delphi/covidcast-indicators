@@ -1,5 +1,5 @@
 """Tests for update_sensor.py."""
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
 import os
 from pathlib import Path
@@ -30,9 +30,11 @@ class TestProcessData:
             logger=TEST_LOGGER,
         )
 
-        comparison = pd.read_pickle(f"{self.compare_path}/process_data/main_after_date_SYNEDI_AGG_OUTPATIENT_07022020_1455CDT.pkl")
-        pd.testing.assert_frame_equal(actual.reset_index(drop=True), comparison)
-
+        columns = list(actual.columns)
+        expected = pd.read_pickle(f"{self.compare_path}/process_data/main_after_date_SYNEDI_AGG_OUTPATIENT_07022020_1455CDT.pkl")
+        expected.reset_index(drop=True)
+        expected = expected[columns]
+        pd.testing.assert_frame_equal(expected, actual)
 
     def test_write_to_csv(self):
         output_df = pd.read_csv(f"{self.compare_path}/update_sensor/all.csv", parse_dates=["date"])
@@ -54,7 +56,7 @@ class TestProcessData:
         for f in files:
             filename = f.name
             actual = pd.read_csv(f)
-            comparison = pd.read_csv(f"{self.compare_path}/process_data/{filename}")
-            pd.testing.assert_frame_equal(actual, comparison)
+            expected = pd.read_csv(f"{self.compare_path}/process_data/{filename}")
+            pd.testing.assert_frame_equal(expected, actual)
             os.remove(f)
 

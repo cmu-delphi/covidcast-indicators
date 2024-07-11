@@ -91,6 +91,12 @@ def run_module(params, logger=None):
     mapper = GeoMapper()
     # Compute variations. Add num/prop variations if needed
     for signal, smoother_name, geo in product(SIGNALS, SMOOTHERS, GEOS):
+        logger.info("Generating signal and exporting to CSV",
+            geo_res = geo,
+            metric=signal,
+            smoother = smoother_name,
+        )
+
         df = all_data.copy()
         df["val"] = df[signal]
 
@@ -126,15 +132,17 @@ def run_module(params, logger=None):
         df = add_needed_columns(df, col_names=list(missing_cols))
         df = df[CSV_COLS + ["timestamp"]]
 
-        dates = create_export_csv(
+        if len(df) == 0:
+            continue
+        exported_csv_dates = create_export_csv(
             df,
             export_dir,
             geo,
             signal_name,
             start_date=start_date)
 
-        if len(dates) > 0:
-            run_stats.append((max(dates), len(dates)))
+        if len(exported_csv_dates) > 0:
+            run_stats.append((max(exported_csv_dates), len(exported_csv_dates)))
 
     # Log this indicator run
     summary_log(start_time, run_stats, logger)

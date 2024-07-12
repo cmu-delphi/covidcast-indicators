@@ -42,7 +42,7 @@ class TestProcessData:
         write_to_csv(
             output_df=output_df,
             prefix=self.prefix,
-            geo_id=self.geo,
+            geo_level=self.geo,
             se=self.se,
             weekday=self.weekday,
             logger=TEST_LOGGER,

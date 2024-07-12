@@ -11,7 +11,7 @@ required = [
     "pytest-cov",
     "pytest",
     "scikit-learn",
-    "dask>=2024.6, <2024.7",
+    "dask>=2024.6.*,<2024.7.0",
     "cvxpy>=1.5",
 ]
 

@@ -1,14 +1,14 @@
 """Retrieve data and wrangle into appropriate format."""
 # -*- coding: utf-8 -*-
 import re
-from datetime import date, datetime, timedelta  # pylint: disable=unused-import
-import pandas_gbq
-from google.oauth2 import service_account
+from datetime import date, datetime  # pylint: disable=unused-import
+
 import numpy as np
 import pandas as pd
+import pandas_gbq
+from google.oauth2 import service_account
 
-from .constants import DC_FIPS, METRICS, COMBINED_METRIC, SYMPTOM_SETS, DTYPE_CONVERSIONS
-
+from .constants import COMBINED_METRIC, DC_FIPS, DTYPE_CONVERSIONS, METRICS, SYMPTOM_SETS
 
 # Create map of BigQuery symptom column names to desired column names.
 colname_map = {"symptom_" +
@@ -93,45 +93,6 @@ def preprocess(df, level):
     df = df.rename({"date": "timestamp"}, axis=1)
 
     return df
-
-
-def get_date_range(export_start_date, export_end_date, num_export_days):
-    """Produce date range to retrieve data for.
-
-    Calculate start of date range as a static offset from the end date.
-    Pad date range by an additional 7 days before the earliest date to
-    produce data for calculating smoothed estimates.
-
-    Parameters
-    ----------
-    export_start_date: date
-        first date to retrieve data for
-    export_end_date: date
-        last date to retrieve data for
-    num_export_days: int
-        number of days before end date to export
-
-    Returns
-    -------
-    list
-    """
-    PAD_DAYS = 7
-
-    if num_export_days == "all":
-        # Get all dates since export_start_date.
-        start_date = export_start_date
-    else:
-        # Don't fetch data before the user-set start date.
-        start_date = max(
-            export_end_date - timedelta(days=num_export_days),
-            export_start_date
-        )
-
-    retrieve_dates = [
-        start_date - timedelta(days=PAD_DAYS - 1),
-        export_end_date]
-
-    return retrieve_dates
 
 
 def format_dates_for_query(date_list):
@@ -254,7 +215,7 @@ def initialize_credentials(credentials):
     pandas_gbq.context.project = credentials.project_id
 
 
-def pull_gs_data(credentials, export_start_date, export_end_date, num_export_days):
+def pull_gs_data(credentials, export_date_range):
     """Pull latest dataset for each geo level and combine.
 
     PS:  No information for PR
@@ -277,9 +238,8 @@ def pull_gs_data(credentials, export_start_date, export_end_date, num_export_day
     dict: {"county": pd.DataFrame, "state": pd.DataFrame}
     """
     # Fetch and format dates we want to attempt to retrieve
-    retrieve_dates = get_date_range(
-        export_start_date, export_end_date, num_export_days)
-    retrieve_dates = format_dates_for_query(retrieve_dates)
+
+    retrieve_dates = format_dates_for_query(export_date_range)
 
     initialize_credentials(credentials)
 

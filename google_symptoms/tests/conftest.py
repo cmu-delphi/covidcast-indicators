@@ -116,19 +116,3 @@ def run_as_module(params):
         with mock.patch("pandas_gbq.read_gbq", side_effect=[
                 state_data, county_data]) as mock_read_gbq:
             delphi_google_symptoms.run.run_module(params)
-
-
-@pytest.fixture(scope="session")
-def run_as_module_gap(params_w_patch, logger):
-    if exists("receiving"):
-        # Clean receiving directory
-        for fname in listdir("receiving"):
-            remove(join("receiving", fname))
-    else:
-        makedirs("receiving")
-
-    with mock.patch("delphi_google_symptoms.pull.initialize_credentials",
-                    return_value=None) as mock_credentials:
-        with mock.patch("pandas_gbq.read_gbq", side_effect=[
-                state_data_gap, county_data_gap]) as mock_read_gbq:
-            return delphi_google_symptoms.run.run_module(params_w_patch, logger)

@@ -185,7 +185,6 @@ def pull_gs_data_one_geolevel(level, date_range):
     query = produce_query(level, date_range)
 
     df = pandas_gbq.read_gbq(query, progress_bar_type=None, dtypes = DTYPE_CONVERSIONS)
-
     if len(df) == 0:
         df = pd.DataFrame(
             columns=["open_covid_region_code", "date"] +

@@ -12,14 +12,14 @@ import numpy as np
 from delphi_utils import create_export_csv, get_structured_logger
 
 from .constants import COMBINED_METRIC, GEO_RESOLUTIONS, SMOOTHERS, SMOOTHERS_MAP
-from .date_utils import _generate_export_dates, generate_date_range
+from .date_utils import _generate_candidate_dates, generate_date_range
 from .geo import geo_map
 from .pull import pull_gs_data
 
 
 # pylint: disable=R0912
 # pylint: disable=R0915
-def run_module(params):
+def run_module(params, logger=None):
     """
     Run Google Symptoms module.
 
@@ -42,15 +42,17 @@ def run_module(params):
     oldest_final_export_date = None
     export_dir = params["common"]["export_dir"]
 
-    logger = get_structured_logger(
-        __name__, filename=params["common"].get("log_filename"),
-        log_exceptions=params["common"].get("log_exceptions", True))
+    if logger is None:
+        logger = get_structured_logger(
+            __name__,
+            filename=params["common"].get("log_filename"),
+            log_exceptions=params["common"].get("log_exceptions", True),
+        )
 
-    export_start_date, export_end_date, num_export_days = _generate_export_dates(params)
-    export_date_range = generate_date_range(export_start_date, export_end_date, num_export_days)
+    start_date, end_date, num_export_days = _generate_candidate_dates(params, logger)
+    export_date_range = generate_date_range(start_date, end_date, num_export_days)
     # Pull GS data
     dfs = pull_gs_data(params["indicator"]["bigquery_credentials"], export_date_range)
-
     for geo_res in GEO_RESOLUTIONS:
         if geo_res == "state":
             df_pull = dfs["state"]
@@ -58,6 +60,7 @@ def run_module(params):
             df_pull = geo_map(dfs["state"], geo_res)
         else:
             df_pull = geo_map(dfs["county"], geo_res)
+
 
         if len(df_pull) == 0:
             continue
@@ -77,14 +80,12 @@ def run_module(params):
             df = df.loc[~df["val"].isnull(), :]
             df = df.reset_index()
             sensor_name = "_".join([smoother, "search"])
-
             if len(df) == 0:
                 continue
             exported_csv_dates = create_export_csv(
                 df,
                 export_dir=export_dir,
-                start_date=SMOOTHERS_MAP[smoother][1](export_start_date),
-                end_date=SMOOTHERS_MAP[smoother][1](export_end_date),
+                start_date=SMOOTHERS_MAP[smoother][1](start_date),
                 metric=metric.lower(),
                 geo_res=geo_res,
                 sensor=sensor_name)

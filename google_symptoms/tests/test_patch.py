@@ -54,7 +54,7 @@ class TestPatchModule:
             mock_read_gbq.side_effect = side_effect
             start_date = datetime.strptime(params_w_patch["patch"]["start_issue"], "%Y-%m-%d")
 
-            # patch()
+            patch()
 
             patch_path = Path(f"{TEST_DIR}/{params_w_patch['patch']['patch_dir']}")
 

@@ -9,8 +9,13 @@ import pandas as pd
 from conftest import TEST_DIR
 
 class TestRun:
-    def test_output_files_exist(self):
-        output_files = listdir("receiving")
+    @classmethod
+    def teardown_class(cls):
+        print('cleaning up tests...')
+        shutil.rmtree(f"{TEST_DIR}/receiving/")
+
+    def test_output_files_exist(self, run_as_module):
+        output_files = listdir(f"{TEST_DIR}/receiving")
         smoothed_files = sorted(list(set([file for file in output_files if "smoothed" in file])))
         raw_files = sorted(list(set([file for file in output_files if "raw" in file])))
         csv_files = {"raw": raw_files, "smoothed": smoothed_files}
@@ -62,11 +67,10 @@ class TestRun:
             csv_dates = list(set([datetime.strptime(f.split('_')[0], "%Y%m%d") for f in csv_files[smther] if smther in f]))
             assert set(csv_files[smther]).issuperset(set(expected_files))
 
-        shutil.rmtree(f"{TEST_DIR}/receiving/")
 
-    def test_output_file_format(self, run_as_module):
+    def test_output_file_format(self):
         df = pd.read_csv(
-            join("receiving", "20200810_state_s03_smoothed_search.csv")
+            join(f"{TEST_DIR}/receiving", "20200810_state_s03_smoothed_search.csv")
         )
         assert (df.columns.values == [
                 "geo_id", "val", "se", "sample_size"]).all()

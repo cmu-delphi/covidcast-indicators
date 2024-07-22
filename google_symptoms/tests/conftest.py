@@ -72,7 +72,7 @@ def logger():
 def params():
     params = {
         "common": {
-            "export_dir": "./receiving"
+            "export_dir": f"{TEST_DIR}/receiving"
         },
         "indicator": {
             "export_start_date": "2020-02-20",
@@ -104,12 +104,12 @@ def params_w_patch(params):
 
 @pytest.fixture(scope="session")
 def run_as_module(params):
-    if exists("receiving"):
+    if exists(f"{TEST_DIR}/receiving"):
         # Clean receiving directory
-        for fname in listdir("receiving"):
-            remove(join("receiving", fname))
+        for fname in listdir(f"{TEST_DIR}/receiving"):
+            remove(join(f"{TEST_DIR}/receiving", fname))
     else:
-        makedirs("receiving")
+        makedirs(f"{TEST_DIR}/receiving")
 
     with mock.patch("delphi_google_symptoms.pull.initialize_credentials",
                     return_value=None) as mock_credentials:

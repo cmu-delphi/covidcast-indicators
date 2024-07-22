@@ -1,15 +1,21 @@
+import shutil
+from datetime import datetime
 from os import listdir
 from os.path import join
 from itertools import product
 
 import pandas as pd
 
+from conftest import TEST_DIR
 
 class TestRun:
-    def test_output_files_exist(self, run_as_module):
-        csv_files = listdir("receiving")
+    def test_output_files_exist(self):
+        output_files = listdir("receiving")
+        smoothed_files = sorted(list(set([file for file in output_files if "smoothed" in file])))
+        raw_files = sorted(list(set([file for file in output_files if "raw" in file])))
+        csv_files = {"raw": raw_files, "smoothed": smoothed_files}
 
-        dates = [
+        expected_smoothed_dates = [
             "20200801",
             "20200802",
             "20200803",
@@ -22,22 +28,41 @@ class TestRun:
             "20200810",
             "20200811"
         ]
+        expected_raw_dates = [
+                                 '20200726',
+                                 '20200727',
+                                 '20200728',
+                                 '20200729',
+                                 '20200730',
+                                 '20200731',
+                             ] + expected_smoothed_dates
+
+        dates = {
+            "raw": expected_raw_dates,
+            "smoothed": expected_smoothed_dates,
+        }
+
         geos = ["county", "state", "hhs", "nation"]
         metrics = ["s01", "s02", "s03",
-                   #"s04",
+                   # "s04",
                    "s04", "s05",
-                   #"s07",
+                   # "s07",
                    "s06",
-                   #"s09", "s10",
+                   # "s09", "s10",
                    "scontrol"]
         smoother = ["raw", "smoothed"]
 
-        expected_files = []
-        for date, geo, metric, smoother in product(dates, geos, metrics, smoother):
-            nf = "_".join([date, geo, metric, smoother, "research"]) + ".csv"
-            expected_files.append(nf)
+        for smther in smoother:
+            expected_files = []
 
-        set(csv_files) == set(expected_files)
+            for date, geo, metric in product(dates[smther], geos, metrics):
+                nf = "_".join([date, geo, metric, smther, "search"]) + ".csv"
+                expected_files.append(nf)
+
+            csv_dates = list(set([datetime.strptime(f.split('_')[0], "%Y%m%d") for f in csv_files[smther] if smther in f]))
+            assert set(csv_files[smther]).issuperset(set(expected_files))
+
+        shutil.rmtree(f"{TEST_DIR}/receiving/")
 
     def test_output_file_format(self, run_as_module):
         df = pd.read_csv(

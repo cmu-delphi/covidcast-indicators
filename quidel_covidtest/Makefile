@@ -13,7 +13,7 @@ install: venv
 install-ci: venv
 	. env/bin/activate; \
 	pip install wheel ; \
-	pip install ../_delphi_utils_python ;\
+	pip install '../_delphi_utils_python[dev]' ;\
 	pip install .
 
 lint:

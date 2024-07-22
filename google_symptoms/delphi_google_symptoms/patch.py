@@ -11,14 +11,14 @@ To use this module, you need to specify the range of issue dates in params.json,
     ...
   },
   "patch": {
-    "patch_dir": "/Users/minhkhuele/Desktop/delphi/covidcast-indicators/doctor_visits/AprilPatch",
+    "patch_dir": ".../covidcast-indicators/google-symptoms/AprilPatch",
     "start_issue": "2024-04-20",
     "end_issue": "2024-04-21"
   }
 }
 
 It will generate data for that range of issue dates, and store them in batch issue format:
-[name-of-patch]/issue_[issue-date]/doctor-visits/actual_data_file.csv
+[params patch_dir]/issue_[issue-date]/google-symptoms/xxx.csv
 """
 
 from datetime import datetime, timedelta

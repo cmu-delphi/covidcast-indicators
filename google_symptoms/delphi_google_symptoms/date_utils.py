@@ -23,7 +23,7 @@ def generate_patch_dates(params) -> List[Dict[date, List[date]]]:
     -------
     list of dicts
     """
-    start_date = datetime.strptime(params["patch"]["start_issue"], "%Y-%m-%d")
+    issue_date = datetime.strptime(params["patch"]["start_issue"], "%Y-%m-%d")
 
     # If end_date not specified, use current date.
     end_date = datetime.strptime(params["patch"]["end_issue"], "%Y-%m-%d")
@@ -34,14 +34,13 @@ def generate_patch_dates(params) -> List[Dict[date, List[date]]]:
     global_max_expected_lag = max(list(max_expected_lag.values()))
     num_export_days = params["validation"]["common"].get("span_length", 14) + global_max_expected_lag
 
-    while start_date <= end_date:
+    while issue_date <= end_date:
         # start_date gets padded again when executed in run_module
-        expected_start_dt = start_date - timedelta(days=num_export_days - PAD_DAYS + 2)
-        expected_end_dt = start_date
-        daterange = generate_date_range(expected_start_dt, expected_end_dt, "all")
-        patch_date = {start_date: daterange}
+        expected_start_dt = issue_date - timedelta(days=num_export_days - PAD_DAYS + 2)
+        daterange = generate_date_range(expected_start_dt, issue_date, num_export_days)
+        patch_date = {issue_date: daterange}
         patch_dates_list.append(patch_date)
-        start_date += timedelta(days=1)
+        issue_date += timedelta(days=1)
     return patch_dates_list
 
 
@@ -98,6 +97,9 @@ def _generate_candidate_dates(params: Dict, logger) -> Tuple[date, date, int]:
 
             num_export_days = expected_date_diff
 
+    if num_export_days == "all":
+        num_export_days = (export_end_date - export_start_date).days + 1
+
     return export_start_date, export_end_date, num_export_days
 
 
@@ -121,12 +123,7 @@ def generate_date_range(export_start_date: date, export_end_date: date, num_expo
     -------
     List[date, date]
     """
-    if num_export_days == "all":
-        # Get all dates since export_start_date.
-        start_date = export_start_date
-    else:
-        # Don't fetch data before the user-set start date.
-        start_date = max(export_end_date - timedelta(days=num_export_days), export_start_date)
+    start_date = max(export_end_date - timedelta(days=num_export_days), export_start_date)
 
     retrieve_dates = [start_date - timedelta(days=PAD_DAYS - 1), export_end_date]
 

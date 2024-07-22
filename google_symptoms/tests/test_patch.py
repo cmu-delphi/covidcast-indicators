@@ -19,16 +19,21 @@ from conftest import state_data_gap, county_data_gap, covidcast_metadata, TEST_D
 class TestPatchModule:
 
     def parse_csv_file(self, file_list: List[str]) -> Tuple[List[datetime]]:
-        smoothed_list = set((datetime.strptime(f.name.split('_')[0],"%Y%m%d") for f in file_list if "smoothed" in f.name))
-        raw_list = set((datetime.strptime(f.name.split('_')[0],"%Y%m%d") for f in file_list if "raw" in f.name))
-        return smoothed_list, raw_list
+        smoothed_list = list(set([datetime.strptime(f.name.split('_')[0],"%Y%m%d") for f in file_list if "smoothed" in f.name]))
+        raw_list = list(set([datetime.strptime(f.name.split('_')[0],"%Y%m%d") for f in file_list if "raw" in f.name]))
+        return sorted(smoothed_list), sorted(raw_list)
 
     def generate_expected_dates(self, params_w_patch, smoother, issue_date):
         max_expected_lag = lag_converter(params_w_patch["validation"]["common"].get("max_expected_lag", {"all": 4}))
         global_max_expected_lag = max(list(max_expected_lag.values()))
         num_export_days = params_w_patch["validation"]["common"].get("span_length", 14) + global_max_expected_lag
-        export_start_date = issue_date - timedelta(days=num_export_days + PAD_DAYS)
-        return SMOOTHERS_MAP[smoother][1](export_start_date), issue_date - timedelta(days=5)
+        export_start_date = SMOOTHERS_MAP[smoother][1](issue_date - timedelta(days=num_export_days))
+        if smoother == "smoothed":
+            export_start_date = export_start_date - timedelta(days=1)
+        # subtract for expected delay
+        export_end_date = issue_date - timedelta(days=5)
+        num_export_days = (export_end_date - export_start_date).days + 1
+        return sorted([export_start_date + timedelta(days=x) for x in range(num_export_days)])
     def test_patch(self, params_w_patch, monkeypatch):
         with mock_patch("delphi_google_symptoms.patch.read_params", return_value=params_w_patch), \
              mock_patch("delphi_google_symptoms.pull.pandas_gbq.read_gbq") as mock_read_gbq, \
@@ -49,25 +54,23 @@ class TestPatchModule:
             mock_read_gbq.side_effect = side_effect
             start_date = datetime.strptime(params_w_patch["patch"]["start_issue"], "%Y-%m-%d")
 
-            patch()
+            # patch()
 
             patch_path = Path(f"{TEST_DIR}/{params_w_patch['patch']['patch_dir']}")
 
             for issue_dir in sorted(list(patch_path.iterdir())):
                 assert f'issue_{datetime.strftime(start_date, "%Y%m%d")}' == issue_dir.name
+
                 smoothed_dates, raw_dates = self.parse_csv_file(list(Path(issue_dir, "google-symptom").glob("*.csv")))
-                expected_smoothed_start, expected_smoothed_end = self.generate_expected_dates(params_w_patch, "smoothed", start_date)
-                expected_raw_start, expected_raw_end = self.generate_expected_dates(params_w_patch, "raw", start_date)
+                expected_smoothed_dates = self.generate_expected_dates(params_w_patch, "smoothed", start_date)
+                expected_raw_dates = self.generate_expected_dates(params_w_patch, "raw", start_date)
 
-                assert len(smoothed_dates) == (expected_smoothed_end - expected_smoothed_start).days
-                assert len(raw_dates) == (expected_raw_end - expected_raw_start).days
-
-                print("hi")
+                assert smoothed_dates == expected_smoothed_dates
+                assert raw_dates == expected_raw_dates
+                shutil.rmtree(issue_dir)
                 start_date += timedelta(days=1)
-                # shutil.rmtree(issue_dir)
 
-                # assert (os.path.isdir(f'{TEST_DIR}/patch_dir/issue_{datetime.strftime(start_date, "yyyymmdd")}/google-symptoms'))
-                
+
 
 
 

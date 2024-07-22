@@ -98,7 +98,7 @@ def params_w_patch(params):
             "end_issue": "2024-06-29",
             "patch_dir": "./patch_dir"
         }
-    params["indicator"]["num_export_days"] = None
+    params["indicator"]["num_export_days"] = "all"
     return params
 
 

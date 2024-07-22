@@ -52,5 +52,6 @@ class TestDateUtils:
         for date_info in output:
             issue_date, daterange = list(*date_info.items())
             num_export_dates = (daterange[1] - daterange[0]).days
-            assert num_export_dates == expected_num_export_days
+            # plus one to expected to account for inclusive counting
+            assert num_export_dates == expected_num_export_days + 1
 

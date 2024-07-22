@@ -5,6 +5,7 @@ from os.path import join
 from itertools import product
 
 import pandas as pd
+import numpy as np
 
 from conftest import TEST_DIR
 
@@ -64,7 +65,6 @@ class TestRun:
                 nf = "_".join([date, geo, metric, smther, "search"]) + ".csv"
                 expected_files.append(nf)
 
-            csv_dates = list(set([datetime.strptime(f.split('_')[0], "%Y%m%d") for f in csv_files[smther] if smther in f]))
             assert set(csv_files[smther]).issuperset(set(expected_files))
 
 
@@ -74,3 +74,24 @@ class TestRun:
         )
         assert (df.columns.values == [
                 "geo_id", "val", "se", "sample_size"]).all()
+
+    def test_output_files_smoothed(self):
+        dates = [str(x) for x in range(20200804, 20200811)]
+
+        smoothed = pd.read_csv(
+            join(f"{TEST_DIR}/receiving",
+                 f"{dates[-1]}_state_s01_smoothed_search.csv")
+        )
+
+        raw = pd.concat([
+            pd.read_csv(
+                join(f"{TEST_DIR}/receiving",
+                     f"{date}_state_s01_raw_search.csv")
+            ) for date in dates
+        ])
+
+        raw = raw.groupby('geo_id')['val'].sum()/7.0
+        df = pd.merge(smoothed, raw, on='geo_id',
+                      suffixes=('_smoothed', '_raw'))
+
+        assert np.allclose(df['val_smoothed'].values, df['val_raw'].values)

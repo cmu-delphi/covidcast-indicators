@@ -18,13 +18,14 @@ classifiers = [
 dependencies = [
     "boto3",
     "covidcast",
-    "cvxpy",
+    "cvxpy", # TODO: remove this ; it is a cvxpy dependency, and the excluded version appears to break our jenkins build. see: https://github.com/cvxgrp/scs/issues/283
     "epiweeks",
     "gitpython",
     "importlib_resources>=1.3",
     "numpy",
     "pandas>=1.1.0",
     "slackclient",
+    "scs<3.2.6",
     "structlog",
     "xlrd",
 ]

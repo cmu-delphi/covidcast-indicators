@@ -6,13 +6,12 @@ from mock import patch as mock_patch
 from pathlib import Path
 import re
 import shutil
-from typing import Dict, List, Tuple
-import pytest
+from typing import List, Tuple
 
 from delphi_google_symptoms.patch import patch
 from delphi_utils.validator.utils import lag_converter
 
-from delphi_google_symptoms.constants import SMOOTHERS_MAP, PAD_DAYS
+from delphi_google_symptoms.constants import SMOOTHERS_MAP
 from conftest import state_data_gap, county_data_gap, covidcast_metadata, TEST_DIR
 
 
@@ -69,9 +68,6 @@ class TestPatchModule:
                 assert raw_dates == expected_raw_dates
                 shutil.rmtree(issue_dir)
                 start_date += timedelta(days=1)
-
-
-
 
 
 if __name__ == '__main__':

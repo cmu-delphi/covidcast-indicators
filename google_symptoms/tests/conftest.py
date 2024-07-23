@@ -102,7 +102,7 @@ def params_w_patch(params):
     return params
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="class")
 def run_as_module(params):
     if exists(f"{TEST_DIR}/receiving"):
         # Clean receiving directory

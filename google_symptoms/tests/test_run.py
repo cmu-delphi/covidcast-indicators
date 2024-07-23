@@ -68,14 +68,14 @@ class TestRun:
             assert set(csv_files[smther]).issuperset(set(expected_files))
 
 
-    def test_output_file_format(self):
+    def test_output_file_format(self, run_as_module):
         df = pd.read_csv(
             join(f"{TEST_DIR}/receiving", "20200810_state_s03_smoothed_search.csv")
         )
         assert (df.columns.values == [
                 "geo_id", "val", "se", "sample_size"]).all()
 
-    def test_output_files_smoothed(self):
+    def test_output_files_smoothed(self, run_as_module):
         dates = [str(x) for x in range(20200804, 20200811)]
 
         smoothed = pd.read_csv(

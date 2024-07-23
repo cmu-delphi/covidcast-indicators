@@ -62,7 +62,7 @@ def logging(start_time, run_stats, logger):
     )
 
 
-def run_module(params):
+def run_module(params, logger=None):
     """
     Run the indicator.
 
@@ -72,18 +72,21 @@ def run_module(params):
         Nested dictionary of parameters.
     """
     start_time = time.time()
-    logger = get_structured_logger(
-        __name__,
-        filename=params["common"].get("log_filename"),
-        log_exceptions=params["common"].get("log_exceptions", True),
-    )
+    issue_date = params.get("patch", {}).get("current_issue", None)
+    source_dir = params.get("patch", {}).get("source_dir", None)
+    if not logger:
+        logger = get_structured_logger(
+            __name__,
+            filename=params["common"].get("log_filename"),
+            log_exceptions=params["common"].get("log_exceptions", True),
+        )
     export_dir = params["common"]["export_dir"]
     socrata_token = params["indicator"]["socrata_token"]
 
     run_stats = []
     ## build the base version of the signal at the most detailed geo level you can get.
     ## compute stuff here or farm out to another function or file
-    df_pull = pull_nssp_data(socrata_token)
+    df_pull = pull_nssp_data(socrata_token, issue_date, source_dir)
     ## aggregate
     geo_mapper = GeoMapper()
     for signal in SIGNALS:

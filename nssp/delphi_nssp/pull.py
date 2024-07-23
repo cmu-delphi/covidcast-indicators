@@ -27,7 +27,7 @@ def warn_string(df, type_dict):
     return warn
 
 
-def pull_nssp_data(socrata_token: str):
+def pull_nssp_data(socrata_token: str, issue_date: str = None, source_dir: str = None) -> pd.DataFrame:
     """Pull the latest NSSP ER visits data, and conforms it into a dataset.
 
     The output dataset has:
@@ -39,6 +39,11 @@ def pull_nssp_data(socrata_token: str):
     ----------
     socrata_token: str
         My App Token for pulling the NWSS data (could be the same as the nchs data)
+    issue_date: Optional[str]
+        (patching mode only) YYYY-MM-DD formatted date of the issue to pull data for.
+    source_dir: Optional[str]
+        (patching mode only) Path to the directory containing the source data csv files. 
+        The files in source_dir are expected to be named yyyy-mm-dd.csv
     test_file: Optional[str]
         When not null, name of file from which to read test data
 
@@ -47,18 +52,21 @@ def pull_nssp_data(socrata_token: str):
     pd.DataFrame
         Dataframe as described above.
     """
-    # Pull data from Socrata API
-    client = Socrata("data.cdc.gov", socrata_token)
-    results = []
-    offset = 0
-    limit = 50000  # maximum limit allowed by SODA 2.0
-    while True:
-        page = client.get("rdmq-nq56", limit=limit, offset=offset)
-        if not page:
-            break  # exit the loop if no more results
-        results.extend(page)
-        offset += limit
-    df_ervisits = pd.DataFrame.from_records(results)
+    if not issue_date:
+        # Pull data from Socrata API
+        client = Socrata("data.cdc.gov", socrata_token)
+        results = []
+        offset = 0
+        limit = 50000  # maximum limit allowed by SODA 2.0
+        while True:
+            page = client.get("rdmq-nq56", limit=limit, offset=offset)
+            if not page:
+                break  # exit the loop if no more results
+            results.extend(page)
+            offset += limit
+        df_ervisits = pd.DataFrame.from_records(results)
+    else:
+        df_ervisits = pd.read_csv(f"{source_dir}/{issue_date}.csv")
     df_ervisits = df_ervisits.rename(columns={"week_end": "timestamp"})
     df_ervisits = df_ervisits.rename(columns=SIGNALS_MAP)
 

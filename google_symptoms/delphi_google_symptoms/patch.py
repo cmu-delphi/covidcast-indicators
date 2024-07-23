@@ -67,7 +67,6 @@ def patch():
         params["indicator"]["export_start_date"] = daterange[0].strftime("%Y-%m-%d")
         params["indicator"]["export_end_date"] = daterange[1].strftime("%Y-%m-%d")
         run_module(params, logger)
-        current_issue += timedelta(days=1)
 
 
 if __name__ == "__main__":

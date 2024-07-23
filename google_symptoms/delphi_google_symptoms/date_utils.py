@@ -24,8 +24,6 @@ def generate_patch_dates(params) -> List[Dict[date, List[date]]]:
     list of dicts
     """
     issue_date = datetime.strptime(params["patch"]["start_issue"], "%Y-%m-%d")
-
-    # If end_date not specified, use current date.
     end_date = datetime.strptime(params["patch"]["end_issue"], "%Y-%m-%d")
 
     patch_dates_list = []
@@ -107,7 +105,7 @@ def generate_date_range(export_start_date: date, export_end_date: date, num_expo
     """Produce date range to retrieve data for.
 
     Calculate start of date range as a static offset from the end date.
-    Pad date range by an additional 7 days before the earliest date to
+    Pad date range by an additional `PAD_DAYS` days before the earliest date to
     produce data for calculating smoothed estimates.
 
     Parameters

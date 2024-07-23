@@ -41,6 +41,8 @@ def run_module(params, logger=None):
     csv_export_count = 0
     oldest_final_export_date = None
     export_dir = params["common"]["export_dir"]
+    # safety check for when patch parameter is still in the json, but not running patch
+    patch_flag = False if not params.get("patch") else params["patch"].get("patch_flag", False)
 
     if logger is None:
         logger = get_structured_logger(
@@ -50,7 +52,7 @@ def run_module(params, logger=None):
         )
 
     start_date, end_date, num_export_days = generate_export_dates(params, logger)
-    export_date_range = generate_query_dates(start_date, end_date, num_export_days)
+    export_date_range = generate_query_dates(start_date, end_date, num_export_days, patch_flag)
     # Pull GS data
     dfs = pull_gs_data(params["indicator"]["bigquery_credentials"], export_date_range)
     for geo_res in GEO_RESOLUTIONS:

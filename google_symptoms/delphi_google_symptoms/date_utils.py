@@ -35,7 +35,7 @@ def generate_patch_dates(params) -> List[Dict[date, List[date]]]:
     while issue_date <= end_date:
         # start_date gets padded again when executed in run_module
         expected_start_dt = issue_date - timedelta(days=num_export_days - PAD_DAYS + 2)
-        daterange = generate_query_dates(expected_start_dt, issue_date, num_export_days)
+        daterange = generate_query_dates(expected_start_dt, issue_date, num_export_days, True)
         patch_date = {issue_date: daterange}
         patch_dates_list.append(patch_date)
         issue_date += timedelta(days=1)
@@ -95,7 +95,7 @@ def generate_export_dates(params: Dict, logger) -> Tuple[date, date, int]:
     return export_start_date, export_end_date, num_export_days
 
 
-def generate_query_dates(export_start_date: date, export_end_date: date, num_export_days: int) -> List[date]:
+def generate_query_dates(export_start_date: date, export_end_date: date, num_export_days: int, patch_flag: bool) -> List[date]:
     """Produce date range to retrieve data for.
 
     Calculate start of date range as a static offset from the end date.
@@ -110,12 +110,18 @@ def generate_query_dates(export_start_date: date, export_end_date: date, num_exp
         last date to retrieve data for
     num_export_days: int
         number of days before end date to export
+    patch_flag: bool
+        flag to indicate if the date should be taken from export or calculated based on if it's a patch or regular run
 
     Returns
     -------
     List[date, date]
     """
-    start_date = export_end_date - timedelta(days=num_export_days)
+    start_date = export_start_date
+    if patch_flag:
+        start_date = export_start_date
+    else:
+        start_date = export_end_date - timedelta(days=num_export_days)
 
     retrieve_dates = [start_date - timedelta(days=PAD_DAYS - 1), export_end_date]
 

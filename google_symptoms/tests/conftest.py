@@ -65,6 +65,8 @@ county_data_gap = pd.read_csv(
 
 covidcast_metadata = pd.read_csv(f"{TEST_DIR}/test_data/covid_metadata_backfill.csv",
                                  parse_dates=["max_time", "min_time", "max_issue", "last_update"])
+
+NEW_DATE = "2024-02-20"
 @pytest.fixture(scope="session")
 def logger():
     return logging.getLogger()
@@ -90,6 +92,17 @@ def params():
     }
     return params
 
+@pytest.fixture(scope="session")
+def params_diff_start(params):
+    params["indicator"]["export_start_date"] = NEW_DATE
+    return params
+
+@pytest.fixture(scope="session")
+def params_diff_end(params):
+    params["indicator"]["export_end_date"] = NEW_DATE
+    return params
+
+
 @pytest.fixture
 def params_w_patch(params):
     params["common"]["log_filename"] = "test.log"
@@ -98,7 +111,6 @@ def params_w_patch(params):
             "end_issue": "2024-06-29",
             "patch_dir": "./patch_dir"
         }
-    params["indicator"]["num_export_days"] = "all"
     return params
 
 

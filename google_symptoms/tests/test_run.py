@@ -1,5 +1,3 @@
-import shutil
-from datetime import datetime
 from os import listdir
 from os.path import join
 from itertools import product

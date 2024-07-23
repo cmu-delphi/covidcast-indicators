@@ -64,6 +64,7 @@ def patch():
 
         params["indicator"]["export_start_date"] = daterange[0].strftime("%Y-%m-%d")
         params["indicator"]["export_end_date"] = daterange[1].strftime("%Y-%m-%d")
+        params["patch"]["patch_flag"] = True
         run_module(params, logger)
 
 

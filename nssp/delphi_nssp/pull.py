@@ -40,9 +40,9 @@ def pull_nssp_data(socrata_token: str, issue_date: str = None, source_dir: str =
     socrata_token: str
         My App Token for pulling the NWSS data (could be the same as the nchs data)
     issue_date: Optional[str]
-        (patching mode only) YYYY-MM-DD formatted date of the issue to pull data for.
+        (patching mode only) YYYY-MM-DD formatted date of the issue to pull data for
     source_dir: Optional[str]
-        (patching mode only) Path to the directory containing the source data csv files. 
+        (patching mode only) Path to the directory containing the source data csv files
         The files in source_dir are expected to be named yyyy-mm-dd.csv
     test_file: Optional[str]
         When not null, name of file from which to read test data

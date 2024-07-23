@@ -6,11 +6,11 @@ from freezegun import freeze_time
 from conftest import TEST_DIR
 
 from delphi_utils.validator.utils import lag_converter
-from delphi_google_symptoms.date_utils import generate_date_range, _generate_candidate_dates, generate_patch_dates
+from delphi_google_symptoms.date_utils import generate_query_dates, generate_export_dates, generate_patch_dates
 class TestDateUtils:
     @freeze_time("2021-01-05")
     def test_get_date_range_recent_export_start_date(self):
-        output = generate_date_range(
+        output = generate_query_dates(
             datetime.strptime("20201230", "%Y%m%d"),
             datetime.combine(date.today(), datetime.min.time()),
             14
@@ -22,7 +22,7 @@ class TestDateUtils:
 
     @freeze_time("2021-01-05")
     def test_get_date_range(self):
-        output = generate_date_range(
+        output = generate_query_dates(
             datetime.strptime("20200201", "%Y%m%d"),
             datetime.combine(date.today(), datetime.min.time()),
             14
@@ -32,11 +32,11 @@ class TestDateUtils:
                     datetime(2021, 1, 5)]
         assert set(output) == set(expected)
 
-    def test_generate_candidate_dates_normal(self, params, logger, monkeypatch):
+    def test_generate_generate_export_dates_normal(self, params, logger, monkeypatch):
         import covidcast
         metadata_df = pd.read_csv(f"{TEST_DIR}/test_data/covid_metadata.csv")
         monkeypatch.setattr(covidcast, "metadata", lambda: metadata_df)
-        output = _generate_candidate_dates(params, logger)
+        output = generate_export_dates(params, logger)
         print("hi")
 
     def test_generate_patch_dates(self, params_w_patch, logger, monkeypatch):

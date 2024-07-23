@@ -104,12 +104,12 @@ def params_w_patch(params):
 
 @pytest.fixture(scope="class")
 def run_as_module(params):
-    if exists(f"{TEST_DIR}/receiving"):
+    if exists("./receiving"):
         # Clean receiving directory
-        for fname in listdir(f"{TEST_DIR}/receiving"):
-            remove(join(f"{TEST_DIR}/receiving", fname))
+        for fname in listdir("./receiving"):
+            remove(join("./receiving", fname))
     else:
-        makedirs(f"{TEST_DIR}/receiving")
+        makedirs("./receiving")
 
     with mock.patch("delphi_google_symptoms.pull.initialize_credentials",
                     return_value=None) as mock_credentials:

@@ -10,11 +10,6 @@ import numpy as np
 from conftest import TEST_DIR
 
 class TestRun:
-    @classmethod
-    def teardown_class(cls):
-        print('cleaning up tests...')
-        shutil.rmtree(f"{TEST_DIR}/receiving/")
-
     def test_output_files_exist(self, run_as_module):
         output_files = listdir(f"{TEST_DIR}/receiving")
         smoothed_files = sorted(list(set([file for file in output_files if "smoothed" in file])))

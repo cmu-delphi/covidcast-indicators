@@ -21,7 +21,7 @@ It will generate data for that range of issue dates, and store them in batch iss
 [params patch_dir]/issue_[issue-date]/google-symptoms/xxx.csv
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime
 from os import makedirs
 
 from delphi_utils import get_structured_logger, read_params
@@ -51,8 +51,6 @@ def patch():
     logger.info(f"""End issue: {end_issue.strftime("%Y-%m-%d")}""")
 
     makedirs(params["patch"]["patch_dir"], exist_ok=True)
-
-    current_issue = start_issue
 
     patch_dates = generate_patch_dates(params)
 

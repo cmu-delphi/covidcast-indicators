@@ -63,7 +63,9 @@ state_data_gap = pd.read_csv(patch_input["state"], parse_dates=["date"])[keep_co
 county_data_gap = pd.read_csv(
     patch_input["county"], parse_dates=["date"])[keep_cols]
 
-covidcast_metadata = pd.read_csv(f"{TEST_DIR}/test_data/covid_metadata_backfill.csv",
+covidcast_backfill_metadata = pd.read_csv(f"{TEST_DIR}/test_data/covid_metadata_backfill.csv",
+                                          parse_dates=["max_time", "min_time", "max_issue", "last_update"])
+covidcast_metadata = pd.read_csv(f"{TEST_DIR}/test_data/covid_metadata.csv",
                                  parse_dates=["max_time", "min_time", "max_issue", "last_update"])
 
 NEW_DATE = "2024-02-20"
@@ -74,13 +76,13 @@ def logger():
 def params():
     params = {
         "common": {
-            "export_dir": f"{TEST_DIR}/receiving"
+            "export_dir": "./receiving"
         },
         "indicator": {
             "export_start_date": "2020-02-20",
-            "num_export_days": None,
             "bigquery_credentials": {},
             "static_file_dir": "../static",
+            "api_credentials": "fakesecret"
         },
         "validation": {
             "common": {
@@ -106,15 +108,16 @@ def params_w_patch(params):
 
 @pytest.fixture(scope="class")
 def run_as_module(params):
-    if exists("./receiving"):
+    if exists("receiving"):
         # Clean receiving directory
-        for fname in listdir("./receiving"):
-            remove(join("./receiving", fname))
+        for fname in listdir("receiving"):
+            remove(join("receiving", fname))
     else:
-        makedirs("./receiving")
+        makedirs("receiving")
 
     with mock.patch("delphi_google_symptoms.pull.initialize_credentials",
-                    return_value=None) as mock_credentials:
-        with mock.patch("pandas_gbq.read_gbq", side_effect=[
-                state_data, county_data]) as mock_read_gbq:
+                    return_value=None), \
+         mock.patch("pandas_gbq.read_gbq", side_effect=[state_data, county_data]), \
+         mock.patch("delphi_google_symptoms.pull.initialize_credentials", return_value=None), \
+         mock.patch("delphi_google_symptoms.date_utils.covidcast.metadata", return_value=covidcast_metadata):
             delphi_google_symptoms.run.run_module(params)

@@ -75,7 +75,7 @@ None of the linting or unit tests should fail, and the code lines that are not c
 should not include critical sub-routines. 
 
 ## Running Patches:
-A daily backup of from source in the form of csv files can be found on bigchunk-dev-02. Ask @minhkhul for more details.
+A daily backup of from source in the form of csv files can be found on `bigchunk-dev-02` under `/common/source_backup/nssp`. Talk to your sysadmin for access. 
 
 You can also generate your own backup from source by setting up a cron job that runs the following .py every day when a pipeline outtage is going on on our side but aource api is still available:
 ```
@@ -99,7 +99,7 @@ while True:
 df_ervisits = pd.DataFrame.from_records(results)
 df_ervisits.to_csv(f'~/{today}.csv', index=False)
 ```
-When you're ready to create patching data for a specific date range output in batch issue format, adjust `params.json` in accordance with instructions in `patch.py`, move these backup csv files into `source_dir`, then run
+When you're ready to create patching data for a specific date range in batch issue format, adjust `params.json` in accordance with instructions in `patch.py`, move the backup csv files into your chosen `source_dir`, then run
 ```
 env/bin/python -m delphi_nssp.patch
 ```

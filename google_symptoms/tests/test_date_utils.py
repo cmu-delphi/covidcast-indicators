@@ -23,7 +23,7 @@ class TestDateUtils:
         assert set(output) == set(expected)
 
     @freeze_time("2021-01-05")
-    def test_generate_query_dates_patch(self):
+    def test_generate_query_dates_custom(self):
         output = generate_query_dates(
             datetime.strptime("20200201", "%Y%m%d"),
             datetime.combine(date.today(), datetime.min.time()),

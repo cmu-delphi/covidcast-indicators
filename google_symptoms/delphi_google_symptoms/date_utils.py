@@ -102,7 +102,7 @@ def generate_num_export_days(params: Dict, logger) -> [int]:
 
 
 def generate_query_dates(
-    export_start_date: date, export_end_date: date, num_export_days: int, patch_flag: bool
+    export_start_date: date, export_end_date: date, num_export_days: int, custom_run_flag: bool
 ) -> List[date]:
     """Produce date range to retrieve data for.
 
@@ -118,7 +118,7 @@ def generate_query_dates(
         last date to retrieve data for
     num_export_days: int
         number of days before end date to export
-    patch_flag: bool
+    custom_run_flag: bool
         flag to indicate if the date should be taken from export or calculated based on if it's a patch or regular run
 
     Returns
@@ -126,7 +126,7 @@ def generate_query_dates(
     List[date, date]
     """
     start_date = export_start_date
-    if not patch_flag:
+    if not custom_run_flag:
         start_date = export_end_date - timedelta(days=num_export_days)
     retrieve_dates = [start_date - timedelta(days=PAD_DAYS - 1), export_end_date]
 

@@ -6,6 +6,7 @@ To use this module, you need to specify the range of issue dates in params.json,
 {
   "common": {
     ...
+    "custom_run": true
   },
   "validation": {
     ...
@@ -14,7 +15,6 @@ To use this module, you need to specify the range of issue dates in params.json,
     "patch_dir": ".../covidcast-indicators/google-symptoms/AprilPatch",
     "start_issue": "2024-04-20",
     "end_issue": "2024-04-21"
-    "patch_flag": true
   }
 }
 
@@ -33,14 +33,13 @@ from .run import run_module
 
 def patch():
     """
-    Run the doctor visits indicator for a range of issue dates.
+    Run the google symptoms indicator for a range of issue dates.
 
     The range of issue dates is specified in params.json using the following keys:
     - "patch": Only used for patching data
         - "start_date": str, YYYY-MM-DD format, first issue date
         - "end_date": str, YYYY-MM-DD format, last issue date
         - "patch_dir": str, directory to write all issues output
-        - "patch_flag": bool flag to indictate to use the user-set export_start_date and export_end_date
     """
     params = read_params()
     logger = get_structured_logger("delphi_google_symptom.patch", filename=params["common"]["log_filename"])

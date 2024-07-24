@@ -55,9 +55,9 @@ def run_module(params, logger=None):
         params["indicator"].get("export_end_date", datetime.strftime(date.today(), "%Y-%m-%d")), "%Y-%m-%d"
     )
     num_export_days = generate_num_export_days(params, logger)
-    # safety check for when patch parameter is still in the json, but not running patch
-    patch_flag = False if not params.get("patch") else params["patch"].get("patch_flag", False)
-    export_date_range = generate_query_dates(export_start_date, export_end_date, num_export_days, patch_flag)
+    # safety check for patch parameters exists in file, but not running custom runs/patches
+    custom_run_flag = False if not params["common"].get("custom_run") else params["common"].get("custom_run", False)
+    export_date_range = generate_query_dates(export_start_date, export_end_date, num_export_days, custom_run_flag)
 
     # Pull GS data
     dfs = pull_gs_data(params["indicator"]["bigquery_credentials"], export_date_range)

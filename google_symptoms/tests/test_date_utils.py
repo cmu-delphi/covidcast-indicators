@@ -18,12 +18,12 @@ class TestDateUtils:
             False
         )
 
-        expected = [datetime(2020, 12, 24),
+        expected = [datetime(2020, 12, 16),
                     datetime(2021, 1, 5)]
         assert set(output) == set(expected)
 
     @freeze_time("2021-01-05")
-    def test_generate_query_dates_patch(self):
+    def test_generate_query_dates_custom(self):
         output = generate_query_dates(
             datetime.strptime("20200201", "%Y%m%d"),
             datetime.combine(date.today(), datetime.min.time()),
@@ -52,7 +52,7 @@ class TestDateUtils:
         metadata_df = pd.read_csv(f"{TEST_DIR}/test_data/covid_metadata_missing.csv")
         monkeypatch.setattr(covidcast, "metadata", lambda: metadata_df)
         num_export_days = generate_num_export_days(params, logger)
-        expected_num_export_days = (date.today() - FULL_BKFILL_START_DATE).days + 1
+        expected_num_export_days = (date.today() - FULL_BKFILL_START_DATE.date()).days + 1
         assert num_export_days == expected_num_export_days
 
     def test_generate_patch_dates(self, params_w_patch, logger, monkeypatch):

@@ -6,6 +6,7 @@ To use this module, you need to specify the range of issue dates in params.json,
 {
   "common": {
     ...
+    "custom_run": true
   },
   "validation": {
     ...
@@ -32,7 +33,7 @@ from .run import run_module
 
 def patch():
     """
-    Run the doctor visits indicator for a range of issue dates.
+    Run the google symptoms indicator for a range of issue dates.
 
     The range of issue dates is specified in params.json using the following keys:
     - "patch": Only used for patching data

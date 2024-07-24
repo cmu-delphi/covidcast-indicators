@@ -6,12 +6,12 @@ venv:
 install: venv
 	. env/bin/activate; \
 	pip install wheel ; \
-	pip install -e '.[dev]'
+	pip install -e .
 
 install-ci: venv
 	. env/bin/activate; \
-	pip install 'build[virtualenv]' pylint pytest pydocstyle wheel twine ; \
-	pip install '.[dev]'
+	pip install wheel ; \
+	pip install .
 
 lint:
 	. env/bin/activate; pylint delphi_utils --rcfile=../pyproject.toml
@@ -30,5 +30,4 @@ clean:
 
 release: lint test
 	. env/bin/activate ; \
-	pip install 'build[virtualenv]' ; \
-    python -m build --sdist --wheel
+	python setup.py sdist bdist_wheel

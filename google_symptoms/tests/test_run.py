@@ -56,7 +56,7 @@ class TestRun:
             for date, geo, metric in product(dates[smther], geos, metrics):
                 nf = "_".join([date, geo, metric, smther, "search"]) + ".csv"
                 expected_files.append(nf)
-
+            print(csv_files[smther])
             assert set(csv_files[smther]).issuperset(set(expected_files))
 
     def test_output_file_format(self, run_as_module):

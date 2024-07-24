@@ -25,15 +25,11 @@ def generate_patch_dates(params) -> Dict[date, Tuple[date]]:
     """
     issue_date = datetime.strptime(params["patch"]["start_issue"], "%Y-%m-%d")
     end_date = datetime.strptime(params["patch"]["end_issue"], "%Y-%m-%d")
+    num_export_days = _generate_num_export_days(params)
 
     patch_dates = dict()
-
-    max_expected_lag = lag_converter(params["validation"]["common"].get("max_expected_lag", {"all": 4}))
-    global_max_expected_lag = max(list(max_expected_lag.values()))
-    num_export_days = params["validation"]["common"].get("span_length", 14) + global_max_expected_lag
-
     while issue_date <= end_date:
-        # plus one for
+        # negate the subtraction done within generate_query_dates
         expected_start_dt = issue_date - timedelta(days=num_export_days - PAD_DAYS + 1)
         daterange = generate_query_dates(expected_start_dt, issue_date, num_export_days, True)
         patch_dates[issue_date] = tuple(daterange)
@@ -41,9 +37,28 @@ def generate_patch_dates(params) -> Dict[date, Tuple[date]]:
     return patch_dates
 
 
-def generate_num_export_days(params: Dict, logger) -> [int]:
+def _generate_num_export_days(params: Dict) -> int:
     """
     Generate dates for exporting with possible lag.
+
+    Parameters
+    ----------
+    params: dictionary parsed from params.json
+
+    Returns
+    -------
+    number of export days
+    """
+    # Calculate number of days based on what's missing from the API and
+    # what the validator expects.
+    max_expected_lag = lag_converter(params["validation"]["common"].get("max_expected_lag", {"all": 4}))
+    global_max_expected_lag = max(list(max_expected_lag.values()))
+    num_export_days = params["validation"]["common"].get("span_length", 14) + global_max_expected_lag
+    return num_export_days
+
+def generate_num_export_days(params: Dict, logger) -> [int]:
+    """
+    Generate dates for exporting based on current available data.
 
     Parameters
 
@@ -75,13 +90,8 @@ def generate_num_export_days(params: Dict, logger) -> [int]:
         logger.warning("Signals missing in the epidata; backfilling full history")
         num_export_days = (export_end_date - FULL_BKFILL_START_DATE).days + 1
     else:
-        # Calculate number of days based on what's missing from the API and
-        # what the validator expects.
-        max_expected_lag = lag_converter(params["validation"]["common"].get("max_expected_lag", {"all": 4}))
-        global_max_expected_lag = max(list(max_expected_lag.values()))
-
         latest_date_diff = (datetime.today() - to_datetime(min(gs_metadata.max_time))).days + 1
-        expected_date_diff = params["validation"]["common"].get("span_length", 14) + global_max_expected_lag
+        expected_date_diff = _generate_num_export_days(params)
 
         if latest_date_diff > expected_date_diff:
             logger.info(f"Missing dates from: {to_datetime(min(gs_metadata.max_time)).date()}")

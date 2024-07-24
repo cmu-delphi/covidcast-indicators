@@ -11,7 +11,7 @@ from pandas import to_datetime
 from .constants import COMBINED_METRIC, FULL_BKFILL_START_DATE, PAD_DAYS, SMOOTHERS
 
 
-def generate_patch_dates(params) -> List[Dict[date, List[date]]]:
+def generate_patch_dates(params) -> Dict[date, Tuple[date]]:
     """
     Generate date range for chunking backfilled dates.
 
@@ -21,28 +21,27 @@ def generate_patch_dates(params) -> List[Dict[date, List[date]]]:
 
     Returns
     -------
-    list of dicts
+    dict of date and tuple of date
     """
     issue_date = datetime.strptime(params["patch"]["start_issue"], "%Y-%m-%d")
     end_date = datetime.strptime(params["patch"]["end_issue"], "%Y-%m-%d")
 
-    patch_dates_list = []
+    patch_dates = dict()
 
     max_expected_lag = lag_converter(params["validation"]["common"].get("max_expected_lag", {"all": 4}))
     global_max_expected_lag = max(list(max_expected_lag.values()))
     num_export_days = params["validation"]["common"].get("span_length", 14) + global_max_expected_lag
 
     while issue_date <= end_date:
-        # start_date gets padded again when executed in run_module
-        expected_start_dt = issue_date - timedelta(days=num_export_days - PAD_DAYS + 2)
+        # plus one for
+        expected_start_dt = issue_date - timedelta(days=num_export_days - PAD_DAYS + 1)
         daterange = generate_query_dates(expected_start_dt, issue_date, num_export_days, True)
-        patch_date = {issue_date: daterange}
-        patch_dates_list.append(patch_date)
+        patch_dates[issue_date] = tuple(daterange)
         issue_date += timedelta(days=1)
-    return patch_dates_list
+    return patch_dates
 
 
-def generate_export_dates(params: Dict, logger) -> Tuple[date, date, int]:
+def generate_num_export_days(params: Dict, logger) -> [int]:
     """
     Generate dates for exporting with possible lag.
 
@@ -52,12 +51,9 @@ def generate_export_dates(params: Dict, logger) -> Tuple[date, date, int]:
     params: dictionary parsed from params.json
 
     Returns
-    Tuple[date, date, int]
     -------
-    export_start_date and export_end_date and num_export_days
+    num_export_days: int
     """
-    export_start_date = datetime.strptime(params["indicator"]["export_start_date"], "%Y-%m-%d")
-
     # If end_date not specified, use current date.
     export_end_date = datetime.strptime(
         params["indicator"].get("export_end_date", datetime.strftime(date.today(), "%Y-%m-%d")), "%Y-%m-%d"
@@ -92,10 +88,12 @@ def generate_export_dates(params: Dict, logger) -> Tuple[date, date, int]:
 
         num_export_days = expected_date_diff
 
-    return export_start_date, export_end_date, num_export_days
+    return num_export_days
 
 
-def generate_query_dates(export_start_date: date, export_end_date: date, num_export_days: int, patch_flag: bool) -> List[date]:
+def generate_query_dates(
+    export_start_date: date, export_end_date: date, num_export_days: int, patch_flag: bool
+) -> List[date]:
     """Produce date range to retrieve data for.
 
     Calculate start of date range as a static offset from the end date.
@@ -118,11 +116,8 @@ def generate_query_dates(export_start_date: date, export_end_date: date, num_exp
     List[date, date]
     """
     start_date = export_start_date
-    if patch_flag:
-        start_date = export_start_date
-    else:
+    if not patch_flag:
         start_date = export_end_date - timedelta(days=num_export_days)
-
     retrieve_dates = [start_date - timedelta(days=PAD_DAYS - 1), export_end_date]
 
     return retrieve_dates

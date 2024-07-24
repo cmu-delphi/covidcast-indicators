@@ -11,8 +11,10 @@ from typing import List, Tuple
 from delphi_google_symptoms.patch import patch
 from delphi_utils.validator.utils import lag_converter
 
-from delphi_google_symptoms.constants import SMOOTHERS_MAP
-from conftest import state_data_gap, county_data_gap, covidcast_metadata, TEST_DIR
+from delphi_google_symptoms.constants import SMOOTHERS_MAP, FULL_BKFILL_START_DATE
+from delphi_google_symptoms.date_utils import generate_query_dates
+
+from conftest import state_data_gap, covidcast_metadata, TEST_DIR
 
 
 class TestPatchModule:
@@ -26,29 +28,36 @@ class TestPatchModule:
         max_expected_lag = lag_converter(params_w_patch["validation"]["common"].get("max_expected_lag", {"all": 4}))
         global_max_expected_lag = max(list(max_expected_lag.values()))
         num_export_days = params_w_patch["validation"]["common"].get("span_length", 14) + global_max_expected_lag
-        export_start_date = SMOOTHERS_MAP[smoother][1](issue_date - timedelta(days=num_export_days))
-        if smoother == "smoothed":
-            export_start_date = export_start_date - timedelta(days=1)
-        # subtract for expected delay
-        export_end_date = issue_date - timedelta(days=5)
+
+        # mimic date generate as if the issue date was "today"
+        query_start_date, query_end_date = generate_query_dates(
+            FULL_BKFILL_START_DATE,
+            issue_date,
+            num_export_days,
+            False
+        )
+        # the smoother in line 82-88 filters out prev seven days
+        export_start_date = query_start_date + timedelta(days=6) if smoother == "smoothed" else query_start_date
+        export_end_date = query_end_date - timedelta(days=global_max_expected_lag)
         num_export_days = (export_end_date - export_start_date).days + 1
+
         return sorted([export_start_date + timedelta(days=x) for x in range(num_export_days)])
     def test_patch(self, params_w_patch, monkeypatch):
         with mock_patch("delphi_google_symptoms.patch.read_params", return_value=params_w_patch), \
              mock_patch("delphi_google_symptoms.pull.pandas_gbq.read_gbq") as mock_read_gbq, \
              mock_patch("delphi_google_symptoms.pull.initialize_credentials", return_value=None), \
-             mock_patch("delphi_google_symptoms.date_utils.covidcast.metadata", return_value=covidcast_metadata):
+             mock_patch("delphi_google_symptoms.date_utils.covidcast.metadata", return_value=covidcast_metadata), \
+             mock_patch("delphi_google_symptoms.run.GEO_RESOLUTIONS", new=["state"]):
             def side_effect(*args, **kwargs):
-                pattern = re.compile(r'\d{4}-\d{2}-\d{2}')
-                start_date, end_date = re.findall(pattern, args[0])
-                df = pd.DataFrame()
                 if "symptom_search_sub_region_1_daily" in args[0]:
                     df = state_data_gap
-                elif "symptom_search_sub_region_2_daily" in args[0]:
-                    df = county_data_gap
-                end_date_w_lag = (datetime.strptime(end_date, "%Y-%m-%d") - timedelta(days=5)).strftime("%Y-%m-%d")
-                return df[(df["date"] >= start_date) & \
-                          (df["date"] <= end_date_w_lag)]
+                    pattern = re.compile(r'\d{4}-\d{2}-\d{2}')
+                    start_date, end_date = re.findall(pattern, args[0])
+                    end_date_w_lag = (datetime.strptime(end_date, "%Y-%m-%d") - timedelta(days=4)).strftime("%Y-%m-%d")
+                    return df[(df["date"] >= start_date) & \
+                              (df["date"] <= end_date_w_lag)]
+                else:
+                    return pd.DataFrame()
 
             mock_read_gbq.side_effect = side_effect
             start_date = datetime.strptime(params_w_patch["patch"]["start_issue"], "%Y-%m-%d")

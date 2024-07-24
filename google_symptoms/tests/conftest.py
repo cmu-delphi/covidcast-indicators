@@ -92,16 +92,6 @@ def params():
     }
     return params
 
-@pytest.fixture(scope="session")
-def params_diff_start(params):
-    params["indicator"]["export_start_date"] = NEW_DATE
-    return params
-
-@pytest.fixture(scope="session")
-def params_diff_end(params):
-    params["indicator"]["export_end_date"] = NEW_DATE
-    return params
-
 
 @pytest.fixture
 def params_w_patch(params):

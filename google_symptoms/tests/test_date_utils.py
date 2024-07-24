@@ -1,4 +1,4 @@
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 
 import pandas as pd
 from freezegun import freeze_time
@@ -6,7 +6,7 @@ from conftest import TEST_DIR, NEW_DATE
 
 from delphi_utils.validator.utils import lag_converter
 from delphi_google_symptoms.constants import FULL_BKFILL_START_DATE
-from delphi_google_symptoms.date_utils import generate_query_dates, generate_export_dates, generate_patch_dates
+from delphi_google_symptoms.date_utils import generate_query_dates, generate_num_export_days, generate_patch_dates
 class TestDateUtils:
 
     @freeze_time("2021-01-05")
@@ -23,15 +23,15 @@ class TestDateUtils:
         assert set(output) == set(expected)
 
     @freeze_time("2021-01-05")
-    def test_generate_query_dates(self):
+    def test_generate_query_dates_patch(self):
         output = generate_query_dates(
             datetime.strptime("20200201", "%Y%m%d"),
             datetime.combine(date.today(), datetime.min.time()),
             14,
-            False
+            True
         )
 
-        expected = [datetime(2020, 12, 16),
+        expected = [datetime(2020, 1, 26),
                     datetime(2021, 1, 5)]
         assert set(output) == set(expected)
 
@@ -39,43 +39,20 @@ class TestDateUtils:
         import covidcast
         metadata_df = pd.read_csv(f"{TEST_DIR}/test_data/covid_metadata.csv")
         monkeypatch.setattr(covidcast, "metadata", lambda: metadata_df)
-        start_date, end_date, num_export_days = generate_export_dates(params, logger)
+        num_export_days = generate_num_export_days(params, logger)
 
         max_expected_lag = lag_converter(params["validation"]["common"].get("max_expected_lag", {"all": 4}))
         global_max_expected_lag = max(list(max_expected_lag.values()))
         expected_num_export_days = params["validation"]["common"].get("span_length", 14) + global_max_expected_lag
 
-        assert start_date == FULL_BKFILL_START_DATE
-        assert end_date == date.today()
         assert num_export_days == expected_num_export_days
 
-    def test_generate_export_date_start_changed(self, params_diff_start, logger, monkeypatch):
+    def test_generate_export_date_missing(self, params, logger, monkeypatch):
         import covidcast
-        metadata_df = pd.read_csv(f"{TEST_DIR}/test_data/covid_metadata.csv")
+        metadata_df = pd.read_csv(f"{TEST_DIR}/test_data/covid_metadata_missing.csv")
         monkeypatch.setattr(covidcast, "metadata", lambda: metadata_df)
-        start_date, end_date, num_export_days = generate_export_dates(params_diff_start, logger)
-
-        max_expected_lag = lag_converter(params_diff_start["validation"]["common"].get("max_expected_lag", {"all": 4}))
-        global_max_expected_lag = max(list(max_expected_lag.values()))
-        expected_num_export_days = params_diff_start["validation"]["common"].get("span_length", 14) + global_max_expected_lag
-
-        assert start_date == datetime.strptime(NEW_DATE, "%Y-%m-%d")
-        assert end_date == date.today()
-        assert num_export_days == expected_num_export_days
-
-
-    def test_generate_export_dates_end_changed(self, params_diff_end, logger, monkeypatch):
-        import covidcast
-        metadata_df = pd.read_csv(f"{TEST_DIR}/test_data/covid_metadata.csv")
-        monkeypatch.setattr(covidcast, "metadata", lambda: metadata_df)
-        start_date, end_date, num_export_days = generate_export_dates(params_diff_end, logger)
-
-        max_expected_lag = lag_converter(params_diff_end["validation"]["common"].get("max_expected_lag", {"all": 4}))
-        global_max_expected_lag = max(list(max_expected_lag.values()))
-        expected_num_export_days = params_diff_end["validation"]["common"].get("span_length", 14) + global_max_expected_lag
-
-        assert start_date == FULL_BKFILL_START_DATE
-        assert end_date == datetime.strptime(NEW_DATE, "%Y-%m-%d")
+        num_export_days = generate_num_export_days(params, logger)
+        expected_num_export_days = (date.today() - FULL_BKFILL_START_DATE).days + 1
         assert num_export_days == expected_num_export_days
 
     def test_generate_patch_dates(self, params_w_patch, logger, monkeypatch):
@@ -86,11 +63,20 @@ class TestDateUtils:
         global_max_expected_lag = max(list(max_expected_lag.values()))
         expected_num_export_days = params_w_patch["validation"]["common"].get("span_length", 14) + global_max_expected_lag
 
-        output = generate_patch_dates(params_w_patch)
+        issue_date = datetime.strptime(params_w_patch["patch"]["start_issue"], "%Y-%m-%d")
+        end_issue = datetime.strptime(params_w_patch["patch"]["end_issue"], "%Y-%m-%d")
 
-        for date_info in output:
-            issue_date, daterange = list(*date_info.items())
-            num_export_dates = (daterange[1] - daterange[0]).days
-            # plus one to expected to account for inclusive counting
-            assert num_export_dates == expected_num_export_days + 1
+        patch_date_dict = generate_patch_dates(params_w_patch)
 
+        while issue_date <= end_issue:
+            expected_daterange = generate_query_dates(
+                FULL_BKFILL_START_DATE,
+                issue_date,
+                expected_num_export_days,
+                False
+            )
+            # in the patch script the date generated by generate_patch_dates becomes the export_start_date and export_end_date
+            export_start_date, export_end_date = patch_date_dict[issue_date]
+            actual_daterange = generate_query_dates(export_start_date, export_end_date, expected_num_export_days, True)
+            assert set(actual_daterange) == set(expected_daterange)
+            issue_date += timedelta(days=1)

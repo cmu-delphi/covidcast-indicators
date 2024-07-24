@@ -5,14 +5,14 @@ This module should contain a function called `run_module`, that is executed
 when the module is run with `python -m delphi_google_symptoms`.
 """
 import time
-from datetime import datetime
+from datetime import datetime, date
 from itertools import product
 
 import numpy as np
 from delphi_utils import create_export_csv, get_structured_logger
 
 from .constants import COMBINED_METRIC, GEO_RESOLUTIONS, SMOOTHERS, SMOOTHERS_MAP
-from .date_utils import generate_export_dates, generate_query_dates
+from .date_utils import generate_num_export_days, generate_query_dates
 from .geo import geo_map
 from .pull import pull_gs_data
 
@@ -41,8 +41,6 @@ def run_module(params, logger=None):
     csv_export_count = 0
     oldest_final_export_date = None
     export_dir = params["common"]["export_dir"]
-    # safety check for when patch parameter is still in the json, but not running patch
-    patch_flag = False if not params.get("patch") else params["patch"].get("patch_flag", False)
 
     if logger is None:
         logger = get_structured_logger(
@@ -51,8 +49,16 @@ def run_module(params, logger=None):
             log_exceptions=params["common"].get("log_exceptions", True),
         )
 
-    start_date, end_date, num_export_days = generate_export_dates(params, logger)
-    export_date_range = generate_query_dates(start_date, end_date, num_export_days, patch_flag)
+    export_start_date = datetime.strptime(params["indicator"]["export_start_date"], "%Y-%m-%d")
+    # If end_date not specified, use current date.
+    export_end_date = datetime.strptime(
+        params["indicator"].get("export_end_date", datetime.strftime(date.today(), "%Y-%m-%d")), "%Y-%m-%d"
+    )
+    num_export_days = generate_num_export_days(params, logger)
+    # safety check for when patch parameter is still in the json, but not running patch
+    patch_flag = False if not params.get("patch") else params["patch"].get("patch_flag", False)
+    export_date_range = generate_query_dates(export_start_date, export_end_date, num_export_days, patch_flag)
+
     # Pull GS data
     dfs = pull_gs_data(params["indicator"]["bigquery_credentials"], export_date_range)
     for geo_res in GEO_RESOLUTIONS:
@@ -87,7 +93,7 @@ def run_module(params, logger=None):
             exported_csv_dates = create_export_csv(
                 df,
                 export_dir=export_dir,
-                start_date=SMOOTHERS_MAP[smoother][1](start_date),
+                start_date=SMOOTHERS_MAP[smoother][1](export_start_date),
                 metric=metric.lower(),
                 geo_res=geo_res,
                 sensor=sensor_name)

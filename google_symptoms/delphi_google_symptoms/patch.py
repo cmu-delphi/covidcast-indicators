@@ -21,7 +21,7 @@ It will generate data for that range of issue dates, and store them in batch iss
 [params patch_dir]/issue_[issue-date]/google-symptoms/xxx.csv
 """
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from os import makedirs
 
 from delphi_utils import get_structured_logger, read_params
@@ -43,19 +43,19 @@ def patch():
     params = read_params()
     logger = get_structured_logger("delphi_google_symptom.patch", filename=params["common"]["log_filename"])
 
-    start_issue = datetime.strptime(params["patch"]["start_issue"], "%Y-%m-%d")
+    issue_date = datetime.strptime(params["patch"]["start_issue"], "%Y-%m-%d")
     end_issue = datetime.strptime(params["patch"]["end_issue"], "%Y-%m-%d")
 
     logger.info(f"""Start patching {params["patch"]["patch_dir"]}""")
-    logger.info(f"""Start issue: {start_issue.strftime("%Y-%m-%d")}""")
+    logger.info(f"""Start issue: {issue_date.strftime("%Y-%m-%d")}""")
     logger.info(f"""End issue: {end_issue.strftime("%Y-%m-%d")}""")
 
     makedirs(params["patch"]["patch_dir"], exist_ok=True)
 
     patch_dates = generate_patch_dates(params)
 
-    for issue_date_info in patch_dates:
-        issue_date, daterange = list(*issue_date_info.items())
+    while issue_date <= end_issue:
+        daterange = patch_dates[issue_date]
         logger.info(f"""Running issue {issue_date.strftime("%Y-%m-%d")}""")
         current_issue_yyyymmdd = issue_date.strftime("%Y%m%d")
         current_issue_dir = f"""{params["patch"]["patch_dir"]}/issue_{current_issue_yyyymmdd}/google-symptom"""
@@ -66,6 +66,7 @@ def patch():
         params["indicator"]["export_end_date"] = daterange[1].strftime("%Y-%m-%d")
         params["patch"]["patch_flag"] = True
         run_module(params, logger)
+        issue_date += timedelta(days=1)
 
 
 if __name__ == "__main__":

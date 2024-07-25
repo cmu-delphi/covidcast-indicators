@@ -28,8 +28,10 @@ class TestPatchModule(unittest.TestCase):
             self.assertEqual(mock_read_params.return_value['patch']['current_issue'], '2021-01-02')
 
             self.assertTrue(os.path.isdir('./patch_dir'))
-            self.assertTrue(os.path.isdir('./patch_dir/issue_202053/nssp'))
-            self.assertFalse(os.path.isdir('./patch_dir/issue_202101/nssp'))
+            self.assertTrue(os.path.isdir('./patch_dir/issue_20201227/nssp'))
+            self.assertFalse(os.path.isdir('./patch_dir/issue_20210101/nssp'))
+            self.assertFalse(os.path.isdir('./patch_dir/issue_20210101/nssp'))
+            self.assertFalse(os.path.isdir('./patch_dir/issue_20210103/nssp'))
 
             # Clean up the created directories after the test
             shutil.rmtree(mock_read_params.return_value["patch"]["patch_dir"])

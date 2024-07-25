@@ -70,8 +70,14 @@ def patch():
 
         params["patch"]["current_issue"] = current_issue.strftime("%Y-%m-%d")
 
-        current_issue_week = Week.fromdate(current_issue)
-        current_issue_dir = f"""{params["patch"]["patch_dir"]}/issue_{current_issue_week}/nssp"""
+        # current_issue_date can be different from params["patch"]["current_issue"]
+        # due to weekly cadence of nssp data. For weekly sources, issue dates in our
+        # db matches with first date of epiweek that the reporting date falls in,
+        # rather than reporting date itself.
+        current_issue_date = Week.fromdate(current_issue).startdate()
+        current_issue_dir = (
+            f"""{params["patch"]["patch_dir"]}/issue_{current_issue_date.strftime("%Y%m%d")}/nssp"""
+        )
         makedirs(f"{current_issue_dir}", exist_ok=True)
         params["common"]["export_dir"] = f"""{current_issue_dir}"""
 

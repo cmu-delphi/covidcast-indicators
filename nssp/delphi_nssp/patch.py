@@ -75,9 +75,7 @@ def patch():
         # db matches with first date of epiweek that the reporting date falls in,
         # rather than reporting date itself.
         current_issue_date = Week.fromdate(current_issue).startdate()
-        current_issue_dir = (
-            f"""{params["patch"]["patch_dir"]}/issue_{current_issue_date.strftime("%Y%m%d")}/nssp"""
-        )
+        current_issue_dir = f"""{params["patch"]["patch_dir"]}/issue_{current_issue_date.strftime("%Y%m%d")}/nssp"""
         makedirs(f"{current_issue_dir}", exist_ok=True)
         params["common"]["export_dir"] = f"""{current_issue_dir}"""
 

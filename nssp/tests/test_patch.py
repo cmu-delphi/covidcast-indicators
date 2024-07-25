@@ -3,6 +3,7 @@ from unittest.mock import patch as mock_patch, call
 from delphi_nssp.patch import patch
 import os
 import shutil
+from datetime import datetime, timedelta
 
 class TestPatchModule(unittest.TestCase):
     def test_patch(self):
@@ -29,9 +30,15 @@ class TestPatchModule(unittest.TestCase):
 
             self.assertTrue(os.path.isdir('./patch_dir'))
             self.assertTrue(os.path.isdir('./patch_dir/issue_20201227/nssp'))
-            self.assertFalse(os.path.isdir('./patch_dir/issue_20210101/nssp'))
-            self.assertFalse(os.path.isdir('./patch_dir/issue_20210101/nssp'))
-            self.assertFalse(os.path.isdir('./patch_dir/issue_20210103/nssp'))
+
+            start_date = datetime(2020, 12, 28)
+            end_date = datetime(2021, 1, 3)
+            date = start_date
+
+            while date <= end_date:
+                date_str = date.strftime("%Y%m%d")
+                self.assertFalse(os.path.isdir(f'./patch_dir/issue_{date_str}/nssp'))
+                date += timedelta(days=1)
 
             # Clean up the created directories after the test
             shutil.rmtree(mock_read_params.return_value["patch"]["patch_dir"])

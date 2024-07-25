@@ -43,7 +43,6 @@ def f(x, threaded_logger):
 logger = get_structured_logger('my_logger')
 logger.info('Hello, world!')
 with pool_and_threadedlogger(logger, n_cpu) as (pool, threaded_logger):
-    pool_results = []
     for i in range(10):
         pool.apply_async(f, args=(i, threaded_logger))
 ```

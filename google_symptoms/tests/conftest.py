@@ -60,8 +60,6 @@ county_data = pd.read_csv(
 
 
 state_data_gap = pd.read_csv(patch_input["state"], parse_dates=["date"])[keep_cols]
-county_data_gap = pd.read_csv(
-    patch_input["county"], parse_dates=["date"])[keep_cols]
 
 covidcast_backfill_metadata = pd.read_csv(f"{TEST_DIR}/test_data/covid_metadata_backfill.csv",
                                           parse_dates=["max_time", "min_time", "max_issue", "last_update"])
@@ -106,7 +104,7 @@ def params_w_patch(params):
     return params
 
 
-@pytest.fixture(scope="class")
+@pytest.fixture(scope="session")
 def run_as_module(params):
     if exists("receiving"):
         # Clean receiving directory

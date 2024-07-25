@@ -1,14 +1,17 @@
 """Dynamic file checks."""
+
+import re
 from dataclasses import dataclass
 from datetime import date, timedelta
 from typing import Dict, Set
-import re
-import pandas as pd
+
 import numpy as np
-import covidcast
-from .errors import ValidationFailure
+import pandas as pd
+
+from .. import covidcast_port as covidcast
 from .datafetcher import get_geo_signal_combos, threaded_api_calls
-from .utils import relative_difference_by_min, TimeWindow, lag_converter
+from .errors import ValidationFailure
+from .utils import TimeWindow, lag_converter, relative_difference_by_min
 
 
 class DynamicValidator:

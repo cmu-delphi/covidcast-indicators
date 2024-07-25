@@ -48,7 +48,7 @@ class TestDataFetcher:
         else:
             return MockResponse([{"signals": [{"active": True}]}], 200)
 
-    # the `kw` approach is needed here because otherwise pytest thinks the 
+    # the `kw` approach is needed here because otherwise pytest thinks the
     # requests_mock arg is supposed to be a fixture
     @requests_mock.Mocker(kw="mock_requests")
     def test_bad_api_key(self, **kwargs):
@@ -57,7 +57,7 @@ class TestDataFetcher:
             get_geo_signal_combos("chng", api_key="")
 
     @mock.patch('requests.get', side_effect=mocked_requests_get)
-    @mock.patch("covidcast.metadata")
+    @mock.patch("delphi_utils.covidcast_port.metadata")
     def test_get_geo_signal_combos(self, mock_metadata, mock_get):
         """Test that the geo signal combos are correctly pulled from the covidcast metadata."""
         # Need to use actual data_source and signal names since we reference the API
@@ -87,7 +87,7 @@ class TestDataFetcher:
              ("msa", "pcr_specimen_positivity_rate"),
              ("msa", "pcr_specimen_total_tests")])
 
-    @mock.patch("covidcast.signal")
+    @mock.patch("delphi_utils.covidcast_port.signal")
     def test_threaded_api_calls(self, mock_signal):
         """Test that calls to the covidcast API are made."""
 

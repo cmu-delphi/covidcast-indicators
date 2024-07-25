@@ -8,7 +8,7 @@ when the module is run with `python -m delphi_sir_complainsalot`.
 import time
 from itertools import groupby
 
-import covidcast
+import delphi_utils.covidcast_port as covidcast
 from delphi_utils import SlackNotifier
 from delphi_utils import get_structured_logger
 from delphi_utils import read_params

@@ -17,8 +17,6 @@ from .geo import geo_map
 from .pull import pull_gs_data
 
 
-# pylint: disable=R0912
-# pylint: disable=R0915
 def run_module(params, logger=None):
     """
     Run Google Symptoms module.

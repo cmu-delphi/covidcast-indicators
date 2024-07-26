@@ -74,11 +74,13 @@ def logger():
 def params():
     params = {
         "common": {
-            "export_dir": "./receiving"
+            "export_dir": "./receiving",
+            "log_filename": "./test.log"
         },
         "indicator": {
             "export_start_date": "2020-02-20",
             "bigquery_credentials": {},
+            "num_export_days": 14,
             "static_file_dir": "../static",
             "api_credentials": "fakesecret"
         },
@@ -95,7 +97,6 @@ def params():
 
 @pytest.fixture
 def params_w_patch(params):
-    params["common"]["log_filename"] = "test.log"
     params["patch"] = {
             "start_issue": "2024-06-27",
             "end_issue": "2024-06-29",

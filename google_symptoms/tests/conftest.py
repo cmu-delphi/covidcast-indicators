@@ -75,7 +75,7 @@ def params():
     params = {
         "common": {
             "export_dir": "./receiving",
-            "log_filename": "./test.log"
+            "log_filename": "./test.log",
         },
         "indicator": {
             "export_start_date": "2020-02-20",
@@ -94,7 +94,6 @@ def params():
     }
     return params
 
-
 @pytest.fixture
 def params_w_patch(params):
     params["patch"] = {
@@ -102,6 +101,11 @@ def params_w_patch(params):
             "end_issue": "2024-06-29",
             "patch_dir": "./patch_dir"
         }
+    return params
+
+@pytest.fixture
+def params_w_no_date(params):
+    params["indicator"]["num_export_days"] = None
     return params
 
 

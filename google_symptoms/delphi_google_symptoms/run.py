@@ -54,9 +54,12 @@ def run_module(params, logger=None):
     export_end_date = datetime.strptime(
         params["indicator"].get("export_end_date", datetime.strftime(date.today(), "%Y-%m-%d")), "%Y-%m-%d"
     )
+
     num_export_days = generate_num_export_days(params, logger)
     # safety check for patch parameters exists in file, but not running custom runs/patches
-    custom_run_flag = False if not params["common"].get("custom_run") else params["common"].get("custom_run", False)
+    custom_run_flag = (
+        False if not params["indicator"].get("custom_run", False) else params["indicator"].get("custom_run", False)
+    )
     export_date_range = generate_query_dates(export_start_date, export_end_date, num_export_days, custom_run_flag)
 
     # Pull GS data
@@ -68,7 +71,6 @@ def run_module(params, logger=None):
             df_pull = geo_map(dfs["state"], geo_res)
         else:
             df_pull = geo_map(dfs["county"], geo_res)
-
 
         if len(df_pull) == 0:
             continue

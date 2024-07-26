@@ -11,12 +11,14 @@ from pandas import to_datetime
 from .constants import COMBINED_METRIC, FULL_BKFILL_START_DATE, PAD_DAYS, SMOOTHERS
 
 
-def generate_patch_dates(params) -> Dict[date, Tuple[date]]:
+def generate_patch_dates(params: Dict) -> Dict[date, Tuple[date]]:
     """
     Generate date range for chunking backfilled dates.
 
     Parameters
     ----------
+    issue_date
+    end_date
     params
 
     Returns
@@ -56,6 +58,7 @@ def _generate_num_export_days(params: Dict) -> int:
     num_export_days = params["validation"]["common"].get("span_length", 14) + global_max_expected_lag
     return num_export_days
 
+
 def generate_num_export_days(params: Dict, logger) -> [int]:
     """
     Generate dates for exporting based on current available data.
@@ -85,18 +88,22 @@ def generate_num_export_days(params: Dict, logger) -> [int]:
     # Filter to only those we currently want to produce, ignore any old or deprecated signals
     gs_metadata = metadata[(metadata.data_source == "google-symptoms") & (metadata.signal.isin(sensor_names))]
 
-    if sensor_names.difference(set(gs_metadata.signal)):
-        # If any signal not in metadata yet, we need to backfill its full history.
-        logger.warning("Signals missing in the epidata; backfilling full history")
-        num_export_days = (export_end_date - FULL_BKFILL_START_DATE).days + 1
-    else:
-        latest_date_diff = (datetime.today() - to_datetime(min(gs_metadata.max_time))).days + 1
-        expected_date_diff = _generate_num_export_days(params)
+    num_export_days = params["indicator"]["num_export_days"]
+    custom_run = False if not params["common"].get("custom_run") else params["common"].get("custom_run", False)
 
-        if latest_date_diff > expected_date_diff:
-            logger.info(f"Missing dates from: {to_datetime(min(gs_metadata.max_time)).date()}")
+    if num_export_days is None and not custom_run:
+        if sensor_names.difference(set(gs_metadata.signal)):
+            # If any signal not in metadata yet, we need to backfill its full history.
+            logger.warning("Signals missing in the epidata; backfilling full history")
+            num_export_days = (export_end_date - FULL_BKFILL_START_DATE).days + 1
+        else:
+            latest_date_diff = (datetime.today() - to_datetime(min(gs_metadata.max_time))).days + 1
+            expected_date_diff = _generate_num_export_days(params)
 
-        num_export_days = expected_date_diff
+            if latest_date_diff > expected_date_diff:
+                logger.info(f"Missing dates from: {to_datetime(min(gs_metadata.max_time)).date()}")
+
+            num_export_days = expected_date_diff
 
     return num_export_days
 

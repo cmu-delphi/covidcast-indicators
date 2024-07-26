@@ -24,10 +24,14 @@ class TestPatchModule:
         raw_list = list(set([datetime.strptime(f.name.split('_')[0],"%Y%m%d") for f in file_list if "raw" in f.name]))
         return sorted(smoothed_list), sorted(raw_list)
 
-    def generate_expected_dates(self, params_w_patch, smoother, issue_date):
-        max_expected_lag = lag_converter(params_w_patch["validation"]["common"].get("max_expected_lag", {"all": 4}))
+    def generate_expected_dates(self, params_, smoother, issue_date):
+        max_expected_lag = lag_converter(params_["validation"]["common"].get("max_expected_lag", {"all": 4}))
         global_max_expected_lag = max(list(max_expected_lag.values()))
-        num_export_days = params_w_patch["validation"]["common"].get("span_length", 14) + global_max_expected_lag
+
+        if params_["indicator"].get("num_export_days"):
+            num_export_days = params_["indicator"]["num_export_days"]
+        else:
+            num_export_days = params_["validation"]["common"].get("span_length", 14) + global_max_expected_lag
 
         # mimic date generate as if the issue date was "today"
         query_start_date, query_end_date = generate_query_dates(
@@ -42,8 +46,9 @@ class TestPatchModule:
         num_export_days = (export_end_date - export_start_date).days + 1
 
         return sorted([export_start_date + timedelta(days=x) for x in range(num_export_days)])
-    def test_patch(self, params_w_patch, monkeypatch):
-        with mock_patch("delphi_google_symptoms.patch.read_params", return_value=params_w_patch), \
+    def mocked_patch(self, params_):
+
+        with mock_patch("delphi_google_symptoms.patch.read_params", return_value=params_), \
              mock_patch("delphi_google_symptoms.pull.pandas_gbq.read_gbq") as mock_read_gbq, \
              mock_patch("delphi_google_symptoms.pull.initialize_credentials", return_value=None), \
              mock_patch("delphi_google_symptoms.date_utils.covidcast.metadata", return_value=covidcast_metadata), \
@@ -60,23 +65,28 @@ class TestPatchModule:
                     return pd.DataFrame()
 
             mock_read_gbq.side_effect = side_effect
-            start_date = datetime.strptime(params_w_patch["patch"]["start_issue"], "%Y-%m-%d")
+            start_date = datetime.strptime(params_["patch"]["start_issue"], "%Y-%m-%d")
 
             patch()
 
-            patch_path = Path(f"{TEST_DIR}/{params_w_patch['patch']['patch_dir']}")
+            patch_path = Path(f"{TEST_DIR}/{params_['patch']['patch_dir']}")
 
             for issue_dir in sorted(list(patch_path.iterdir())):
                 assert f'issue_{datetime.strftime(start_date, "%Y%m%d")}' == issue_dir.name
 
                 smoothed_dates, raw_dates = self.parse_csv_file(list(Path(issue_dir, "google-symptom").glob("*.csv")))
-                expected_smoothed_dates = self.generate_expected_dates(params_w_patch, "smoothed", start_date)
-                expected_raw_dates = self.generate_expected_dates(params_w_patch, "raw", start_date)
+                expected_smoothed_dates = self.generate_expected_dates(params_, "smoothed", start_date)
+                expected_raw_dates = self.generate_expected_dates(params_, "raw", start_date)
 
                 assert smoothed_dates == expected_smoothed_dates
                 assert raw_dates == expected_raw_dates
                 shutil.rmtree(issue_dir)
                 start_date += timedelta(days=1)
+    def test_patch_default(self, params_w_patch):
+        params_w_patch["indicator"]["num_export_days"] = None
+        self.mocked_patch(params_w_patch)
+    def test_patch_date_set(self, params_w_patch):
+        self.mocked_patch(params_w_patch)
 
 
 if __name__ == '__main__':

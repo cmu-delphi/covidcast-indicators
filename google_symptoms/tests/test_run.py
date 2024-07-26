@@ -6,9 +6,10 @@ from itertools import product
 import pandas as pd
 import numpy as np
 
+from conftest import TEST_DIR
 class TestRun:
     def test_output_files_exist(self, run_as_module):
-        output_files = listdir("receiving")
+        output_files = listdir(f"{TEST_DIR}/receiving")
         smoothed_files = sorted(list(set([file for file in output_files if "smoothed" in file])))
         raw_files = sorted(list(set([file for file in output_files if "raw" in file])))
         csv_files = {"raw": raw_files, "smoothed": smoothed_files}
@@ -61,7 +62,7 @@ class TestRun:
 
     def test_output_file_format(self, run_as_module):
         df = pd.read_csv(
-            join("receiving", "20200810_state_s03_smoothed_search.csv")
+            join(f"{TEST_DIR}/receiving", "20200810_state_s03_smoothed_search.csv")
         )
         assert (df.columns.values == [
                 "geo_id", "val", "se", "sample_size"]).all()
@@ -70,13 +71,13 @@ class TestRun:
         dates = [str(x) for x in range(20200804, 20200811)]
 
         smoothed = pd.read_csv(
-            join(f"receiving",
+            join(f"{TEST_DIR}/receiving",
                  f"{dates[-1]}_state_s01_smoothed_search.csv")
         )
 
         raw = pd.concat([
             pd.read_csv(
-                join("receiving",
+                join(f"{TEST_DIR}/receiving",
                      f"{date}_state_s01_raw_search.csv")
             ) for date in dates
         ])

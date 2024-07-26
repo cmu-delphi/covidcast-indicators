@@ -74,8 +74,8 @@ def logger():
 def params():
     params = {
         "common": {
-            "export_dir": "./receiving",
-            "log_filename": "./test.log",
+            "export_dir": f"{TEST_DIR}/receiving",
+            "log_filename": f"{TEST_DIR}/test.log",
         },
         "indicator": {
             "export_start_date": "2020-02-20",
@@ -110,13 +110,27 @@ def params_w_no_date(params):
 
 
 @pytest.fixture(scope="session")
-def run_as_module(params):
-    if exists("receiving"):
+def run_as_module():
+    # For some reason, the files don't write with the param fixture
+    params = {
+        "common": {
+            "export_dir": f"{TEST_DIR}/receiving",
+            "log_filename": f"{TEST_DIR}/test.log",
+        },
+        "indicator": {
+            "export_start_date": "2020-02-20",
+            "bigquery_credentials": {},
+            "num_export_days": 14,
+            "static_file_dir": "../static",
+            "api_credentials": "fakesecret"
+        }
+    }
+    if exists(f"{TEST_DIR}/receiving"):
         # Clean receiving directory
-        for fname in listdir("receiving"):
-            remove(join("receiving", fname))
+        for fname in listdir(f"{TEST_DIR}/receiving"):
+            remove(join(f"{TEST_DIR}/receiving", fname))
     else:
-        makedirs("receiving")
+        makedirs(f"{TEST_DIR}/receiving")
 
     with mock.patch("delphi_google_symptoms.pull.initialize_credentials",
                     return_value=None), \

@@ -35,23 +35,33 @@ class TestDateUtils:
                     datetime(2021, 1, 5)]
         assert set(output) == set(expected)
 
-    def test_generate_export_dates_normal(self, params, logger, monkeypatch):
+    def test_generate_export_dates(self, params, logger, monkeypatch):
         import covidcast
         metadata_df = pd.read_csv(f"{TEST_DIR}/test_data/covid_metadata.csv")
         monkeypatch.setattr(covidcast, "metadata", lambda: metadata_df)
         num_export_days = generate_num_export_days(params, logger)
 
-        max_expected_lag = lag_converter(params["validation"]["common"].get("max_expected_lag", {"all": 4}))
-        global_max_expected_lag = max(list(max_expected_lag.values()))
-        expected_num_export_days = params["validation"]["common"].get("span_length", 14) + global_max_expected_lag
+        expected_num_export_days = params["indicator"]["num_export_days"]
 
         assert num_export_days == expected_num_export_days
 
-    def test_generate_export_date_missing(self, params, logger, monkeypatch):
+    def test_generate_export_dates_normal(self, params_w_no_date, logger, monkeypatch):
+        import covidcast
+        metadata_df = pd.read_csv(f"{TEST_DIR}/test_data/covid_metadata.csv")
+        monkeypatch.setattr(covidcast, "metadata", lambda: metadata_df)
+        num_export_days = generate_num_export_days(params_w_no_date, logger)
+
+        max_expected_lag = lag_converter(params_w_no_date["validation"]["common"].get("max_expected_lag", {"all": 4}))
+        global_max_expected_lag = max(list(max_expected_lag.values()))
+        expected_num_export_days = params_w_no_date["validation"]["common"].get("span_length", 14) + global_max_expected_lag
+
+        assert num_export_days == expected_num_export_days
+
+    def test_generate_export_date_missing(self, params_w_no_date, logger, monkeypatch):
         import covidcast
         metadata_df = pd.read_csv(f"{TEST_DIR}/test_data/covid_metadata_missing.csv")
         monkeypatch.setattr(covidcast, "metadata", lambda: metadata_df)
-        num_export_days = generate_num_export_days(params, logger)
+        num_export_days = generate_num_export_days(params_w_no_date, logger)
         expected_num_export_days = (date.today() - FULL_BKFILL_START_DATE.date()).days + 1
         assert num_export_days == expected_num_export_days
 

@@ -89,6 +89,7 @@ def run_module(params, logger=None):
             df = df.reset_index()
             sensor_name = "_".join([smoother, "search"])
             if len(df) == 0:
+                logger.info("No data for %s_%s_%s", geo_res, metric.lower(), sensor_name)
                 continue
             exported_csv_dates = create_export_csv(
                 df,

@@ -25,27 +25,24 @@ class TestPatchModule:
         return sorted(smoothed_list), sorted(raw_list)
 
     def generate_expected_dates(self, params_, smoother, issue_date):
-        max_expected_lag = lag_converter(params_["validation"]["common"].get("max_expected_lag", {"all": 4}))
-        global_max_expected_lag = max(list(max_expected_lag.values()))
+        dates_dict = {
+            "2024-06-27": [ '2024-06-02', '2024-06-03', '2024-06-04', '2024-06-05', '2024-06-06', '2024-06-07', '2024-06-08', '2024-06-09', '2024-06-10', '2024-06-11', '2024-06-12', '2024-06-13', '2024-06-14', '2024-06-15', '2024-06-16', '2024-06-17', '2024-06-18', '2024-06-19', '2024-06-20', '2024-06-21', '2024-06-22'],
+            "2024-06-28": ['2024-06-03', '2024-06-04', '2024-06-05', '2024-06-06', '2024-06-07', '2024-06-08', '2024-06-09', '2024-06-10', '2024-06-11', '2024-06-12', '2024-06-13', '2024-06-14', '2024-06-15', '2024-06-16', '2024-06-17', '2024-06-18', '2024-06-19', '2024-06-20', '2024-06-21', '2024-06-22', '2024-06-23'],
+            "2024-06-29": ['2024-06-04', '2024-06-05', '2024-06-06','2024-06-07', '2024-06-08', '2024-06-09', '2024-06-10', '2024-06-11', '2024-06-12', '2024-06-13', '2024-06-14', '2024-06-15', '2024-06-16', '2024-06-17', '2024-06-18', '2024-06-19', '2024-06-20', '2024-06-21', '2024-06-22', '2024-06-23', '2024-06-24'],
+        }
 
-        if params_["indicator"].get("num_export_days"):
-            num_export_days = params_["indicator"]["num_export_days"]
+        dates_dict = {
+            datetime.strptime(key, "%Y-%m-%d"): [datetime.strptime(lvalue, "%Y-%m-%d") for lvalue in value]
+            for key, value in dates_dict.items()
+        }
+
+
+        dates = dates_dict[issue_date]
+
+        if smoother == "raw":
+            return dates
         else:
-            num_export_days = params_["validation"]["common"].get("span_length", 14) + global_max_expected_lag
-
-        # mimic date generate as if the issue date was "today"
-        query_start_date, query_end_date = generate_query_dates(
-            FULL_BKFILL_START_DATE,
-            issue_date,
-            num_export_days,
-            False
-        )
-        # the smoother in line 82-88 filters out prev seven days
-        export_start_date = query_start_date + timedelta(days=6) if smoother == "smoothed" else query_start_date
-        export_end_date = query_end_date - timedelta(days=global_max_expected_lag)
-        num_export_days = (export_end_date - export_start_date).days + 1
-
-        return sorted([export_start_date + timedelta(days=x) for x in range(num_export_days)])
+            return dates[6:21]
 
     def mocked_patch(self, params_):
         with mock_patch("delphi_google_symptoms.patch.read_params", return_value=params_), \

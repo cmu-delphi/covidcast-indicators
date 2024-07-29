@@ -12,7 +12,7 @@ import numpy as np
 from delphi_utils import create_export_csv, get_structured_logger
 
 from .constants import COMBINED_METRIC, GEO_RESOLUTIONS, SMOOTHERS, SMOOTHERS_MAP
-from .date_utils import generate_num_export_days, generate_query_dates
+from .date_utils import generate_num_export_days
 from .geo import geo_map
 from .pull import pull_gs_data
 
@@ -58,10 +58,9 @@ def run_module(params, logger=None):
     custom_run_flag = (
         False if not params["indicator"].get("custom_run", False) else params["indicator"].get("custom_run", False)
     )
-    export_date_range = generate_query_dates(export_start_date, export_end_date, num_export_days, custom_run_flag)
 
     # Pull GS data
-    dfs = pull_gs_data(params["indicator"]["bigquery_credentials"], export_date_range)
+    dfs = pull_gs_data(params["indicator"]["bigquery_credentials"], export_start_date, export_end_date, num_export_days, custom_run_flag)
     for geo_res in GEO_RESOLUTIONS:
         if geo_res == "state":
             df_pull = dfs["state"]

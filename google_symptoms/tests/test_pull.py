@@ -44,7 +44,8 @@ class TestPullGoogleSymptoms:
             "20201230", "%Y%m%d")
         end_date = datetime.combine(date.today(), datetime.min.time())
 
-        dfs = pull_gs_data("", [start_date, end_date])
+        dfs = pull_gs_data("", datetime.strptime(
+            "20201230", "%Y%m%d"), datetime.combine(date.today(), datetime.min.time()), 0, False)
 
         for level in ["county", "state"]:
             df = dfs[level]

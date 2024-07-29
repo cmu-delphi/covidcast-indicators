@@ -1,9 +1,11 @@
-from datetime import datetime, date, timedelta
+from datetime import date, timedelta
 from typing import List, Tuple, Union, Iterable
 
+import numpy as np
 import pandas as pd
 
 from delphi_epidata import Epidata
+from epiweeks import Week
 
 def date_generator(startdate, enddate):
   while startdate <= enddate:
@@ -11,6 +13,27 @@ def date_generator(startdate, enddate):
     startdate = startdate + timedelta(days=1)
 
 
+def _parse_datetimes(date_int: int,
+                     time_type: str,
+                     date_format: str = "%Y%m%d") -> Union[pd.Timestamp]:  # annotating nan errors
+    """Convert a date or epiweeks string into timestamp objects.
+
+    Datetimes (length 8) are converted to their corresponding date, while epiweeks (length 6)
+    are converted to the date of the start of the week. Returns nan otherwise
+
+    Epiweeks use the CDC format.
+
+    :param date_int: Int representation of date.
+    :param date_format: String of the date format to parse.
+    :returns: Timestamp.
+    """
+    date_str = str(date_int)
+    if time_type == "day":
+        return pd.to_datetime(date_str, format=date_format)
+    if time_type == "week":
+        epiwk = Week(int(date_str[:4]), int(date_str[-2:]))
+        return pd.to_datetime(epiwk.startdate())
+    return np.nan
 
 def metadata():
     response = Epidata._request("covidcast_meta")
@@ -21,6 +44,9 @@ def metadata():
                            response["message"])
 
     df = pd.DataFrame.from_dict(response["epidata"])
+    df["min_time"] = df.apply(lambda x: _parse_datetimes(x.min_time, x.time_type), axis=1)
+    df["max_time"] = df.apply(lambda x: _parse_datetimes(x.max_time, x.time_type), axis=1)
+    df["last_update"] = pd.to_datetime(df["last_update"], unit="s")
     return df
 
 
@@ -182,7 +208,7 @@ def signal(
         )
 
     time_values = list(date_generator(start_day, end_day))
-    issues = list(date_generator(start_day, end_day)) #TODO placesholder
+    issues = list(date_generator(start_day, end_day)) #TODO placesholder need to see how the issues params are coming in
     response = Epidata.covidcast(data_source, signal, time_type=time_type,
                                  geo_type=geo_type, time_values=time_values,
                                  geo_value=geo_values, as_of=as_of,

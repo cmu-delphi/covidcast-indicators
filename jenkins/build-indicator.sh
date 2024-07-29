@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Jenkins build-and-package
+# Jenkins build 
 #
 
 set -eo pipefail
@@ -8,10 +8,6 @@ source ~/.bash_profile
 
 # Vars
 local_indicator=$1
-
-#
-# Build
-#
 
 cd "${WORKSPACE}/${local_indicator}" || exit
 

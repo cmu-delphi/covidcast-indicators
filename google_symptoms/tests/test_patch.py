@@ -46,8 +46,8 @@ class TestPatchModule:
         num_export_days = (export_end_date - export_start_date).days + 1
 
         return sorted([export_start_date + timedelta(days=x) for x in range(num_export_days)])
-    def mocked_patch(self, params_):
 
+    def mocked_patch(self, params_):
         with mock_patch("delphi_google_symptoms.patch.read_params", return_value=params_), \
              mock_patch("delphi_google_symptoms.pull.pandas_gbq.read_gbq") as mock_read_gbq, \
              mock_patch("delphi_google_symptoms.pull.initialize_credentials", return_value=None), \
@@ -67,7 +67,7 @@ class TestPatchModule:
             mock_read_gbq.side_effect = side_effect
             start_date = datetime.strptime(params_["patch"]["start_issue"], "%Y-%m-%d")
 
-            patch()
+            patch(params_)
 
             patch_path = Path(f"{TEST_DIR}/{params_['patch']['patch_dir']}")
 

@@ -31,17 +31,28 @@ from .date_utils import generate_patch_dates
 from .run import run_module
 
 
-def patch():
+def patch(params):
     """
     Run the google symptoms indicator for a range of issue dates.
 
-    The range of issue dates is specified in params.json using the following keys:
+    Parameters
+    ----------
+    params
+        Dictionary containing indicator configuration. Expected to have the following structure:
+    - "common":
+        - "export_dir": str, directory to write output
+        - "log_exceptions" (optional): bool, whether to log exceptions to file
+        - "log_filename" (optional): str, name of file to write logs
+    - "indicator":
+        - "export_start_date": str, YYYY-MM-DD format, date from which to export data
+        - "num_export_days": int, number of days before end date (today) to export
+        - "path_to_bigquery_credentials": str, path to BigQuery API key and service account
+            JSON file
     - "patch": Only used for patching data
         - "start_date": str, YYYY-MM-DD format, first issue date
         - "end_date": str, YYYY-MM-DD format, last issue date
         - "patch_dir": str, directory to write all issues output
     """
-    params = read_params()
     logger = get_structured_logger("delphi_google_symptom.patch", filename=params["common"]["log_filename"])
 
     issue_date = datetime.strptime(params["patch"]["start_issue"], "%Y-%m-%d")
@@ -71,4 +82,4 @@ def patch():
 
 
 if __name__ == "__main__":
-    patch()
+    patch(read_params())

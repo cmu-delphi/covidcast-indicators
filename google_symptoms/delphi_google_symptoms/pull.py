@@ -9,6 +9,7 @@ import pandas_gbq
 from google.oauth2 import service_account
 
 from .constants import COMBINED_METRIC, DC_FIPS, DTYPE_CONVERSIONS, METRICS, SYMPTOM_SETS
+from .date_utils import generate_query_dates
 
 # Create map of BigQuery symptom column names to desired column names.
 colname_map = {"symptom_" +
@@ -214,7 +215,7 @@ def initialize_credentials(credentials):
     pandas_gbq.context.project = credentials.project_id
 
 
-def pull_gs_data(credentials, export_date_range):
+def pull_gs_data(credentials, export_start_date, export_end_date, num_export_days, custom_run_flag):
     """Pull latest dataset for each geo level and combine.
 
     PS:  No information for PR
@@ -237,7 +238,7 @@ def pull_gs_data(credentials, export_date_range):
     dict: {"county": pd.DataFrame, "state": pd.DataFrame}
     """
     # Fetch and format dates we want to attempt to retrieve
-
+    export_date_range = generate_query_dates(export_start_date, export_end_date, num_export_days, custom_run_flag)
     retrieve_dates = format_dates_for_query(export_date_range)
 
     initialize_credentials(credentials)

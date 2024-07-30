@@ -4,17 +4,12 @@ import pandas as pd
 from delphi_utils import covidcast_wrapper
 import covidcast
 from freezegun import freeze_time
-import os
 from pandas.testing import assert_frame_equal
 
 TEST_DIR = Path(__file__).parent
-API_KEY = os.environ.get('DELPHI_API_KEY')
-covidcast.use_api_key(API_KEY)
 class TestCovidcastWrapper:
-    API_KEY = os.environ.get('DELPHI_API_KEY')
-    covidcast.use_api_key(API_KEY)
     def test_metadata(self):
-        expected_df = pd.read_pickle(f"{TEST_DIR}/test_data/covidcast_metadata.pkl")
+        expected_df = covidcast.metadata()
         df = covidcast_wrapper.metadata()
         assert_frame_equal(expected_df, df)
 

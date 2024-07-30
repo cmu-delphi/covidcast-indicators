@@ -3,14 +3,15 @@
 
 import re
 import threading
+import warnings
 from os import listdir
 from os.path import isfile, join
-import warnings
-import requests
-import pandas as pd
-import numpy as np
 
-from ..covidcast_wrapper import metadata, signal
+import numpy as np
+import pandas as pd
+import requests
+from delphi_utils import covidcast_wrapper
+
 from .errors import APIDataFetchError, ValidationFailure
 
 FILENAME_REGEX = re.compile(
@@ -117,7 +118,7 @@ def get_geo_signal_combos(data_source, api_key):
     source_signal_mappings = {i['source']:i['db_source'] for i in
         meta_response.json()}
 
-    meta = metadata()
+    meta = covidcast_wrapper.metadata()
 
     source_meta = meta[meta['data_source'] == data_source]
     # Need to convert np.records to tuples so they are hashable and can be used in sets and dicts.
@@ -162,7 +163,7 @@ def fetch_api_reference(data_source, start_date, end_date, geo_type, signal_type
     Formatting is changed to match that of source data CSVs.
     """
     with warnings.catch_warnings():
-        api_df = signal(data_source, signal_type, start_date, end_date, geo_type)
+        api_df = covidcast_wrapper.signal(data_source, signal_type, start_date, end_date, geo_type)
 
 
     error_context = f"when fetching reference data from {start_date} to {end_date} " +\

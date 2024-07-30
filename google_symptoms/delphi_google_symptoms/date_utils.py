@@ -2,7 +2,7 @@
 
 from datetime import date, datetime, timedelta
 from itertools import product
-from typing import Dict, List, Tuple
+from typing import Dict, List, Union
 
 import covidcast
 from delphi_utils.validator.utils import lag_converter
@@ -11,7 +11,7 @@ from pandas import to_datetime
 from .constants import COMBINED_METRIC, FULL_BKFILL_START_DATE, PAD_DAYS, SMOOTHERS
 
 
-def generate_patch_dates(params: Dict) -> Dict[date, Tuple[date]]:
+def generate_patch_dates(params: Dict) -> Dict[date, Dict[str, Union[date, int]]]:
     """
     Generate date range for chunking backfilled dates.
 
@@ -43,10 +43,12 @@ def generate_patch_dates(params: Dict) -> Dict[date, Tuple[date]]:
 
     return patch_dates
 
+
 def get_max_lag(params: Dict) -> int:
-    """Determine reporting lag for data source"""
+    """Determine reporting lag for data source."""
     max_expected_lag = lag_converter(params["validation"]["common"].get("max_expected_lag", {"all": 4}))
     return max(list(max_expected_lag.values()))
+
 
 def generate_num_export_days(params: Dict, logger) -> [int]:
     """
@@ -128,4 +130,3 @@ def generate_query_dates(
     retrieve_dates = [start_date - timedelta(days=PAD_DAYS - 1), export_end_date]
 
     return retrieve_dates
-

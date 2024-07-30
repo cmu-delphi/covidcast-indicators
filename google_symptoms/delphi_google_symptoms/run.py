@@ -60,7 +60,13 @@ def run_module(params, logger=None):
     )
 
     # Pull GS data
-    dfs = pull_gs_data(params["indicator"]["bigquery_credentials"], export_start_date, export_end_date, num_export_days, custom_run_flag)
+    dfs = pull_gs_data(
+        params["indicator"]["bigquery_credentials"],
+        export_start_date,
+        export_end_date,
+        num_export_days,
+        custom_run_flag,
+    )
     for geo_res in GEO_RESOLUTIONS:
         if geo_res == "state":
             df_pull = dfs["state"]

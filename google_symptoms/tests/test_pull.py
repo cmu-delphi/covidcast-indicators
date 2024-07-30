@@ -8,15 +8,16 @@ from pandas.testing import assert_frame_equal
 from delphi_google_symptoms.pull import (
     pull_gs_data, preprocess, format_dates_for_query, pull_gs_data_one_geolevel)
 from delphi_google_symptoms.constants import METRICS, COMBINED_METRIC
+from conftest import TEST_DIR
 
 good_input = {
-    "state": "test_data/small_states_daily.csv",
-    "county": "test_data/small_counties_daily.csv"
+    "state": f"{TEST_DIR}/test_data/small_states_daily.csv",
+    "county": f"{TEST_DIR}/test_data/small_counties_daily.csv"
 }
 
 bad_input = {
-    "missing_cols": "test_data/bad_state_missing_cols.csv",
-    "invalid_fips": "test_data/bad_county_invalid_fips.csv"
+    "missing_cols": f"{TEST_DIR}/test_data/bad_state_missing_cols.csv",
+    "invalid_fips": f"{TEST_DIR}/test_data/bad_county_invalid_fips.csv"
 }
 
 symptom_names = ["symptom_" +

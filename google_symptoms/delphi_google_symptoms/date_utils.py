@@ -27,37 +27,28 @@ def generate_patch_dates(params: Dict) -> Dict[date, Tuple[date]]:
     """
     issue_date = datetime.strptime(params["patch"]["start_issue"], "%Y-%m-%d")
     end_date = datetime.strptime(params["patch"]["end_issue"], "%Y-%m-%d")
-    num_export_days = _generate_num_export_days(params)
+    num_export_days = params["validation"]["common"].get("span_length", 14)
 
     patch_dates = dict()
     while issue_date <= end_date:
-        # negate the subtraction done within generate_query_dates
-        expected_start_dt = issue_date - timedelta(days=num_export_days - PAD_DAYS + 1)
-        daterange = generate_query_dates(expected_start_dt, issue_date, num_export_days, True)
-        patch_dates[issue_date] = tuple(daterange)
+        global_max_expected_lag = get_max_lag(params)
+        export_end_date = issue_date - timedelta(days=global_max_expected_lag + 1)
+        export_start_date = issue_date - timedelta(days=num_export_days + global_max_expected_lag + 1)
+
+        patch_dates[issue_date] = {
+            "export_start_date": export_start_date,
+            "export_end_date": export_end_date,
+            "num_export_days": num_export_days,
+        }
+
         issue_date += timedelta(days=1)
+
     return patch_dates
 
-
-def _generate_num_export_days(params: Dict) -> int:
-    """
-    Generate dates for exporting with possible lag.
-
-    Parameters
-    ----------
-    params: dictionary parsed from params.json
-
-    Returns
-    -------
-    number of export days
-    """
-    # Calculate number of days based on what's missing from the API and
-    # what the validator expects.
+def get_max_lag(params: Dict) -> int:
+    """Determine reporting lag for data source"""
     max_expected_lag = lag_converter(params["validation"]["common"].get("max_expected_lag", {"all": 4}))
-    global_max_expected_lag = max(list(max_expected_lag.values()))
-    num_export_days = params["validation"]["common"].get("span_length", 14) + global_max_expected_lag
-    return num_export_days
-
+    return max(list(max_expected_lag.values()))
 
 def generate_num_export_days(params: Dict, logger) -> [int]:
     """
@@ -98,7 +89,8 @@ def generate_num_export_days(params: Dict, logger) -> [int]:
             num_export_days = (export_end_date - FULL_BKFILL_START_DATE).days + 1
         else:
             latest_date_diff = (datetime.today() - to_datetime(min(gs_metadata.max_time))).days + 1
-            expected_date_diff = _generate_num_export_days(params)
+            global_max_expected_lag = get_max_lag(params)
+            expected_date_diff = params["validation"]["common"].get("span_length", 14) + global_max_expected_lag
 
             if latest_date_diff > expected_date_diff:
                 logger.info(f"Missing dates from: {to_datetime(min(gs_metadata.max_time)).date()}")
@@ -138,3 +130,4 @@ def generate_query_dates(
     retrieve_dates = [start_date - timedelta(days=PAD_DAYS - 1), export_end_date]
 
     return retrieve_dates
+

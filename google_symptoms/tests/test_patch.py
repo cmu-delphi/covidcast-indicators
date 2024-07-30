@@ -55,9 +55,7 @@ class TestPatchModule:
                     df = state_data_gap
                     pattern = re.compile(r'\d{4}-\d{2}-\d{2}')
                     start_date, end_date = re.findall(pattern, args[0])
-                    end_date_w_lag = (datetime.strptime(end_date, "%Y-%m-%d") - timedelta(days=4)).strftime("%Y-%m-%d")
-                    return df[(df["date"] >= start_date) & \
-                              (df["date"] <= end_date_w_lag)]
+                    return df[(df["date"] >= start_date) & (df["date"] <= end_date)]
                 else:
                     return pd.DataFrame()
 

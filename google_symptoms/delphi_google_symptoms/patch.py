@@ -67,17 +67,24 @@ def patch(params):
     patch_dates = generate_patch_dates(params)
 
     while issue_date <= end_issue:
-        daterange = patch_dates[issue_date]
         logger.info(f"""Running issue {issue_date.strftime("%Y-%m-%d")}""")
+
+        # Output dir setup
         current_issue_yyyymmdd = issue_date.strftime("%Y%m%d")
         current_issue_dir = f"""{params["patch"]["patch_dir"]}/issue_{current_issue_yyyymmdd}/google-symptom"""
         makedirs(f"{current_issue_dir}", exist_ok=True)
-        params["common"]["export_dir"] = f"""{current_issue_dir}"""
 
-        params["indicator"]["export_start_date"] = daterange[0].strftime("%Y-%m-%d")
-        params["indicator"]["export_end_date"] = daterange[1].strftime("%Y-%m-%d")
-        params["patch"]["patch_flag"] = True
+        params["common"]["export_dir"] = f"""{current_issue_dir}"""
+        params["indicator"]["custom_run"] = True
+
+        date_settings = patch_dates[issue_date]
+
+        params["indicator"]["export_start_date"] = date_settings["export_start_date"].strftime("%Y-%m-%d")
+        params["indicator"]["export_end_date"] = date_settings["export_end_date"].strftime("%Y-%m-%d")
+        params["indicator"]["num_export_days"] = date_settings["num_export_days"]
+
         run_module(params, logger)
+
         issue_date += timedelta(days=1)
 
 

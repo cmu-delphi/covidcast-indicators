@@ -1,21 +1,32 @@
+"""module for covidcast api call wrapper."""
+
 from datetime import date, timedelta
-from typing import List, Tuple, Union, Iterable
+from typing import Iterable, Union
 
-import numpy as np
 import pandas as pd
-
 from delphi_epidata import Epidata
 from epiweeks import Week
 
-def date_generator(startdate, enddate):
-  while startdate <= enddate:
-    yield startdate.strftime('%Y-%m-%d')
-    startdate = startdate + timedelta(days=1)
+
+def date_generator(startdate: date, enddate: date) -> Iterable[date]:
+    """
+    Take start date and end date and generates date string.
+
+    Parameters
+    ----------
+    startdate: date
+    enddate: date
+
+    Returns
+    -------
+    generator of str
+    """
+    while startdate <= enddate:
+        yield startdate.strftime("%Y-%m-%d")
+        startdate = startdate + timedelta(days=1)
 
 
-def _parse_datetimes(date_int: int,
-                     time_type: str,
-                     date_format: str = "%Y%m%d") -> Union[pd.Timestamp]:  # annotating nan errors
+def _parse_datetimes(date_int: int, time_type: str, date_format: str = "%Y%m%d") -> Union[pd.Timestamp, None]:
     """Convert a date or epiweeks string into timestamp objects.
 
     Datetimes (length 8) are converted to their corresponding date, while epiweeks (length 6)
@@ -33,15 +44,23 @@ def _parse_datetimes(date_int: int,
     if time_type == "week":
         epiwk = Week(int(date_str[:4]), int(date_str[-2:]))
         return pd.to_datetime(epiwk.startdate())
-    return np.nan
+    return None
 
-def metadata():
+
+def metadata() -> Union[pd.DataFrame, None]:
+    """
+    Make covidcast metadata api call.
+
+    Returns
+    -------
+    pd.DataFrame of covidcast metadata.
+    """
+    # pylint: disable=W0212
     response = Epidata._request("covidcast_meta")
 
     if response["result"] != 1:
         # Something failed in the API and we did not get real metadata
-        raise RuntimeError("Error when fetching metadata from the API",
-                           response["message"])
+        raise RuntimeError("Error when fetching metadata from the API", response["message"])
 
     df = pd.DataFrame.from_dict(response["epidata"])
     df["min_time"] = df.apply(lambda x: _parse_datetimes(x.min_time, x.time_type), axis=1)
@@ -58,7 +77,6 @@ def signal(
     geo_type: str = "county",
     geo_values: Union[str, Iterable[str]] = "*",
     as_of: date = None,
-    issues: Union[date, Tuple[date], List[date]] = None,
     lag: int = None,
     time_type: str = "day",
 ) -> Union[pd.DataFrame, None]:
@@ -208,19 +226,24 @@ def signal(
         )
 
     time_values = list(date_generator(start_day, end_day))
-    issues = list(date_generator(start_day, end_day)) #TODO placesholder need to see how the issues params are coming in
-    response = Epidata.covidcast(data_source, signal, time_type=time_type,
-                                 geo_type=geo_type, time_values=time_values,
-                                 geo_value=geo_values, as_of=as_of,
-                                 issues=issues, lag=lag)
+
+    response = Epidata.covidcast(
+        data_source,
+        signal,
+        time_type=time_type,
+        geo_type=geo_type,
+        time_values=time_values,
+        geo_value=geo_values,
+        as_of=as_of,
+        lag=lag,
+    )
     if response["result"] != 1:
         # Something failed in the API and we did not get real metadata
-        raise RuntimeError("Error when fetching metadata from the API",
-                           response["message"])
+        raise RuntimeError("Error when fetching metadata from the API", response["message"])
 
     api_df = pd.DataFrame.from_dict(response["epidata"])
-    api_df["issue"] = pd.to_datetime(api_df["issue"], format='%Y%m%d')
-    api_df["time_value"] = pd.to_datetime(api_df["time_value"], format='%Y%m%d')
+    api_df["issue"] = pd.to_datetime(api_df["issue"], format="%Y%m%d")
+    api_df["time_value"] = pd.to_datetime(api_df["time_value"], format="%Y%m%d")
     api_df.drop("direction", axis=1, inplace=True)
     api_df["data_source"] = data_source
     api_df["signal"] = signal

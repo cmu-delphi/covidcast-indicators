@@ -5,8 +5,10 @@ This module should contain a function called `run_module`, that is executed
 when the module is run with `python -m delphi_utils.validator`.
 """
 import argparse as ap
+
 from delphi_epidata import Epidata
-from .. import read_params, get_structured_logger
+
+from .. import get_structured_logger, read_params
 from .validate import Validator
 
 

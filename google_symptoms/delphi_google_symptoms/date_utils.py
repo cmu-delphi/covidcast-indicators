@@ -17,13 +17,11 @@ def generate_patch_dates(params: Dict) -> Dict[date, Tuple[date]]:
 
     Parameters
     ----------
-    issue_date
-    end_date
-    params
+    params: dictionary parsed from params.json
 
     Returns
     -------
-    dict of date and tuple of date
+    dict(date: dict(export date range settings))
     """
     issue_date = datetime.strptime(params["patch"]["start_issue"], "%Y-%m-%d")
     end_date = datetime.strptime(params["patch"]["end_issue"], "%Y-%m-%d")
@@ -76,7 +74,7 @@ def generate_num_export_days(params: Dict, logger) -> [int]:
     # Fetch metadata to check how recent each signal is
     covidcast.use_api_key(params["indicator"]["api_credentials"])
     metadata = covidcast.metadata()
-    # Filter to only those we currently want to produce, ignore any old or deprecated signals
+    # Filter to only those signals we currently want to produce for `google-symptoms`
     gs_metadata = metadata[(metadata.data_source == "google-symptoms") & (metadata.signal.isin(sensor_names))]
 
     num_export_days = params["indicator"]["num_export_days"]

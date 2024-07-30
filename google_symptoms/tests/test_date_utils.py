@@ -66,6 +66,10 @@ class TestDateUtils:
         assert num_export_days == expected_num_export_days
 
     def generate_expected_start_end_dates(self, params_, issue_date):
+        # Actual dates reported on issue dates June 27-29, 2024, by the old
+        # version of the google-symptoms indicator
+        # (https://github.com/cmu-delphi/covidcast-indicators/tree/b338a0962bf3a63f70a83f0b719516f914b098e2).
+        # The patch module should be able to recreate these dates.
         dates_dict = {
             "2024-06-27": [ '2024-06-02', '2024-06-03', '2024-06-04', '2024-06-05', '2024-06-06', '2024-06-07', '2024-06-08', '2024-06-09', '2024-06-10', '2024-06-11', '2024-06-12', '2024-06-13', '2024-06-14', '2024-06-15', '2024-06-16', '2024-06-17', '2024-06-18', '2024-06-19', '2024-06-20', '2024-06-21', '2024-06-22'],
             "2024-06-28": ['2024-06-03', '2024-06-04', '2024-06-05', '2024-06-06', '2024-06-07', '2024-06-08', '2024-06-09', '2024-06-10', '2024-06-11', '2024-06-12', '2024-06-13', '2024-06-14', '2024-06-15', '2024-06-16', '2024-06-17', '2024-06-18', '2024-06-19', '2024-06-20', '2024-06-21', '2024-06-22', '2024-06-23'],
@@ -73,8 +77,9 @@ class TestDateUtils:
         }
 
         dates_dict = {
-            datetime.strptime(key, "%Y-%m-%d"): [datetime.strptime(lvalue, "%Y-%m-%d") for lvalue in value]
-            for key, value in dates_dict.items()
+            datetime.strptime(key, "%Y-%m-%d"): [
+                datetime.strptime(listvalue, "%Y-%m-%d") for listvalue in value
+            ] for key, value in dates_dict.items()
         }
 
         dates = dates_dict[issue_date]

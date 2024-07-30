@@ -86,6 +86,10 @@ class TestDateUtils:
 
         dates = dates_dict[issue_date]
 
+        # Raw signals add 6 extra dates of padding for later calculating
+        # smoothed signals. Since this test is checking an early step in the
+        # process, before padding has happened, we can drop the first 6
+        # dates.
         return {
             "export_start_date": min(dates[6:21]),
             "export_end_date": max(dates[6:21])

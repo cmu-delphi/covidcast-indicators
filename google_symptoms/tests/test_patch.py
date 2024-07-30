@@ -46,6 +46,7 @@ class TestPatchModule:
         if smoother == "raw":
             return dates
         else:
+            # Smoothed signals drop the first 6 dates.
             return dates[6:21]
 
     def mocked_patch(self, params_):
@@ -79,11 +80,15 @@ class TestPatchModule:
 
                 assert smoothed_dates == expected_smoothed_dates
                 assert raw_dates == expected_raw_dates
+
                 shutil.rmtree(issue_dir)
+
                 start_date += timedelta(days=1)
+
     def test_patch_default(self, params_w_patch):
         params_w_patch["indicator"]["num_export_days"] = None
         self.mocked_patch(params_w_patch)
+
     def test_patch_date_set(self, params_w_patch):
         self.mocked_patch(params_w_patch)
 

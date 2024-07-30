@@ -1,4 +1,5 @@
 """Tests for update_sensor.py."""
+from datetime import datetime
 import logging
 import pandas as pd
 
@@ -8,11 +9,12 @@ TEST_LOGGER = logging.getLogger()
 
 class TestUpdateSensor:
     def test_update_sensor(self):
+        df = pd.read_pickle("./test_data/SYNEDI_AGG_OUTPATIENT_07022020_1455CDT.pkl")
         actual = update_sensor(
-            filepath="./test_data/SYNEDI_AGG_OUTPATIENT_07022020_1455CDT.csv.gz",
-            startdate="2020-02-04",
-            enddate="2020-02-05",
-            dropdate="2020-02-06",
+            data=df,
+            startdate=datetime(2020, 2, 4),
+            enddate=datetime(2020, 2, 5),
+            dropdate=datetime(2020, 2,6),
             geo="state",
             parallel=False,
             weekday=False,

@@ -1,5 +1,6 @@
 """Registry for constants."""
-from datetime import timedelta
+
+from datetime import datetime, timedelta
 
 from delphi_utils import Smoother
 
@@ -108,3 +109,7 @@ STATE_TO_ABBREV = {'Alabama': 'al',
                    'Wyoming': 'wy'}
 
 DC_FIPS = "11001"
+
+FULL_BKFILL_START_DATE = datetime.strptime("2020-02-20", "%Y-%m-%d")
+
+PAD_DAYS = 7

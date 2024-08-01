@@ -11,7 +11,7 @@ from itertools import product
 import numpy as np
 from delphi_utils import create_export_csv, get_structured_logger
 
-from .constants import COMBINED_METRIC, GEO_RESOLUTIONS, SMOOTHERS, SMOOTHERS_MAP
+from .constants import COMBINED_METRIC, GEO_RESOLUTIONS, SMOOTHERS, SMOOTHERS_MAP, FULL_BKFILL_START_DATE
 from .date_utils import generate_num_export_days
 from .geo import geo_map
 from .pull import pull_gs_data
@@ -47,7 +47,8 @@ def run_module(params, logger=None):
             log_exceptions=params["common"].get("log_exceptions", True),
         )
 
-    export_start_date = datetime.strptime(params["indicator"]["export_start_date"], "%Y-%m-%d")
+    export_start_date = datetime.strptime(params["indicator"].get("export_start_date",
+                                            datetime.strftime(FULL_BKFILL_START_DATE, "%Y-%m-%d")), "%Y-%m-%d")
     # If end_date not specified, use current date.
     export_end_date = datetime.strptime(
         params["indicator"].get("export_end_date", datetime.strftime(date.today(), "%Y-%m-%d")), "%Y-%m-%d"

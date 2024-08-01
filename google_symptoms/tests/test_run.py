@@ -7,6 +7,7 @@ import pandas as pd
 import numpy as np
 
 from conftest import TEST_DIR
+from delphi_google_symptoms.constants import COMBINED_METRIC, GEO_RESOLUTIONS
 class TestRun:
     def test_output_files_exist(self, run_as_module):
         output_files = listdir(f"{TEST_DIR}/receiving")
@@ -59,6 +60,17 @@ class TestRun:
                 expected_files.append(nf)
             logging.info(csv_files[smther])
             assert set(csv_files[smther]).issuperset(set(expected_files))
+
+    def test_check_signal_num(self, run_as_module_full_dates):
+        output_files = listdir(f"{TEST_DIR}/receiving")
+        smoother = ["raw", "smoothed"]
+        for metric, smoother, geo in product(COMBINED_METRIC, smoother, GEO_RESOLUTIONS):
+            file_prefix = f"{geo}_{metric}_{smoother}"
+            files_with_prefix = [f for f in output_files if file_prefix in f]
+            if smoother == "raw":
+                assert len(files_with_prefix) == 21
+            if smoother == "smoothed":
+                assert len(files_with_prefix) == 15
 
     def test_output_file_format(self, run_as_module):
         df = pd.read_csv(

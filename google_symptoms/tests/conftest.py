@@ -61,6 +61,7 @@ county_data = pd.read_csv(
 
 
 state_data_gap = pd.read_csv(patch_input["state"], parse_dates=["date"])[keep_cols]
+county_data_gap = pd.read_csv(patch_input["county"], parse_dates=["date"])[keep_cols]
 
 covidcast_backfill_metadata = pd.read_csv(f"{TEST_DIR}/test_data/covid_metadata_backfill.csv",
                                           parse_dates=["max_time", "min_time", "max_issue", "last_update"])
@@ -125,6 +126,22 @@ def run_as_module(params):
     with mock.patch("delphi_google_symptoms.pull.initialize_credentials",
                     return_value=None), \
          mock.patch("pandas_gbq.read_gbq", side_effect=[state_data, county_data]), \
+         mock.patch("delphi_google_symptoms.pull.initialize_credentials", return_value=None), \
+         mock.patch("delphi_google_symptoms.date_utils.covidcast.metadata", return_value=covidcast_metadata):
+            delphi_google_symptoms.run.run_module(params)
+
+@pytest.fixture(scope="session")
+def run_as_module_full_dates(params):
+    if exists("receiving"):
+        # Clean receiving directory
+        for fname in listdir("receiving"):
+            remove(join("receiving", fname))
+    else:
+        makedirs("receiving")
+
+    with mock.patch("delphi_google_symptoms.pull.initialize_credentials",
+                    return_value=None), \
+         mock.patch("pandas_gbq.read_gbq", side_effect=[state_data_gap, county_data_gap]), \
          mock.patch("delphi_google_symptoms.pull.initialize_credentials", return_value=None), \
          mock.patch("delphi_google_symptoms.date_utils.covidcast.metadata", return_value=covidcast_metadata):
             delphi_google_symptoms.run.run_module(params)

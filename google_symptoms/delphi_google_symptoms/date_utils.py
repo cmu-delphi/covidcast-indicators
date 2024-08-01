@@ -89,7 +89,6 @@ def generate_num_export_days(params: Dict, logger) -> [int]:
             num_export_days = (export_end_date - FULL_BKFILL_START_DATE).days + 1
         else:
             latest_date_diff = (datetime.today() - to_datetime(min(gs_metadata.max_time))).days + 1
-            global_max_expected_lag = get_max_lag(params)
             expected_date_diff = params["validation"]["common"].get("span_length", 14)
 
             if latest_date_diff > expected_date_diff:

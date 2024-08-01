@@ -55,7 +55,7 @@ class TestDateUtils:
 
         max_expected_lag = lag_converter(params_w_no_date["validation"]["common"]["max_expected_lag"])
         global_max_expected_lag = max(list(max_expected_lag.values()))
-        expected_num_export_days = params_w_no_date["validation"]["common"]["span_length"] + global_max_expected_lag
+        expected_num_export_days = params_w_no_date["validation"]["common"]["span_length"]
 
         assert num_export_days == expected_num_export_days
 

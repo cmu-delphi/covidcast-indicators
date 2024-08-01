@@ -4,19 +4,22 @@ import pandas as pd
 from delphi_utils import covidcast_wrapper
 import covidcast
 from freezegun import freeze_time
+from delphi_epidata import Epidata
 from pandas.testing import assert_frame_equal
 
 TEST_DIR = Path(__file__).parent
 class TestCovidcastWrapper:
+    Epidata.debug = True
     def test_metadata(self):
         expected_df = covidcast.metadata()
         df = covidcast_wrapper.metadata()
         assert_frame_equal(expected_df, df)
 
-    @freeze_time("2024-07-29")
+    @freeze_time("2022-01-29")
     def test_signal(self):
-        meta_df = covidcast_wrapper.metadata()
-        data_filter = ((meta_df["max_time"] >= datetime(year=2024, month=6, day=1)) & (meta_df["time_type"] == "day"))
+        meta_df = pd.read_pickle(f"{TEST_DIR}/test_data/covidcast_metadata.pkl")
+
+        data_filter = (meta_df["max_time"] >= datetime(year=2024, month=6, day=1))
         signal_df = meta_df[data_filter].groupby("data_source")["signal"].agg(['unique'])
         enddate = datetime.today()
         startdate = enddate - timedelta(days=15)

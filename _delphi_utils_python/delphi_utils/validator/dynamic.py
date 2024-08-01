@@ -80,8 +80,6 @@ class DynamicValidator:
         # Get 14 days prior to the earliest list date
         outlier_lookbehind = timedelta(days=14)
 
-        # Authenticate API
-        # Epidata.auth = ("epidata", api)
 
         # Get all expected combinations of geo_type and signal.
         geo_signal_combos = get_geo_signal_combos(self.params.data_source,

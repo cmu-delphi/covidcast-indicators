@@ -12,7 +12,7 @@ from conftest import TEST_DIR
 from delphi_google_symptoms.constants import COMBINED_METRIC, GEO_RESOLUTIONS
 class TestRun:
     @pytest.mark.freeze_time("2020-08-15")
-    def test_output_files_exist(self):
+    def test_output_files_exist(self, run_as_module):
         output_files = listdir(f"{TEST_DIR}/receiving")
         smoothed_files = sorted(list(set([file for file in output_files if "smoothed" in file])))
         raw_files = sorted(list(set([file for file in output_files if "raw" in file])))

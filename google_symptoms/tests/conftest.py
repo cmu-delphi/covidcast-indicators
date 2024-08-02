@@ -85,7 +85,6 @@ def params():
             "log_filename": f"{TEST_DIR}/test.log",
         },
         "indicator": {
-            "export_start_date": "2020-02-20",
             "bigquery_credentials": {},
             "num_export_days": 14,
             "custom_run": False,

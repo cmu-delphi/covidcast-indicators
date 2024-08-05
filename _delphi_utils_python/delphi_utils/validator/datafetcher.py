@@ -212,13 +212,14 @@ def fetch_api_reference(data_source, start_date, end_date, geo_type, signal_type
         # Something failed in the API and we did not get real metadata
         raise RuntimeError("Error when fetching signal data from the API", response["message"])
 
-    api_df = pd.DataFrame.from_dict(response["epidata"])
-    api_df["issue"] = pd.to_datetime(api_df["issue"], format="%Y%m%d")
-    api_df["time_value"] = pd.to_datetime(api_df["time_value"], format="%Y%m%d")
-    api_df.drop("direction", axis=1, inplace=True)
-    api_df["data_source"] = data_source
-    api_df["signal"] = signal_type
-
+    api_df = None
+    if len(response["epidata"]) > 0:
+        api_df = pd.DataFrame.from_dict(response["epidata"])
+        api_df["issue"] = pd.to_datetime(api_df["issue"], format="%Y%m%d")
+        api_df["time_value"] = pd.to_datetime(api_df["time_value"], format="%Y%m%d")
+        api_df.drop("direction", axis=1, inplace=True)
+        api_df["data_source"] = data_source
+        api_df["signal"] = signal_type
 
     error_context = f"when fetching reference data from {start_date} to {end_date} " +\
         f"for data source: {data_source}, signal type: {signal_type}, geo type: {geo_type}"

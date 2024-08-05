@@ -6,16 +6,41 @@ import threading
 import warnings
 from os import listdir
 from os.path import isfile, join
+from typing import Union
 
 import numpy as np
 import pandas as pd
 import requests
-from delphi_utils import covidcast_wrapper
+from delphi_epidata import Epidata
+from epiweeks import Week
 
 from .errors import APIDataFetchError, ValidationFailure
 
 FILENAME_REGEX = re.compile(
     r'^(?P<date>\d{8})_(?P<geo_type>\w+?)_(?P<signal>\w+)\.csv$')
+
+def _parse_datetimes(date_int: int, time_type: str, date_format: str = "%Y%m%d") -> Union[pd.Timestamp, None]:
+    """Convert a date or epiweeks string into timestamp objects.
+
+    Datetimes (length 8) are converted to their corresponding date, while epiweeks (length 6)
+    are converted to the date of the start of the week. Returns nan otherwise
+
+    Epiweeks use the CDC format.
+
+    date_int: Int representation of date.
+    time_type: The temporal resolution to request this data. Most signals
+      are available at the "day" resolution (the default); some are only
+      available at the "week" resolution, representing an MMWR week ("epiweek").
+    date_format: String of the date format to parse.
+    :returns: Timestamp.
+    """
+    date_str = str(date_int)
+    if time_type == "day":
+        return pd.to_datetime(date_str, format=date_format)
+    if time_type == "week":
+        epiwk = Week(int(date_str[:4]), int(date_str[-2:]))
+        return pd.to_datetime(epiwk.startdate())
+    return None
 
 def make_date_filter(start_date, end_date):
     """
@@ -118,7 +143,16 @@ def get_geo_signal_combos(data_source, api_key):
     source_signal_mappings = {i['source']:i['db_source'] for i in
         meta_response.json()}
 
-    meta = covidcast_wrapper.metadata()
+    response = Epidata.covidcast_meta()
+
+    if response["result"] != 1:
+        # Something failed in the API and we did not get real metadata
+        raise RuntimeError("Error when fetching metadata from the API", response["message"])
+
+    meta = pd.DataFrame.from_dict(response["epidata"])
+    meta["min_time"] = meta.apply(lambda x: _parse_datetimes(x.min_time, x.time_type), axis=1)
+    meta["max_time"] = meta.apply(lambda x: _parse_datetimes(x.max_time, x.time_type), axis=1)
+    meta["last_update"] = pd.to_datetime(meta["last_update"], unit="s")
 
     source_meta = meta[meta['data_source'] == data_source]
     # Need to convert np.records to tuples so they are hashable and can be used in sets and dicts.
@@ -162,8 +196,28 @@ def fetch_api_reference(data_source, start_date, end_date, geo_type, signal_type
 
     Formatting is changed to match that of source data CSVs.
     """
-    with warnings.catch_warnings():
-        api_df = covidcast_wrapper.signal(data_source, signal_type, start_date, end_date, geo_type)
+    if start_date > end_date:
+        raise ValueError(
+            "end_day must be on or after start_day, but " f"start_day = '{start_date}', end_day = '{end_date}'"
+        )
+    response = Epidata.covidcast(
+        data_source,
+        signal_type,
+        time_type="day",
+        geo_type=geo_type,
+        time_values=Epidata.range(start_date.strftime("%Y%m%d"), end_date.strftime("%Y%m%d")),
+        geo_value=geo_type,
+    )
+    if response["result"] != 1:
+        # Something failed in the API and we did not get real metadata
+        raise RuntimeError("Error when fetching signal data from the API", response["message"])
+
+    api_df = pd.DataFrame.from_dict(response["epidata"])
+    api_df["issue"] = pd.to_datetime(api_df["issue"], format="%Y%m%d")
+    api_df["time_value"] = pd.to_datetime(api_df["time_value"], format="%Y%m%d")
+    api_df.drop("direction", axis=1, inplace=True)
+    api_df["data_source"] = data_source
+    api_df["signal"] = signal_type
 
 
     error_context = f"when fetching reference data from {start_date} to {end_date} " +\

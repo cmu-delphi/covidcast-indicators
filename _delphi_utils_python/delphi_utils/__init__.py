@@ -4,7 +4,6 @@
 from __future__ import absolute_import
 
 from .archive import ArchiveDiffer, GitArchiveDiffer, S3ArchiveDiffer
-from .covidcast_wrapper import metadata, signal
 from .export import create_export_csv
 from .geomap import GeoMapper
 from .logger import get_structured_logger

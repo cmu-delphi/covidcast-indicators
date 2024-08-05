@@ -5,20 +5,16 @@ This module should contain a function called `run_module`, that is executed
 when the module is run with `python -m delphi_google_symptoms`.
 """
 import time
-from datetime import datetime, date
+from datetime import date, datetime
 from itertools import product
-import covidcast
 
 import numpy as np
-from pandas import to_datetime
-from delphi_utils import (
-    create_export_csv,
-    get_structured_logger
-)
+from delphi_epidata import Epidata
+from delphi_utils import create_export_csv, get_structured_logger
 from delphi_utils.validator.utils import lag_converter
+from pandas import to_datetime
 
-from .constants import (COMBINED_METRIC,
-                        GEO_RESOLUTIONS, SMOOTHERS, SMOOTHERS_MAP)
+from .constants import COMBINED_METRIC, GEO_RESOLUTIONS, SMOOTHERS, SMOOTHERS_MAP
 from .geo import geo_map
 from .pull import pull_gs_data
 
@@ -66,8 +62,7 @@ def run_module(params):
         )
 
         # Fetch metadata to check how recent each signal is
-        covidcast.use_api_key(params["indicator"]["api_credentials"])
-        metadata = covidcast.metadata()
+        metadata = Epidata.covidcast_meta()
         # Filter to only those we currently want to produce, ignore any old or deprecated signals
         gs_metadata = metadata[(metadata.data_source == "google-symptoms") &
             (metadata.signal.isin(sensor_names))]

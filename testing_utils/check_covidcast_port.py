@@ -1,37 +1,20 @@
-"""module for covidcast api call wrapper."""
-
-from datetime import date, timedelta
-from typing import Iterable, Union
-
+"""
+script to check converting covidcast api calls with Epidata.covidcast Epidata.covidcast_meta
+"""
+from typing import Union, Iterable
+from datetime import datetime, timedelta, date
 import pandas as pd
+import covidcast
 from delphi_epidata import Epidata
+from pandas.testing import assert_frame_equal
+import os
 from epiweeks import Week
 
+API_KEY = os.environ.get('DELPHI_API_KEY')
+covidcast.use_api_key(API_KEY)
 
-def date_generator(startdate: date, enddate: date, time_type: str) -> Iterable[date]:
-    """
-    Take start date and end date and generates date string.
-
-    Parameters
-    ----------
-    startdate: date
-    enddate: date
-    time_type: str
-
-    Returns
-    -------
-    generator of str
-    """
-    if time_type.lower() == "day":
-        while startdate <= enddate:
-            yield startdate.strftime("%Y-%m-%d")
-            startdate = startdate + timedelta(days=1)
-    elif time_type.lower() == "week":
-        while startdate <= enddate:
-            epiweek = Week.fromdate(startdate)
-            yield epiweek
-            startdate = startdate + timedelta(days=7)
-
+Epidata.debug = True
+Epidata.auth = ("epidata", API_KEY)
 
 def _parse_datetimes(date_int: int, time_type: str, date_format: str = "%Y%m%d") -> Union[pd.Timestamp, None]:
     """Convert a date or epiweeks string into timestamp objects.
@@ -57,7 +40,7 @@ def _parse_datetimes(date_int: int, time_type: str, date_format: str = "%Y%m%d")
     return None
 
 
-def metadata() -> Union[pd.DataFrame, None]:
+def ported_metadata() -> Union[pd.DataFrame, None]:
     """
     Make covidcast metadata api call.
 
@@ -78,7 +61,7 @@ def metadata() -> Union[pd.DataFrame, None]:
     return df
 
 
-def signal(
+def ported_signal(
     data_source: str,
     signal: str,  # pylint: disable=W0621
     start_day: date = None,
@@ -132,14 +115,12 @@ def signal(
             "end_day must be on or after start_day, but " f"start_day = '{start_day}', end_day = '{end_day}'"
         )
 
-    time_values = list(date_generator(start_day, end_day))
-
     response = Epidata.covidcast(
         data_source,
         signal,
         time_type=time_type,
         geo_type=geo_type,
-        time_values=time_values,
+        time_values=Epidata.range(start_day.strftime("%Y%m%d"), end_day.strftime("%Y%m%d")),
         geo_value=geo_values,
         as_of=as_of,
         lag=lag,
@@ -156,3 +137,33 @@ def signal(
     api_df["signal"] = signal
 
     return api_df
+
+def check_metadata():
+    expected_df = covidcast.metadata()
+    df = ported_metadata().metadata()
+    assert_frame_equal(expected_df, df)
+
+def check_signal():
+    meta_df = covidcast.metadata()
+    startdate = datetime(year=2022, month=2, day=1)
+    data_filter = (meta_df["max_time"] >= startdate)
+    signal_df = meta_df[data_filter].groupby("data_source")["signal"].agg(['unique'])
+    enddate = startdate + timedelta(days=3)
+
+    for data_source, row in signal_df.iterrows():
+        signals = list(row[0])
+        for signal in signals:
+            expected_df = covidcast.signal(data_source, signal, start_day=startdate, end_day=enddate, geo_type="state")
+            if expected_df is None:
+                print("%s %s %s %s not existing", data_source, signal, startdate, enddate)
+
+            df = ported_signal(data_source, signal, start_day=startdate, end_day=enddate, geo_type="state")
+
+            check = df.merge(expected_df, indicator=True)
+            assert (check["_merge"] == "both").all()
+            assert check["_left_only"].empty
+            assert check["_right_only"].empty
+
+if __name__ == "__main__":
+    # check_metadata()
+    check_signal()

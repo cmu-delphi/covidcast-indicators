@@ -6,6 +6,7 @@ from typing import List
 
 import covidcast
 import pandas as pd
+from delphi_epidata import Epidata
 
 covidcast.covidcast._ASYNC_CALL = True  # pylint: disable=protected-access
 
@@ -64,22 +65,36 @@ def check_source(data_source, meta, params, grace, logger):  # pylint: disable=t
     age_complaints = {}
     gap_complaints = {}
 
+    start_date = datetime.now() - timedelta(days=14)
+    end_date = datetime.now()
+
     for _, row in signals.iterrows():
         logger.info("Retrieving signal",
             data_source=data_source,
             signal=row["signal"],
-            start_day=(datetime.now() - timedelta(days = 14)).strftime("%Y-%m-%d"),
-            end_day=datetime.now().strftime("%Y-%m-%d"),
+            start_day=start_date.strftime("%Y-%m-%d"),
+            end_day=end_date.strftime("%Y-%m-%d"),
             geo_type=row["geo_type"])
 
-        latest_data = covidcast.signal(
-            data_source, row["signal"],
-            start_day=datetime.now() - timedelta(days = 14),
-            end_day=datetime.now(),
-            geo_type=row["geo_type"]
+        response = Epidata.covidcast(
+            data_source,
+            row["signal"],
+            time_type=row["time_type"],
+            geo_type=row["geo_type"],
+            time_values=Epidata.range(start_date.strftime("%Y%m%d"), end_date.strftime("%Y%m%d")),
+            geo_value="*",
         )
 
-        current_lag_in_days = (now - row["max_time"]).days
+        if response["result"] != 1:
+            # Something failed in the API and we did not get real metadata
+            raise RuntimeError("Error when fetching signal data from the API", response["message"])
+
+        latest_data = pd.DataFrame.from_dict(response["epidata"])
+        latest_data["issue"] = pd.to_datetime(latest_data["issue"], format="%Y%m%d")
+        latest_data["time_value"] = pd.to_datetime(latest_data["time_value"], format="%Y%m%d")
+        latest_data.drop("direction", axis=1, inplace=True)
+
+        current_lag_in_days = (now - datetime.strptime(str(row["max_time"]), "%Y%m%d")).days
         lag_calculated_from_api = False
 
         if latest_data is not None:

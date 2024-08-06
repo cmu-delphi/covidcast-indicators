@@ -1,10 +1,12 @@
 """
 This module is used for patching data in the delphi_nssp package.
 
-To use this module, you need to specify the range of issue dates in params.json, like so:
+To use this module, you need to turn on the custom_run flag
+and specify the range of issue dates in params.json, like so:
 
 {
   "common": {
+    "custom_run": true,
     ...
   },
   "validation": {
@@ -32,16 +34,41 @@ from epiweeks import Week
 from .run import run_module
 
 
-def good_patch_config(params):
+def good_patch_config(params, logger):
     """
     Check if the params.json file is correctly configured for patching.
     params: Dict[str, Any]
         Nested dictionary of parameters, typically loaded from params.json file.
+    logger: Logger object
+        Logger object to log messages.
     """
+    custom_run = params["common"].get("custom_run", False)
+    if not custom_run:
+        logger.error("Calling patch.py without custom_run flag set true. Exiting.")
+        sys.exit(1)
+
     required_keys = ["start_issue", "end_issue", "patch_dir", "source_dir"]
     patch_config = params.get("patch", {})
     if not all(key in patch_config for key in required_keys):
-        return False
+        logger.error("Custom flag is on, but patch section is missing required key(s). Exiting.")
+        sys.exit(1)
+
+    if not path.isdir(patch_config["source_dir"]):
+        logger.error(f"Source directory {patch_config['source_dir']} does not exist. Exiting.")
+        sys.exit(1)
+
+    try:
+        start_issue = datetime.strptime(patch_config["start_issue"], "%Y-%m-%d")
+        end_issue = datetime.strptime(patch_config["end_issue"], "%Y-%m-%d")
+    except ValueError:
+        logger.error("Issue dates must be in YYYY-MM-DD format. Exiting.")
+        sys.exit(1)
+
+    if start_issue > end_issue:
+        logger.error("Start issue date is after end issue date. Exiting.")
+        sys.exit(1)
+
+    logger.info("Good patch configuration.")
     return True
 
 
@@ -58,10 +85,8 @@ def patch():
     """
     params = read_params()
     logger = get_structured_logger("delphi_nssp.patch", filename=params["common"]["log_filename"])
-    custom_run = params["common"].get("custom_run", False)
-    if custom_run and not good_patch_config(params):
-        logger.error("Custom flag is on, but config is bad. Exiting.")
-        sys.exit(1)
+    good_patch_config(params, logger)
+
     start_issue = datetime.strptime(params["patch"]["start_issue"], "%Y-%m-%d")
     end_issue = datetime.strptime(params["patch"]["end_issue"], "%Y-%m-%d")
 

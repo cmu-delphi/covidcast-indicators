@@ -19,29 +19,6 @@ from .errors import APIDataFetchError, ValidationFailure
 FILENAME_REGEX = re.compile(
     r'^(?P<date>\d{8})_(?P<geo_type>\w+?)_(?P<signal>\w+)\.csv$')
 
-def _parse_datetimes(date_int: int, time_type: str, date_format: str = "%Y%m%d") -> Union[pd.Timestamp, None]:
-    """Convert a date or epiweeks string into timestamp objects.
-
-    Datetimes (length 8) are converted to their corresponding date, while epiweeks (length 6)
-    are converted to the date of the start of the week. Returns nan otherwise
-
-    Epiweeks use the CDC format.
-
-    date_int: Int representation of date.
-    time_type: The temporal resolution to request this data. Most signals
-      are available at the "day" resolution (the default); some are only
-      available at the "week" resolution, representing an MMWR week ("epiweek").
-    date_format: String of the date format to parse.
-    :returns: Timestamp.
-    """
-    date_str = str(date_int)
-    if time_type == "day":
-        return pd.to_datetime(date_str, format=date_format)
-    if time_type == "week":
-        epiwk = Week(int(date_str[:4]), int(date_str[-2:]))
-        return pd.to_datetime(epiwk.startdate())
-    return None
-
 def make_date_filter(start_date, end_date):
     """
     Create a function to filter dates in the specified date range (inclusive).
@@ -150,8 +127,9 @@ def get_geo_signal_combos(data_source, api_key):
         raise RuntimeError("Error when fetching metadata from the API", response["message"])
 
     meta = pd.DataFrame.from_dict(response["epidata"])
-    meta["min_time"] = meta.apply(lambda x: _parse_datetimes(x.min_time, x.time_type), axis=1)
-    meta["max_time"] = meta.apply(lambda x: _parse_datetimes(x.max_time, x.time_type), axis=1)
+    # note: this will fail for signals with weekly data, but currently not supported for validation
+    meta["min_time"] = meta.apply(lambda x: pd.to_datetime(str(x.min_time), format="%Y%m%d"), axis=1)
+    meta["max_time"] = meta.apply(lambda x: pd.to_datetime(str(x.max_time), format="%Y%m%d"), axis=1)
     meta["last_update"] = pd.to_datetime(meta["last_update"], unit="s")
 
     source_meta = meta[meta['data_source'] == data_source]

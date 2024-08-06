@@ -22,6 +22,7 @@ the following structure:
         - "cache_dir": str, directory of locally cached data
 """
 
+import sys
 import time
 from datetime import datetime
 
@@ -34,7 +35,6 @@ from delphi_utils.nancodes import add_default_nancodes
 from .constants import AUXILIARY_COLS, CSV_COLS, GEOS, SIGNALS
 from .pull import pull_nssp_data
 
-
 def add_needed_columns(df, col_names=None):
     """Short util to add expected columns not found in the dataset."""
     if col_names is None:
@@ -44,7 +44,6 @@ def add_needed_columns(df, col_names=None):
         df[col_name] = np.nan
     df = add_default_nancodes(df)
     return df
-
 
 def logging(start_time, run_stats, logger):
     """Boilerplate making logs."""
@@ -72,21 +71,28 @@ def run_module(params, logger=None):
         Nested dictionary of parameters.
     """
     start_time = time.time()
-    issue_date = params.get("patch", {}).get("current_issue", None)
-    source_dir = params.get("patch", {}).get("source_dir", None)
+    custom_run = params["common"].get("custom_run", False)
+    # logger doesn't exist yet means run_module is called from normal indicator run (instead of patching)
     if not logger:
         logger = get_structured_logger(
             __name__,
             filename=params["common"].get("log_filename"),
             log_exceptions=params["common"].get("log_exceptions", True),
         )
+        if custom_run:
+            logger.warning("custom_run flag is on despite direct indicator run call. Normal indicator run continues.")
+            custom_run = False
     export_dir = params["common"]["export_dir"]
     socrata_token = params["indicator"]["socrata_token"]
-
     run_stats = []
     ## build the base version of the signal at the most detailed geo level you can get.
     ## compute stuff here or farm out to another function or file
-    df_pull = pull_nssp_data(socrata_token, issue_date, source_dir)
+    if custom_run:
+        issue_date = params.get("patch", {}).get("current_issue", None)
+        source_dir = params.get("patch", {}).get("source_dir", None)
+        df_pull = pull_nssp_data(socrata_token, issue_date, source_dir)
+    else:
+        df_pull = pull_nssp_data(socrata_token)
     ## aggregate
     geo_mapper = GeoMapper()
     for signal in SIGNALS:

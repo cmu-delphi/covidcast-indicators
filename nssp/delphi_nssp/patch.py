@@ -22,6 +22,7 @@ It will generate data for that range of issue dates, and store them in batch iss
 [name-of-patch]/issue_[issue-date]/nssp/actual_data_file.csv
 """
 
+import sys
 from datetime import datetime, timedelta
 from os import makedirs, path
 
@@ -29,6 +30,12 @@ from delphi_utils import get_structured_logger, read_params
 from epiweeks import Week
 
 from .run import run_module
+
+
+def good_patch_config(params):
+    if not all(key in params.get("patch", {}) for key in ["start_issue", "end_issue", "patch_dir", "source_dir"]):
+        return False
+    return True
 
 
 def patch():
@@ -44,7 +51,10 @@ def patch():
     """
     params = read_params()
     logger = get_structured_logger("delphi_nssp.patch", filename=params["common"]["log_filename"])
-
+    custom_run = params["common"].get("custom_run", False)
+    if custom_run and not good_patch_config(params):
+        logger.error("Custom flag is on, but config is bad. Exiting.")
+        sys.exit(1)
     start_issue = datetime.strptime(params["patch"]["start_issue"], "%Y-%m-%d")
     end_issue = datetime.strptime(params["patch"]["end_issue"], "%Y-%m-%d")
 

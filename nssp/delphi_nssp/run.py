@@ -22,7 +22,6 @@ the following structure:
         - "cache_dir": str, directory of locally cached data
 """
 
-import sys
 import time
 from datetime import datetime
 

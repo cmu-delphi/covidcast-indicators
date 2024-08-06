@@ -33,7 +33,14 @@ from .run import run_module
 
 
 def good_patch_config(params):
-    if not all(key in params.get("patch", {}) for key in ["start_issue", "end_issue", "patch_dir", "source_dir"]):
+    """
+    Check if the params.json file is correctly configured for patching.
+    params: Dict[str, Any]
+        Nested dictionary of parameters, typically loaded from params.json file.
+    """
+    required_keys = ["start_issue", "end_issue", "patch_dir", "source_dir"]
+    patch_config = params.get("patch", {})
+    if not all(key in patch_config for key in required_keys):
         return False
     return True
 

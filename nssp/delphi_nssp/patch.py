@@ -49,32 +49,36 @@ def good_patch_config(params, logger):
         logger.error("Calling patch.py without custom_run flag set true.")
         good_patch_config = False
 
-    required_keys = ["start_issue", "end_issue", "patch_dir", "source_dir"]
     patch_config = params.get("patch", {})
-    if not all(key in patch_config for key in required_keys):
-        logger.error("Custom flag is on, but patch section is missing required key(s).")
+    if patch_config == {}:
+        logger.error("Custom flag is on, but patch section is missing.")
         good_patch_config = False
+    else:
+        required_patch_keys = ["start_issue", "end_issue", "patch_dir", "source_dir"]
+        missing_keys = [key for key in required_patch_keys if key not in patch_config]
+        if missing_keys:
+            logger.error(f"Patch section is missing required key(s): {', '.join(missing_keys)}")
+            good_patch_config = False
+        else:
+            try: #issue dates validity check
+                start_issue = datetime.strptime(patch_config["start_issue"], "%Y-%m-%d")
+                end_issue = datetime.strptime(patch_config["end_issue"], "%Y-%m-%d")
+                if start_issue > end_issue:
+                    logger.error("Start issue date is after end issue date.")
+                    good_patch_config = False
+            except ValueError:
+                logger.error("Issue dates must be in YYYY-MM-DD format.")
+                good_patch_config = False
 
-    if not path.isdir(patch_config["source_dir"]):
-        logger.error(f"Source directory {patch_config['source_dir']} does not exist.")
-        good_patch_config = False
-
-    try:
-        start_issue = datetime.strptime(patch_config["start_issue"], "%Y-%m-%d")
-        end_issue = datetime.strptime(patch_config["end_issue"], "%Y-%m-%d")
-    except ValueError:
-        logger.error("Issue dates must be in YYYY-MM-DD format.")
-        good_patch_config = False
-
-    if start_issue > end_issue:
-        logger.error("Start issue date is after end issue date.")
-        good_patch_config = False
+            if not path.isdir(patch_config["source_dir"]):
+                logger.error(f"Source directory {patch_config['source_dir']} does not exist.")
+                good_patch_config = False
 
     if good_patch_config:
         logger.info("Good patch configuration.")
         return True
     else:
-        logger.error("Bad patch configuration.")
+        logger.info("Bad patch configuration.")
         return False
 
 

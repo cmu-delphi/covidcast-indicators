@@ -13,6 +13,7 @@ from delphi_epidata import Epidata
 from delphi_utils import SlackNotifier, get_structured_logger, read_params
 
 from .check_source import check_source
+from .date_utils import _parse_datetimes
 
 
 def get_logger():
@@ -30,6 +31,7 @@ def run_module():
     params = read_params()
     Epidata.auth = ("epidata", params["api_credentials"])
     meta = pd.DataFrame.from_dict(Epidata.covidcast_meta().get("epidata", dict()))
+    meta["max_time"] = meta.apply(lambda x: _parse_datetimes(x.max_time, x.time_type), axis=1)
     slack_notifier = None
     if "channel" in params and "slack_token" in params:
         slack_notifier = SlackNotifier(params["channel"], params["slack_token"])

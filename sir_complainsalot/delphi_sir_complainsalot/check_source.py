@@ -8,7 +8,8 @@ import covidcast
 import pandas as pd
 from delphi_epidata import Epidata
 
-covidcast.covidcast._ASYNC_CALL = True  # pylint: disable=protected-access
+from .date_utils import _date_to_api_string, _parse_datetimes
+
 
 @dataclass
 class Complaint:
@@ -32,6 +33,7 @@ class Complaint:
         return "*{source}* `{signal}` ({geos}) {message}; last updated {updated}.".format(
             source=self.data_source, signal=self.signal, geos=", ".join(self.geo_types),
             message=self.message, updated=self.last_updated.strftime("%Y-%m-%d"))
+
 
 
 def check_source(data_source, meta, params, grace, logger):  # pylint: disable=too-many-locals
@@ -74,30 +76,28 @@ def check_source(data_source, meta, params, grace, logger):  # pylint: disable=t
             signal=row["signal"],
             start_day=start_date.strftime("%Y-%m-%d"),
             end_day=end_date.strftime("%Y-%m-%d"),
-            geo_type=row["geo_type"])
+            geo_type=row["geo_type"],
+            time_type=row["time_type"])
 
         response = Epidata.covidcast(
             data_source,
             row["signal"],
             time_type=row["time_type"],
             geo_type=row["geo_type"],
-            time_values=Epidata.range(start_date.strftime("%Y%m%d"), end_date.strftime("%Y%m%d")),
+            time_values=Epidata.range(_date_to_api_string(start_date), _date_to_api_string(end_date)),
             geo_value="*",
         )
 
-        if response["result"] != 1:
-            # Something failed in the API and we did not get real metadata
-            raise RuntimeError("Error when fetching signal data from the API", response["message"])
-
-        latest_data = pd.DataFrame.from_dict(response["epidata"])
-        latest_data["issue"] = pd.to_datetime(latest_data["issue"], format="%Y%m%d")
-        latest_data["time_value"] = pd.to_datetime(latest_data["time_value"], format="%Y%m%d")
-        latest_data.drop("direction", axis=1, inplace=True)
-
-        current_lag_in_days = (now - datetime.strptime(str(row["max_time"]), "%Y%m%d")).days
+        current_lag_in_days = (now - row["max_time"]).days
         lag_calculated_from_api = False
+        latest_data = None
 
-        if latest_data is not None:
+        if response["result"] == 1:
+            latest_data = pd.DataFrame.from_dict(response["epidata"])
+            latest_data["issue"] = latest_data.apply(lambda x: _parse_datetimes(x.issue, x.time_type), axis=1)
+            latest_data["time_value"] = latest_data.apply(lambda x: _parse_datetimes(x.time_value, x.time_type), axis=1)
+            latest_data.drop("direction", axis=1, inplace=True)
+
             unique_dates = [pd.to_datetime(val).date()
                             for val in latest_data["time_value"].unique()]
             current_lag_in_days = (datetime.now().date() - max(unique_dates)).days

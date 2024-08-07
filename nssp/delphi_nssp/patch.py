@@ -37,39 +37,45 @@ from .run import run_module
 def good_patch_config(params, logger):
     """
     Check if the params.json file is correctly configured for patching.
+
     params: Dict[str, Any]
         Nested dictionary of parameters, typically loaded from params.json file.
     logger: Logger object
         Logger object to log messages.
     """
+    good_patch_config = True
     custom_run = params["common"].get("custom_run", False)
     if not custom_run:
-        logger.error("Calling patch.py without custom_run flag set true. Exiting.")
-        sys.exit(1)
+        logger.error("Calling patch.py without custom_run flag set true.")
+        good_patch_config = False
 
     required_keys = ["start_issue", "end_issue", "patch_dir", "source_dir"]
     patch_config = params.get("patch", {})
     if not all(key in patch_config for key in required_keys):
-        logger.error("Custom flag is on, but patch section is missing required key(s). Exiting.")
-        sys.exit(1)
+        logger.error("Custom flag is on, but patch section is missing required key(s).")
+        good_patch_config = False
 
     if not path.isdir(patch_config["source_dir"]):
-        logger.error(f"Source directory {patch_config['source_dir']} does not exist. Exiting.")
-        sys.exit(1)
+        logger.error(f"Source directory {patch_config['source_dir']} does not exist.")
+        good_patch_config = False
 
     try:
         start_issue = datetime.strptime(patch_config["start_issue"], "%Y-%m-%d")
         end_issue = datetime.strptime(patch_config["end_issue"], "%Y-%m-%d")
     except ValueError:
-        logger.error("Issue dates must be in YYYY-MM-DD format. Exiting.")
-        sys.exit(1)
+        logger.error("Issue dates must be in YYYY-MM-DD format.")
+        good_patch_config = False
 
     if start_issue > end_issue:
-        logger.error("Start issue date is after end issue date. Exiting.")
-        sys.exit(1)
+        logger.error("Start issue date is after end issue date.")
+        good_patch_config = False
 
-    logger.info("Good patch configuration.")
-    return True
+    if good_patch_config:
+        logger.info("Good patch configuration.")
+        return True
+    else:
+        logger.error("Bad patch configuration.")
+        return False
 
 
 def patch():
@@ -85,7 +91,8 @@ def patch():
     """
     params = read_params()
     logger = get_structured_logger("delphi_nssp.patch", filename=params["common"]["log_filename"])
-    good_patch_config(params, logger)
+    if not good_patch_config(params, logger):
+        sys.exit(1)
 
     start_issue = datetime.strptime(params["patch"]["start_issue"], "%Y-%m-%d")
     end_issue = datetime.strptime(params["patch"]["end_issue"], "%Y-%m-%d")

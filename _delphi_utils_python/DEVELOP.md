@@ -9,7 +9,7 @@ To install the module in your default version of Python, run the
 following from this directory:
 
 ```
-pip install .
+pip install -e '.[dev]'
 ```
 
 As described in each of the indicator code directories, you will want to install

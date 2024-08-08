@@ -31,4 +31,4 @@ clean:
 release: lint test
 	. env/bin/activate ; \
 	pip install 'build[virtualenv]' ; \
-    python -m build --sdist --wheel
+	python -m build --sdist --wheel

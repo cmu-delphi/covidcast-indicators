@@ -60,7 +60,7 @@ def run_module(params):
             "_".join([metric, smoother, "search"])
             for metric, smoother in product(COMBINED_METRIC, SMOOTHERS)
         )
-        Epidata.auth = ("epidata", params["api_credentials"])
+        Epidata.auth = ("epidata", params["indicator"]["api_credentials"])
         # Fetch metadata to check how recent each signal is
         metadata = Epidata.covidcast_meta()
         # Filter to only those we currently want to produce, ignore any old or deprecated signals

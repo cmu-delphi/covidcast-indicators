@@ -73,7 +73,7 @@ def run_as_module():
         makedirs("receiving")
 
     with mock.patch("delphi_google_symptoms.pull.initialize_credentials",
-                    return_value=None) as mock_credentials:
-        with mock.patch("pandas_gbq.read_gbq", side_effect=[
-                state_data, county_data]) as mock_read_gbq:
+                    return_value=None) as mock_credentials, \
+         mock.patch("pandas_gbq.read_gbq", side_effect=[state_data, county_data]) as mock_read_gbq, \
+         mock.patch("delphi_google_symptoms.run.Epidata.covidcast_meta", return_value=None) as mock_covidcast_meta:
             delphi_google_symptoms.run.run_module(params)

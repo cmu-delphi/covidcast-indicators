@@ -127,20 +127,20 @@ if __name__ == "__main__":
     patch_dirs = sorted(list(Path(f"{SOURCE_DIR}/patch_dir/").glob("issue*")))
     # Testing for number of signals
     for patch_dir in patch_dirs:
-        patch_files = sorted(list(Path(f"{patch_dir}/google-symptom").glob("*.csv")))
+        patch_files = sorted(list(Path(f"{patch_dir}/google-symptoms").glob("*.csv")))
         check_signal_num(patch_files)
 
     # Testing for matching regular run with patch run (the enddate should match up to the last date in the patch run)
     regular_dir = sorted(list(Path(f"{SOURCE_DIR}/regular_run").glob("*.csv")))
-    patch_dir = sorted(list(Path(f"{SOURCE_DIR}/patch_dir/issue_yyyymmdd/google-symptom").glob("*.csv")))
+    patch_dir = sorted(list(Path(f"{SOURCE_DIR}/patch_dir/issue_yyyymmdd/google-symptoms").glob("*.csv")))
     compare(regular_dir, patch_dir)
 
     # Testing against the api; The data in the api require a range of date to validate
     # as runs at the time some of the earlier date may be only available on previous issue dates
-    compare_to_api(sorted(list(Path(f"{SOURCE_DIR}/fix_patch_today/issue_20240801/google-symptom").glob(f"*.csv"))),
+    compare_to_api(sorted(list(Path(f"{SOURCE_DIR}/fix_patch_today/issue_20240801/google-symptoms").glob(f"*.csv"))),
                    "fix_patch", Epidata.range("20240731", str(20240802)))
     for i in range(2,6):
-        compare_to_api(sorted(list(Path(f"{SOURCE_DIR}/fix_patch_today/issue_2024080{i}/google-symptom").glob(f"*.csv"))), "fix_patch", Epidata.range(str(20240800 + i - 1), str(20240801 + i)))
+        compare_to_api(sorted(list(Path(f"{SOURCE_DIR}/fix_patch_today/issue_2024080{i}/google-symptoms").glob(f"*.csv"))), "fix_patch", Epidata.range(str(20240800 + i - 1), str(20240801 + i)))
 
 
 

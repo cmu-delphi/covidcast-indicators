@@ -120,17 +120,21 @@ def get_geo_signal_combos(data_source, api_key):
     source_signal_mappings = {i['source']:i['db_source'] for i in
         meta_response.json()}
 
-    response = Epidata.covidcast_meta()
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
 
-    if response["result"] != 1:
-        # Something failed in the API and we did not get real metadata
-        raise RuntimeError("Error when fetching metadata from the API", response["message"])
+        response = Epidata.covidcast_meta()
 
-    meta = pd.DataFrame.from_dict(response["epidata"])
-    # note: this will fail for signals with weekly data, but currently not supported for validation
-    meta["min_time"] = meta.apply(lambda x: pd.to_datetime(str(x.min_time), format="%Y%m%d"), axis=1)
-    meta["max_time"] = meta.apply(lambda x: pd.to_datetime(str(x.max_time), format="%Y%m%d"), axis=1)
-    meta["last_update"] = pd.to_datetime(meta["last_update"], unit="s")
+        if response["result"] != 1:
+            # Something failed in the API and we did not get real metadata
+            raise RuntimeError("Error when fetching metadata from the API", response["message"])
+
+        meta = pd.DataFrame.from_dict(response["epidata"])
+        # note: this will fail for signals with weekly data, but currently not supported for validation
+        meta = meta[meta["time_type"] == "day"]
+        meta["min_time"] = meta.apply(lambda x: pd.to_datetime(str(x.min_time), format="%Y%m%d"), axis=1)
+        meta["max_time"] = meta.apply(lambda x: pd.to_datetime(str(x.max_time), format="%Y%m%d"), axis=1)
+        meta["last_update"] = pd.to_datetime(meta["last_update"], unit="s")
 
     source_meta = meta[meta['data_source'] == data_source]
     # Need to convert np.records to tuples so they are hashable and can be used in sets and dicts.
@@ -184,7 +188,7 @@ def fetch_api_reference(data_source, start_date, end_date, geo_type, signal_type
         time_type="day",
         geo_type=geo_type,
         time_values=Epidata.range(start_date.strftime("%Y%m%d"), end_date.strftime("%Y%m%d")),
-        geo_value=geo_type,
+        geo_value="*"
     )
     if response["result"] != 1:
         # Something failed in the API and we did not get real metadata
@@ -193,6 +197,7 @@ def fetch_api_reference(data_source, start_date, end_date, geo_type, signal_type
     api_df = None
     if len(response["epidata"]) > 0:
         api_df = pd.DataFrame.from_dict(response["epidata"])
+        # note: this will fail for signals with weekly data, but currently not supported for validation
         api_df["issue"] = pd.to_datetime(api_df["issue"], format="%Y%m%d")
         api_df["time_value"] = pd.to_datetime(api_df["time_value"], format="%Y%m%d")
         api_df.drop("direction", axis=1, inplace=True)

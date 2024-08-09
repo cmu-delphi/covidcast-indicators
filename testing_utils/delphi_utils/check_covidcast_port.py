@@ -1,50 +1,44 @@
 """
 script to check converting covidcast api calls with Epidata.covidcast Epidata.covidcast_meta
 """
-import time
+
 from collections import defaultdict
 from pathlib import Path
 from typing import Union, Iterable, Tuple, List, Dict
 from datetime import datetime, timedelta, date
 
-import numpy as np
 import pandas as pd
 import covidcast
+import tqdm
 from delphi_epidata import Epidata
 from pandas.testing import assert_frame_equal
 import os
 from epiweeks import Week
 
-API_KEY = os.environ.get('DELPHI_API_KEY')
+API_KEY = os.environ.get("DELPHI_API_KEY", os.environ.get("DELPHI_EPIDATA_KEY"))
 covidcast.use_api_key(API_KEY)
-
-Epidata.debug = True
 Epidata.auth = ("epidata", API_KEY)
-
 CURRENT_DIR = Path(__file__).parent
+if not Path(f"{CURRENT_DIR}/covidcast_result").is_dir():
+    os.mkdir(f"{CURRENT_DIR}/covidcast_result")
 
-def _parse_datetimes(date_int: int, time_type: str, date_format: str = "%Y%m%d") -> Union[pd.Timestamp, None]:
-    """Convert a date or epiweeks string into timestamp objects.
 
-    Datetimes (length 8) are converted to their corresponding date, while epiweeks (length 6)
-    are converted to the date of the start of the week. Returns nan otherwise
+def _parse_datetimes(df: pd.DataFrame, col: str, time_type: str, date_format: str = "%Y%m%d") -> pd.DataFrame:
+    """Convert a DataFrame date or epiweek column into datetimes.
 
-    Epiweeks use the CDC format.
-
-    date_int: Int representation of date.
-    time_type: The temporal resolution to request this data. Most signals
-      are available at the "day" resolution (the default); some are only
-      available at the "week" resolution, representing an MMWR week ("epiweek").
-    date_format: String of the date format to parse.
-    :returns: Timestamp.
+    Assumes the column is string type. Dates are assumed to be in the YYYYMMDD
+    format by default. Weeks are assumed to be in the epiweek CDC format YYYYWW
+    format and return the date of the first day of the week.
     """
-    date_str = str(date_int)
     if time_type == "day":
-        return pd.to_datetime(date_str, format=date_format)
+        df[col] = pd.to_datetime(df[col], format=date_format)
+        return df
     if time_type == "week":
-        epiwk = Week(int(date_str[:4]), int(date_str[-2:]))
-        return pd.to_datetime(epiwk.startdate())
-    return None
+        df[col] = df[col].apply(lambda x: Week(int(x[:4]), int(x[-2:])).startdate())
+        df[col] = pd.to_datetime(df[col])
+        return df
+    raise ValueError(f"Unknown time_type: {time_type}")
+
 
 
 def ported_metadata() -> Union[pd.DataFrame, None]:
@@ -62,8 +56,9 @@ def ported_metadata() -> Union[pd.DataFrame, None]:
         raise RuntimeError("Error when fetching metadata from the API", response["message"])
 
     df = pd.DataFrame.from_dict(response["epidata"])
-    df["min_time"] = df.apply(lambda x: _parse_datetimes(x.min_time, x.time_type), axis=1)
-    df["max_time"] = df.apply(lambda x: _parse_datetimes(x.max_time, x.time_type), axis=1)
+    time_type = df["time_type"].values[0]
+    df = _parse_datetimes(df, "time_value", time_type)
+    df = _parse_datetimes(df, "issue", time_type)
     df["last_update"] = pd.to_datetime(df["last_update"], unit="s")
     return df
 
@@ -143,30 +138,32 @@ def ported_signal(
 
     api_df = pd.DataFrame.from_dict(response["epidata"])
     if not api_df.empty:
-        api_df["issue"] = api_df.apply(lambda x: _parse_datetimes(x.issue, x.time_type), axis=1)
-        api_df["time_value"] = api_df.apply(lambda x: _parse_datetimes(x.time_value, x.time_type), axis=1)
+        time_type = api_df["time_type"].values[0]
+        api_df = _parse_datetimes(api_df, "time_value", time_type)
+        api_df = _parse_datetimes(api_df, "issue", time_type)
         api_df.drop("direction", axis=1, inplace=True)
         api_df["data_source"] = data_source
         api_df["signal"] = signal
 
     return api_df
 
-def check_metadata():
 
+def check_metadata():
     expected_df = covidcast.metadata()
     df = ported_metadata()
     assert_frame_equal(expected_df, df)
 
+
 def ported_signal(
-        data_source: str,
-        signal: str,  # pylint: disable=W0621
-        start_day: date = None,
-        end_day: date = None,
-        geo_type: str = "county",
-        geo_values: Union[str, Iterable[str]] = "*",
-        as_of: date = None,
-        lag: int = None,
-        time_type: str = "day",
+    data_source: str,
+    signal: str,  # pylint: disable=W0621
+    start_day: date = None,
+    end_day: date = None,
+    geo_type: str = "county",
+    geo_values: Union[str, Iterable[str]] = "*",
+    as_of: date = None,
+    lag: int = None,
+    time_type: str = "day",
 ) -> Union[pd.DataFrame, None]:
     """
     Makes covidcast signal api call.
@@ -233,8 +230,9 @@ def ported_signal(
 
     api_df = pd.DataFrame.from_dict(response["epidata"])
     if not api_df.empty:
-        api_df["issue"] = api_df.apply(lambda x: _parse_datetimes(x.issue, x.time_type), axis=1)
-        api_df["time_value"] = api_df.apply(lambda x: _parse_datetimes(x.time_value, x.time_type), axis=1)
+        time_type = api_df["time_type"].values[0]
+        api_df = _parse_datetimes(api_df, "time_value", time_type)
+        api_df = _parse_datetimes(api_df, "issue", time_type)
         api_df.drop("direction", axis=1, inplace=True)
         api_df["data_source"] = data_source
         api_df["signal"] = signal
@@ -252,11 +250,11 @@ def generate_start_date_per_signal() -> Dict[Tuple[datetime, datetime, str], Lis
     Dict[Tuple[datetime.datetime, datetime.datetime, str],[List[Tuple[str, str]]]
     """
     meta_df = pd.DataFrame.from_dict(Epidata.covidcast_meta()["epidata"])
-    meta_df["min_time"] = meta_df["min_time"].astype('str')
+    meta_df["min_time"] = meta_df["min_time"].astype("str")
+    meta_df = meta_df.groupby("data_source").first()
     signal_timeframe_dict = defaultdict(list)
 
     for start_str, data in meta_df.groupby("min_time"):
-
         data_source_groups = data.groupby("data_source")
         for data_source, df in data_source_groups:
             signals = list(df["signal"].unique())
@@ -274,8 +272,7 @@ def generate_start_date_per_signal() -> Dict[Tuple[datetime, datetime, str], Lis
                 elif time_type == "week":
                     start_time = Week(year=int(start_str[:4]), week=int(start_str[-2:]))
                     end_time = (start_time + 2).startdate()
-                    date_range = (start_time.startdate(),
-                                  end_time, time_type)
+                    date_range = (start_time.startdate(), end_time, time_type)
                     signal_timeframe_dict[date_range].append((data_source, signal))
 
     return signal_timeframe_dict
@@ -289,38 +286,50 @@ def check_signal():
     """
     signal_timeframe_dict = generate_start_date_per_signal()
     signal_df_dict = dict()
-    for date_range, data_source_signal_list in signal_timeframe_dict.items():
+    for date_range, data_source_signal_list in tqdm.tqdm(signal_timeframe_dict.items()):
         for data_source, signal in data_source_signal_list:
             time_type = date_range[2]
             filename = f"{CURRENT_DIR}/covidcast_result/{data_source}_{signal}.parquet"
             if not Path(filename).is_file():
                 # every signal except google-symptom has geo type of state
                 geo_type = "state"
-                if data_source == "google-symptom":
+                if data_source == "google-symptoms":
                     geo_type = "county"
-
-                expected_df = covidcast.signal(data_source, signal, start_day=date_range[0], end_day=date_range[1],
-                                           geo_type=geo_type, time_type=time_type)
-                if expected_df is None:
-                    raise RuntimeError("Data should exists")
+                expected_df = covidcast.signal(
+                    data_source,
+                    signal,
+                    start_day=date_range[0],
+                    end_day=date_range[1],
+                    geo_type=geo_type,
+                    time_type=time_type,
+                )
+                assert not expected_df.empty, "Received no data from covidcast API."
 
                 expected_df.to_parquet(filename)
             signal_df_dict[(data_source, signal, time_type)] = filename
 
-    for date_range, data_source_signal_list in signal_timeframe_dict.items():
+    for date_range, data_source_signal_list in tqdm.tqdm(signal_timeframe_dict.items()):
         for data_source, signal in data_source_signal_list:
             expected_filename = signal_df_dict.get((data_source, signal, date_range[2]))
             expected_df = pd.read_parquet(expected_filename)
 
             # every signal except google-symptom has geo type of state
             geo_type = "state"
-            if data_source == "google-symptom":
+            if data_source == "google-symptoms":
                 geo_type = "county"
-            df = ported_signal(data_source, signal, start_day=date_range[0], end_day=date_range[1],
-                               time_type=date_range[2],
-                               geo_type=geo_type)
+            df = ported_signal(
+                data_source,
+                signal,
+                start_day=date_range[0],
+                end_day=date_range[1],
+                time_type=date_range[2],
+                geo_type=geo_type,
+            )
+            assert not df.empty, "Received no data from covidcast API."
+
             check = df.merge(expected_df, indicator=True)
             assert (check["_merge"] == "both").all()
+
 
 if __name__ == "__main__":
     check_metadata()

@@ -1,12 +1,7 @@
-boto3
 covidcast
 delphi-epidata
-scs<3.2.6 # TODO: remove this ; it is a cvxpy dependency and the excluded version appears to break our jenkins build. see: https://github.com/cvxgrp/scs/issues/283
 epiweeks
-importlib_resources>=1.3
-moto~=4.2.14
 numpy
-pandas>=1.1.0
-pylint==2.8.3
-structlog
-xlrd
+pandas==1.5.3
+pyarrow
+tqdm

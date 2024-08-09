@@ -94,12 +94,12 @@ def check_source(data_source, meta, params, grace, logger):  # pylint: disable=t
 
         if response["result"] == 1:
             latest_data = pd.DataFrame.from_dict(response["epidata"])
-            latest_data["issue"] = latest_data.apply(lambda x: _parse_datetimes(x.issue, x.time_type), axis=1)
-            latest_data["time_value"] = latest_data.apply(lambda x: _parse_datetimes(x.time_value, x.time_type), axis=1)
+            time_type = latest_data["time_type"].value[0]
+            latest_data = _parse_datetimes(latest_data, "time_value", time_type)
+            latest_data = _parse_datetimes(latest_data, "issue", time_type)
             latest_data.drop("direction", axis=1, inplace=True)
 
-            unique_dates = [pd.to_datetime(val).date()
-                            for val in latest_data["time_value"].unique()]
+            unique_dates = list(latest_data["time_value"].dt.date.unique())
             current_lag_in_days = (datetime.now().date() - max(unique_dates)).days
             lag_calculated_from_api = True
 

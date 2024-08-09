@@ -2,7 +2,6 @@ from setuptools import setup
 from setuptools import find_packages
 
 required = [
-    "covidcast",
     "darker[isort]~=2.1.1",
     "delphi-utils",
     "pandas",

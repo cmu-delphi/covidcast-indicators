@@ -132,9 +132,6 @@ def get_geo_signal_combos(data_source, api_key):
         meta = pd.DataFrame.from_dict(response["epidata"])
         # note: this will fail for signals with weekly data, but currently not supported for validation
         meta = meta[meta["time_type"] == "day"]
-        meta["min_time"] = meta.apply(lambda x: pd.to_datetime(str(x.min_time), format="%Y%m%d"), axis=1)
-        meta["max_time"] = meta.apply(lambda x: pd.to_datetime(str(x.max_time), format="%Y%m%d"), axis=1)
-        meta["last_update"] = pd.to_datetime(meta["last_update"], unit="s")
 
     source_meta = meta[meta['data_source'] == data_source]
     # Need to convert np.records to tuples so they are hashable and can be used in sets and dicts.

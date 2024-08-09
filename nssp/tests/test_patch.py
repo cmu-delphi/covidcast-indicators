@@ -4,6 +4,7 @@ from delphi_nssp.patch import patch, good_patch_config
 import os
 import shutil
 from datetime import datetime, timedelta
+import pandas as pd
 
 class TestPatchModule:
     @mock_patch('logging.Logger')
@@ -123,6 +124,56 @@ class TestPatchModule:
             date_str = date.strftime("%Y%m%d")
             assert not os.path.isdir(f'./patch_dir/issue_{date_str}/nssp')
             date += timedelta(days=1)
+
+        # Clean up the created directories after the test
+        shutil.rmtree(mock_read_params.return_value["patch"]["patch_dir"])
+
+    # @mock_patch('delphi_nssp.patch.run_module')
+    @mock_patch('delphi_nssp.patch.get_structured_logger')
+    @mock_patch('delphi_nssp.patch.read_params')
+    def test_patch(self, mock_read_params, mock_get_structured_logger):
+    # def test_patch(self, mock_read_params, mock_get_structured_logger, mock_run_module):
+        mock_read_params.return_value = {
+            "common": {
+                "log_filename": "test.log",
+                "custom_run": True
+            },
+            "indicator": {
+                "socrata_token": "test_token"
+                },
+            "patch": {
+                "start_issue": "2021-01-01",
+                "end_issue": "2021-01-16",
+                "patch_dir": "./patch_dir",
+                "source_dir": "./source_dir"
+            }
+        }
+
+        patch()
+
+        start_date = datetime(2021, 1, 1)
+        end_date = datetime(2021, 1, 16)
+        date = start_date
+
+        # Only Sundays should be issue dirs.
+        while date <= end_date:
+            date_str = date.strftime("%Y%m%d")
+            if date.weekday() == 6:
+                assert os.path.isdir(f'./patch_dir/issue_{date_str}/nssp')
+            else:
+                assert not os.path.isdir(f'./patch_dir/issue_{date_str}/nssp')
+            date += timedelta(days=1)
+
+        # Make sure issue_20210103 has latest weekly data (data from 20210109 instead of 20210108)
+        df_20210108 = pd.read_csv('source_dir/2021-01-08.csv')
+        df_20210108_nation_combined = df_20210108['percent_visits_combined'].iloc[0]
+        df_20210109 = pd.read_csv('source_dir/2021-01-09.csv')
+        df_20210109_nation_combined = df_20210109['percent_visits_combined'].iloc[0]
+        assert df_20210108_nation_combined != df_20210109_nation_combined
+
+        df_issue_20210103 = pd.read_csv('patch_dir/issue_20210103/nssp/weekly_202040_nation_pct_ed_visits_combined.csv')
+        df_issue_20210103_nation_combined = df_issue_20210103['val'].iloc[0]
+        assert df_20210109_nation_combined == df_issue_20210103_nation_combined
 
         # Clean up the created directories after the test
         shutil.rmtree(mock_read_params.return_value["patch"]["patch_dir"])

@@ -248,9 +248,9 @@ def pull_gs_data(credentials, export_start_date, export_end_date, num_export_day
 
     # For state level data
     dfs["state"] = pull_gs_data_one_geolevel("state", retrieve_dates)
-
     # For county level data
     dfs["county"] = pull_gs_data_one_geolevel("county", retrieve_dates)
+
 
     # Add District of Columbia as county
     try:
@@ -260,5 +260,4 @@ def pull_gs_data(credentials, export_start_date, export_end_date, num_export_day
         dfs["county"] = pd.concat([dfs["county"], df_dc_county])
     except KeyError:
         pass
-
     return dfs

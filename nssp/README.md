@@ -73,3 +73,33 @@ with the percentage of code covered by the tests.
 
 None of the linting or unit tests should fail, and the code lines that are not covered by unit tests should be small and
 should not include critical sub-routines. 
+
+## Running Patches:
+A daily backup of from source in the form of csv files can be found on `bigchunk-dev-02` under `/common/source_backup/nssp`. Talk to your sysadmin for access. 
+
+You can also generate your own backup from source by setting up a cron job that runs the following .py every day when a pipeline outtage is going on on our side but aource api is still available:
+```
+import numpy as np
+import pandas as pd
+from sodapy import Socrata
+from datetime import date
+
+today = date.today()
+socrata_token = 'FILL_YOUR_OWN_TOKEN_HERE'
+client = Socrata("data.cdc.gov", socrata_token)
+results = []
+offset = 0
+limit = 50000  # maximum limit allowed by SODA 2.0
+while True:
+    page = client.get("rdmq-nq56", limit=limit, offset=offset)
+    if not page:
+        break  # exit the loop if no more results
+    results.extend(page)
+    offset += limit
+df_ervisits = pd.DataFrame.from_records(results)
+df_ervisits.to_csv(f'~/{today}.csv', index=False)
+```
+When you're ready to create patching data for a specific date range in batch issue format, adjust `params.json` in accordance with instructions in `patch.py`, move the backup csv files into your chosen `source_dir`, then run
+```
+env/bin/python -m delphi_nssp.patch
+```

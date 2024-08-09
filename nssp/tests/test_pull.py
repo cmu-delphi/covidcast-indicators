@@ -23,6 +23,16 @@ from delphi_nssp.constants import (
 
 class TestPullNSSPData(unittest.TestCase):
     @patch("delphi_nssp.pull.Socrata")
+    def test_pull_nssp_data_for_patch(self, mock_socrata):
+        source_dir = "source_dir"
+        issue_date = "2021-01-02"
+        test_source_data = pd.read_csv(f"{source_dir}/{issue_date}.csv")
+        result = pull_nssp_data("test_token", issue_date, source_dir)
+
+        assert test_source_data.shape[0] == result.shape[0] # Check if the number of rows are the same
+        mock_socrata.assert_not_called()
+
+    @patch("delphi_nssp.pull.Socrata")
     def test_pull_nssp_data(self, mock_socrata):
         # Load test data
         with open("test_data/page.txt", "r") as f:

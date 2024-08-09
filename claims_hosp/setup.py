@@ -6,6 +6,7 @@ required = [
     "darker[isort]~=2.1.1",
     "delphi-utils",
     "numpy",
+    "pydocstyle",
     "pandas",
     "paramiko",
     "pyarrow",

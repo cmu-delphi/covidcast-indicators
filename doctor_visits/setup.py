@@ -5,6 +5,7 @@ required = [
     "darker[isort]~=2.1.1",
     "delphi-utils",
     "numpy",
+    "pydocstyle",
     "pandas",
     "paramiko",
     "pylint==2.8.3",

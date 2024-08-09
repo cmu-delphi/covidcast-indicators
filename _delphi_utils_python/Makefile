@@ -1,17 +1,17 @@
 .PHONY = venv, lint, test, clean, release
 
 venv:
-	python3.8 -m venv env
+	python3.8 -m venv env; \
+	. env/bin/activate; \
+	python -m pip install pip==23.0.1
 
 install: venv
 	. env/bin/activate; \
-	pip install wheel ; \
-	pip install -e .
+	pip install -e '.[dev]'
 
 install-ci: venv
 	. env/bin/activate; \
-	pip install wheel ; \
-	pip install .
+	pip install '.[dev]'
 
 lint:
 	. env/bin/activate; pylint delphi_utils --rcfile=../pyproject.toml
@@ -30,4 +30,4 @@ clean:
 
 release: lint test
 	. env/bin/activate ; \
-	python setup.py sdist bdist_wheel
+	python -m build --sdist --wheel

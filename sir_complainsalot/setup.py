@@ -6,6 +6,7 @@ required = [
     "darker[isort]~=2.1.1",
     "delphi-utils",
     "pandas",
+    "pydocstyle",
     "pylint==2.8.3",
     "pytest-cov",
     "pytest",

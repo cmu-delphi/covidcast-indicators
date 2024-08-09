@@ -56,7 +56,7 @@ install-python:
 	fi
 	python3 -m venv env
 	source env/bin/activate && \
-	python -m pip install --upgrade pip && \
+	python -m pip install pip==23.0.1 && \
 	pip install wheel && \
 	pip install --timeout 1000 delphi_utils
 

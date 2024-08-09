@@ -1,16 +1,16 @@
 .PHONY = venv, lint, test, clean, release
 
 venv:
-	python3.8 -m venv env
+	python3.8 -m venv env; \
+	. env/bin/activate; \
+	python -m pip install pip==23.0.1
 
 install: venv
 	. env/bin/activate; \
-	pip install wheel ; \
 	pip install -e '.[dev]'
 
 install-ci: venv
 	. env/bin/activate; \
-	pip install 'build[virtualenv]' pylint pytest pydocstyle wheel twine ; \
 	pip install '.[dev]'
 
 lint:
@@ -30,5 +30,4 @@ clean:
 
 release: lint test
 	. env/bin/activate ; \
-	pip install 'build[virtualenv]' ; \
 	python -m build --sdist --wheel

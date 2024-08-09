@@ -8,6 +8,7 @@ required = [
     "freezegun",
     "mock",
     "numpy",
+    "pydocstyle",
     "pandas-gbq",
     "pandas",
     "pydocstyle",

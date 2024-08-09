@@ -4,7 +4,6 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import List
 
-import covidcast
 import pandas as pd
 from delphi_epidata import Epidata
 

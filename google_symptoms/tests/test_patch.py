@@ -74,7 +74,7 @@ class TestPatchModule:
             for issue_dir in sorted(list(patch_path.iterdir())):
                 assert f'issue_{datetime.strftime(start_date, "%Y%m%d")}' == issue_dir.name
 
-                smoothed_dates, raw_dates = self.parse_csv_file(list(Path(issue_dir, "google-symptom").glob("*.csv")))
+                smoothed_dates, raw_dates = self.parse_csv_file(list(Path(issue_dir, "google-symptoms").glob("*.csv")))
                 expected_smoothed_dates = self.generate_expected_dates(params_, "smoothed", start_date)
                 expected_raw_dates = self.generate_expected_dates(params_, "raw", start_date)
 

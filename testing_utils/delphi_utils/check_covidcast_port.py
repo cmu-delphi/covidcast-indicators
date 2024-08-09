@@ -138,9 +138,8 @@ def ported_signal(
     )
 
     if response["result"] != 1:
-        print(f"check {data_source} {signal}")
         # Something failed in the API and we did not get real metadata
-        # raise RuntimeError("Error when fetching signal data from the API", response["message"])
+        raise RuntimeError("Error when fetching signal data from the API", response["message"])
 
     api_df = pd.DataFrame.from_dict(response["epidata"])
     if not api_df.empty:
@@ -293,30 +292,36 @@ def check_signal():
     for date_range, data_source_signal_list in signal_timeframe_dict.items():
         for data_source, signal in data_source_signal_list:
             time_type = date_range[2]
-            expected_df = covidcast.signal(data_source, signal, start_day=date_range[0], end_day=date_range[1],
-                                           geo_type="state", time_type=time_type)
-            if expected_df is None:
-                raise RuntimeError("Data should exists")
+            filename = f"{CURRENT_DIR}/covidcast_result/{data_source}_{signal}.parquet"
+            if not Path(filename).is_file():
+                # every signal except google-symptom has geo type of state
+                geo_type = "state"
+                if data_source == "google-symptom":
+                    geo_type = "county"
 
-            else:
-                signal_df_dict[(data_source, signal, time_type)] = expected_df
+                expected_df = covidcast.signal(data_source, signal, start_day=date_range[0], end_day=date_range[1],
+                                           geo_type=geo_type, time_type=time_type)
+                if expected_df is None:
+                    raise RuntimeError("Data should exists")
 
-    time.sleep(500)# TODO find a elegant way of seperating the logs for the calls from covidcast vs epidata
-    print("-" * 90)
+                expected_df.to_parquet(filename)
+            signal_df_dict[(data_source, signal, time_type)] = filename
+
     for date_range, data_source_signal_list in signal_timeframe_dict.items():
         for data_source, signal in data_source_signal_list:
-            expected_df = signal_df_dict.get((data_source, signal, date_range[2]))
+            expected_filename = signal_df_dict.get((data_source, signal, date_range[2]))
+            expected_df = pd.read_parquet(expected_filename)
 
+            # every signal except google-symptom has geo type of state
+            geo_type = "state"
+            if data_source == "google-symptom":
+                geo_type = "county"
             df = ported_signal(data_source, signal, start_day=date_range[0], end_day=date_range[1],
                                time_type=date_range[2],
-                               geo_type="state")
-            if not expected_df.empty:
-                check = df.merge(expected_df, indicator=True)
-                assert (check["_merge"] == "both").all()
-            else:
-                assert df.empty
-
+                               geo_type=geo_type)
+            check = df.merge(expected_df, indicator=True)
+            assert (check["_merge"] == "both").all()
 
 if __name__ == "__main__":
-    # check_metadata()
+    check_metadata()
     check_signal()

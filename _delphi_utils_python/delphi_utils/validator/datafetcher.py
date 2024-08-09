@@ -6,13 +6,11 @@ import threading
 import warnings
 from os import listdir
 from os.path import isfile, join
-from typing import Union
 
 import numpy as np
 import pandas as pd
 import requests
 from delphi_epidata import Epidata
-from epiweeks import Week
 
 from .errors import APIDataFetchError, ValidationFailure
 

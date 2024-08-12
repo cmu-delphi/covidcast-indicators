@@ -23,22 +23,21 @@ if not Path(f"{CURRENT_DIR}/covidcast_result").is_dir():
     os.mkdir(f"{CURRENT_DIR}/covidcast_result")
 
 
-def _parse_datetimes(df: pd.DataFrame, col: str, time_type: str, date_format: str = "%Y%m%d") -> pd.DataFrame:
+def _parse_datetimes(df: pd.DataFrame, col: str, date_format: str = "%Y%m%d") -> pd.Series:
     """Convert a DataFrame date or epiweek column into datetimes.
 
     Assumes the column is string type. Dates are assumed to be in the YYYYMMDD
     format by default. Weeks are assumed to be in the epiweek CDC format YYYYWW
     format and return the date of the first day of the week.
     """
-    if time_type == "day":
-        df[col] = pd.to_datetime(df[col], format=date_format)
-        return df
-    if time_type == "week":
-        df[col] = df[col].apply(lambda x: Week(int(x[:4]), int(x[-2:])).startdate())
-        df[col] = pd.to_datetime(df[col])
-        return df
-    raise ValueError(f"Unknown time_type: {time_type}")
-
+    df[col] = df[col].astype("str")
+    def parse_row(row):
+        if row["time_type"] == "day":
+            return pd.to_datetime(row[col], format=date_format)
+        if row["time_type"] == "week":
+            return pd.to_datetime(Week(int(row[col][:4]), int(row[col][-2:])).startdate())
+        return row[col]
+    return df.apply(parse_row, axis=1)
 
 
 def ported_metadata() -> Union[pd.DataFrame, None]:
@@ -56,9 +55,8 @@ def ported_metadata() -> Union[pd.DataFrame, None]:
         raise RuntimeError("Error when fetching metadata from the API", response["message"])
 
     df = pd.DataFrame.from_dict(response["epidata"])
-    time_type = df["time_type"].values[0]
-    df = _parse_datetimes(df, "time_value", time_type)
-    df = _parse_datetimes(df, "issue", time_type)
+    df["min_time"] = _parse_datetimes(df, "min_time")
+    df["max_time"] = _parse_datetimes(df, "max_time")
     df["last_update"] = pd.to_datetime(df["last_update"], unit="s")
     return df
 
@@ -139,8 +137,8 @@ def ported_signal(
     api_df = pd.DataFrame.from_dict(response["epidata"])
     if not api_df.empty:
         time_type = api_df["time_type"].values[0]
-        api_df = _parse_datetimes(api_df, "time_value", time_type)
-        api_df = _parse_datetimes(api_df, "issue", time_type)
+        api_df["time_value"] = _parse_datetimes(api_df, "time_value")
+        api_df["issue"] = _parse_datetimes(api_df, "issue")
         api_df.drop("direction", axis=1, inplace=True)
         api_df["data_source"] = data_source
         api_df["signal"] = signal

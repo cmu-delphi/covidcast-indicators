@@ -93,9 +93,8 @@ def check_source(data_source, meta, params, grace, logger):  # pylint: disable=t
 
         if response["result"] == 1:
             latest_data = pd.DataFrame.from_dict(response["epidata"])
-            time_type = latest_data["time_type"].value[0]
-            latest_data = _parse_datetimes(latest_data, "time_value", time_type)
-            latest_data = _parse_datetimes(latest_data, "issue", time_type)
+            latest_data["time_value"] = _parse_datetimes(latest_data, "time_value")
+            latest_data["issue"] = _parse_datetimes(latest_data, "issue")
             latest_data.drop("direction", axis=1, inplace=True)
 
             unique_dates = list(latest_data["time_value"].dt.date.unique())

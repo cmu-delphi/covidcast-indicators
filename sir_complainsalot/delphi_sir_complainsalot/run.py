@@ -31,7 +31,7 @@ def run_module():
     params = read_params()
     Epidata.auth = ("epidata", params["api_credentials"])
     meta = pd.DataFrame.from_dict(Epidata.covidcast_meta().get("epidata", dict()))
-    meta["max_time"] = meta.apply(lambda x: _parse_datetimes(x.max_time, x.time_type), axis=1)
+    meta["max_time"] = _parse_datetimes(meta, "max_time")
     slack_notifier = None
     if "channel" in params and "slack_token" in params:
         slack_notifier = SlackNotifier(params["channel"], params["slack_token"])

@@ -7,7 +7,6 @@ import copy
 import pytest
 import mock
 import pandas as pd
-from freezegun import freeze_time
 
 from os import listdir, remove, makedirs
 from os.path import join, exists

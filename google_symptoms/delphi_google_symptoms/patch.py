@@ -71,7 +71,7 @@ def patch(params):
 
         # Output dir setup
         current_issue_yyyymmdd = issue_date.strftime("%Y%m%d")
-        current_issue_dir = f"""{params["patch"]["patch_dir"]}/issue_{current_issue_yyyymmdd}/google-symptom"""
+        current_issue_dir = f"""{params["patch"]["patch_dir"]}/issue_{current_issue_yyyymmdd}/google-symptoms"""
         makedirs(f"{current_issue_dir}", exist_ok=True)
 
         params["common"]["export_dir"] = f"""{current_issue_dir}"""

@@ -73,24 +73,29 @@ def generate_num_export_days(params: Dict, logger) -> [int]:
         "_".join([metric, smoother, "search"]) for metric, smoother in product(COMBINED_METRIC, SMOOTHERS)
     )
 
-    # Fetch metadata to check how recent each signal is
-    covidcast.use_api_key(params["indicator"]["api_credentials"])
-    metadata = covidcast.metadata()
-    # Filter to only those signals we currently want to produce for `google-symptoms`
-    gs_metadata = metadata[(metadata.data_source == "google-symptoms") & (metadata.signal.isin(sensor_names))]
-
     num_export_days = params["indicator"]["num_export_days"]
     custom_run = False if not params["common"].get("custom_run") else params["common"].get("custom_run", False)
 
     if num_export_days is None and not custom_run:
+        # Fetch metadata to check how recent each signal is
+        covidcast.use_api_key(params["indicator"]["api_credentials"])
+        metadata = covidcast.metadata()
+        # Filter to only those signals we currently want to produce for `google-symptoms`
+        gs_metadata = metadata[(metadata.data_source == "google-symptoms") & (metadata.signal.isin(sensor_names))]
+
         if sensor_names.difference(set(gs_metadata.signal)):
             # If any signal not in metadata yet, we need to backfill its full history.
             logger.warning("Signals missing in the epidata; backfilling full history")
             num_export_days = (export_end_date - FULL_BKFILL_START_DATE).days + 1
         else:
             latest_date_diff = (datetime.today() - to_datetime(min(gs_metadata.max_time))).days + 1
-            global_max_expected_lag = get_max_lag(params)
-            expected_date_diff = params["validation"]["common"].get("span_length", 14) + global_max_expected_lag
+
+            expected_date_diff = params["validation"]["common"].get("span_length", 14)
+
+            # there's an expected lag of 4 days behind if running from today
+            if export_end_date.date() == datetime.today().date():
+                global_max_expected_lag = get_max_lag(params)
+                expected_date_diff += global_max_expected_lag
 
             if latest_date_diff > expected_date_diff:
                 logger.info(f"Missing dates from: {to_datetime(min(gs_metadata.max_time)).date()}")

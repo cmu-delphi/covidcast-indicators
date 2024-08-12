@@ -42,11 +42,6 @@ TEST_DIR = Path(__file__).parent
 # from `bigquery-public-data.covid19_symptom_search.counties_daily_2020` # Counties by day; includes state and county name, + FIPS code
 # where timestamp(date) between timestamp("2020-07-15") and timestamp("2020-08-22")
 
-# good_input = {
-#     "state": f"{TEST_DIR}/test_data/small_states_daily.csv",
-#     "county": f"{TEST_DIR}/test_data/small_counties_daily.csv"
-# }
-
 
 good_input = {
     "state": f"{TEST_DIR}/test_data/small_states_2020_07_15_2020_08_22.csv",

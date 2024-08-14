@@ -96,7 +96,7 @@ def download(ftp_credentials, out_path, logger):
 
     # download!
     for infile, outfile in filepaths_to_download.items():
-        callback_for_filename = functools.partial(print_callback, infile, logger, progress_chunks=[0,25,50,75])
+        callback_for_filename = functools.partial(print_callback, infile, logger, progress_chunks=[0, 25, 50, 75])
         sftp.get(infile, outfile, callback=callback_for_filename)
         logger.info("Transfer in progress", filename=infile, percent=100)
 

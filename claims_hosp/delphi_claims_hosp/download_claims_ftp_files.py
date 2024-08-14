@@ -24,6 +24,7 @@ def print_callback(filename, logger, bytes_so_far, bytes_total, progress_chunks)
     rough_percent_transferred = int(100 * (bytes_so_far / bytes_total))
     if rough_percent_transferred in progress_chunks:
         logger.info("Transfer in progress", filename=filename, percent=rough_percent_transferred)
+        # Remove progress chunk, so it is not logged again
         progress_chunks.remove(rough_percent_transferred)
 
 OLD_FILENAME_TIMESTAMP = re.compile(
@@ -98,6 +99,6 @@ def download(ftp_credentials, out_path, logger):
     for infile, outfile in filepaths_to_download.items():
         callback_for_filename = functools.partial(print_callback, infile, logger, progress_chunks=[0, 25, 50, 75])
         sftp.get(infile, outfile, callback=callback_for_filename)
-        logger.info("Transfer in progress", filename=infile, percent=100)
+        logger.info("Transfer finished", filename=infile, percent=100)
 
     client.close()

@@ -27,7 +27,11 @@ class TestPullNSSPData(unittest.TestCase):
         source_dir = "source_dir"
         issue_date = "2021-01-02"
         test_source_data = pd.read_csv(f"{source_dir}/{issue_date}.csv")
-        result = pull_nssp_data("test_token", issue_date, source_dir)
+        mock_logger = MagicMock()
+        result = pull_nssp_data("test_token", mock_logger, issue_date, source_dir)
+
+        # Check that loggger was called with correct info
+        mock_logger.info.assert_called_with(f"Grabbed {len(result)} records from {source_dir}/{issue_date}.csv")
 
         assert test_source_data.shape[0] == result.shape[0] # Check if the number of rows are the same
         mock_socrata.assert_not_called()
@@ -43,10 +47,15 @@ class TestPullNSSPData(unittest.TestCase):
         mock_client.get.side_effect = [test_data, []]  # Return test data on first call, empty list on second call
         mock_socrata.return_value = mock_client
 
+        mock_logger = MagicMock()
+
         # Call function with test token
         test_token = "test_token"
-        result = pull_nssp_data(test_token)
+        result = pull_nssp_data(test_token, mock_logger)
         print(result)
+
+        # Check that loggger was called with correct info
+        mock_logger.info.assert_called_with(f"Grabbed {len(result)} records from Socrata API")
 
         # Check that Socrata client was initialized with correct arguments
         mock_socrata.assert_called_once_with("data.cdc.gov", test_token)

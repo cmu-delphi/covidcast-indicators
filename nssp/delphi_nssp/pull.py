@@ -8,7 +8,6 @@ from sodapy import Socrata
 
 from .constants import NEWLINE, SIGNALS, SIGNALS_MAP, TYPE_DICT
 
-
 def warn_string(df, type_dict):
     """Format the warning string."""
     warn = textwrap.dedent(
@@ -27,7 +26,7 @@ def warn_string(df, type_dict):
     return warn
 
 
-def pull_nssp_data(socrata_token: str, issue_date: str = None, source_dir: str = None) -> pd.DataFrame:
+def pull_nssp_data(socrata_token: str, logger, issue_date: str = None, source_dir: str = None) -> pd.DataFrame:
     """Pull the latest NSSP ER visits data, and conforms it into a dataset.
 
     The output dataset has:
@@ -46,6 +45,8 @@ def pull_nssp_data(socrata_token: str, issue_date: str = None, source_dir: str =
         The files in source_dir are expected to be named yyyy-mm-dd.csv
     test_file: Optional[str]
         When not null, name of file from which to read test data
+    logger:
+        Logger object
 
     Returns
     -------
@@ -65,8 +66,10 @@ def pull_nssp_data(socrata_token: str, issue_date: str = None, source_dir: str =
             results.extend(page)
             offset += limit
         df_ervisits = pd.DataFrame.from_records(results)
+        logger.info(f"Grabbed {len(df_ervisits)} records from Socrata API")
     else:
         df_ervisits = pd.read_csv(f"{source_dir}/{issue_date}.csv")
+        logger.info(f"Grabbed {len(df_ervisits)} records from {source_dir}/{issue_date}.csv")
     df_ervisits = df_ervisits.rename(columns={"week_end": "timestamp"})
     df_ervisits = df_ervisits.rename(columns=SIGNALS_MAP)
 

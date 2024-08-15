@@ -89,9 +89,9 @@ def run_module(params, logger=None):
     if custom_run:
         issue_date = params.get("patch", {}).get("current_issue", None)
         source_dir = params.get("patch", {}).get("source_dir", None)
-        df_pull = pull_nssp_data(socrata_token, issue_date, source_dir)
+        df_pull = pull_nssp_data(socrata_token, logger, issue_date, source_dir)
     else:
-        df_pull = pull_nssp_data(socrata_token)
+        df_pull = pull_nssp_data(socrata_token, logger)
     ## aggregate
     geo_mapper = GeoMapper()
     for signal in SIGNALS:

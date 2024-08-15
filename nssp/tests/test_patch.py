@@ -110,18 +110,18 @@ class TestPatchModule:
 
         patch()
 
-        start_date = datetime(2021, 1, 1)
-        end_date = datetime(2021, 1, 16)
-        date = start_date
-
         # Only Sundays should be issue dirs.
-        while date <= end_date:
-            date_str = date.strftime("%Y%m%d")
-            if date.weekday() == 6:
-                assert os.path.isdir(f'./patch_dir/issue_{date_str}/nssp')
-            else:
-                assert not os.path.isdir(f'./patch_dir/issue_{date_str}/nssp')
-            date += timedelta(days=1)
+        # Note that data from 2021-01-02.csv falls under issue_20211227.
+        issue_dates = ["20201227", "20210103", "20210110"]
+        for date_str in issue_dates:
+            assert os.path.isdir(f'./patch_dir/issue_{date_str}/nssp')
+
+        not_issue_dates = ["20210101", "20210102", "20210104", "20210105",
+                           "20210106", "20210107", "20210108", "20210109",
+                           "20210111", "20210112", "20210113", "20210114",
+                           "20210115", "20210116"]
+        for date_str in not_issue_dates:
+            assert not os.path.isdir(f'./patch_dir/issue_{date_str}/nssp')
 
         # Clean up the created directories after the test
         shutil.rmtree(mock_read_params.return_value["patch"]["patch_dir"])

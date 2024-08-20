@@ -135,12 +135,12 @@ def run_module(params):
                 params["indicator"]["parallel"],
                 weekday,
                 params["indicator"]["write_se"],
-                signal_name
+                signal_name,
+                logger,
             )
             updater.update_indicator(
                 claims_file,
                 params["common"]["export_dir"],
-                logger,
             )
             max_dates.append(updater.output_dates[-1])
             n_csv_export.append(len(updater.output_dates))

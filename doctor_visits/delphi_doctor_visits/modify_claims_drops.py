@@ -48,5 +48,5 @@ def modify_and_write(f, logger, test_mode=False):
 
     if not test_mode:
         dfs.to_csv(out_path, index=False)
-        logger.info(f"Wrote {out_path}")
+        logger.info(f"Wrote modified csv", filename=out_path)
     return dfs

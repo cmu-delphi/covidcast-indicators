@@ -116,9 +116,9 @@ def run_module(params):
     for geo in params["indicator"]["geos"]:
         for weekday in params["indicator"]["weekday"]:
             if weekday:
-                logger.info("starting weekday adj", geo = geo)
+                logger.info("Starting weekday adj", geo=geo)
             else:
-                logger.info("starting no weekday adj", geo =  geo)
+                logger.info("Starting no weekday adj", geo=geo)
 
             signal_name = Config.signal_weekday_name if weekday else Config.signal_name
             if params["indicator"]["write_se"]:
@@ -144,7 +144,7 @@ def run_module(params):
             )
             max_dates.append(updater.output_dates[-1])
             n_csv_export.append(len(updater.output_dates))
-        logger.info("finished updating", geo = geo)
+        logger.info("Finished updating", geo=geo)
 
     # Remove all the raw files
     for fn in os.listdir(params["indicator"]["input_dir"]):

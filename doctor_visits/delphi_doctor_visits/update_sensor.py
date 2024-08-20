@@ -34,7 +34,7 @@ def write_to_csv(output_df: pd.DataFrame, geo_level, se, out_name, logger, outpu
       output_path: outfile path to write the csv (default is current directory)
     """
     if se:
-        logger.info(f"========= WARNING: WRITING SEs TO {out_name} =========")
+        logger.info("Warning SE is enabled", filename=out_name)
 
     out_n = 0
     for d in set(output_df["date"]):

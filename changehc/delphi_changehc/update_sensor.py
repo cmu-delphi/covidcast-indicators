@@ -41,7 +41,7 @@ def write_to_csv(df, geo_level, write_se, day_shift, out_name, logger, output_pa
     assert df[suspicious_se_mask].empty, " se contains suspiciously large values"
     assert not df["se"].isna().any(), " se contains nan values"
     if write_se:
-        logger.info("========= WARNING: WRITING SEs TO {0} =========".format(out_name))
+        logger.info("WARNING: WRITING SEs", filename=out_name)
     else:
         df["se"] = np.nan
 

@@ -80,10 +80,7 @@ def run_module(params, logger=None):
         if len(df_pull) == 0:
             continue
         for metric, smoother in product(COMBINED_METRIC, SMOOTHERS):
-            logger.info("generating signal and exporting to CSV",
-                        geo_res=geo_res,
-                        metric=metric,
-                        smoother=smoother)
+            logger.info("Generating signal and exporting to CSV", geo_res=geo_res, metric=metric, smoother=smoother)
             df = df_pull
             df["val"] = df[metric].astype(float)
             df["val"] = df[["geo_id", "val"]].groupby(
@@ -96,7 +93,7 @@ def run_module(params, logger=None):
             df = df.reset_index()
             sensor_name = "_".join([smoother, "search"])
             if len(df) == 0:
-                logger.info("No data for %s_%s_%s", geo_res, metric.lower(), sensor_name)
+                logger.info("No data for signal", signal=f"{geo_res}_{metric.lower()}_{sensor_name}")
                 continue
             exported_csv_dates = create_export_csv(
                 df,

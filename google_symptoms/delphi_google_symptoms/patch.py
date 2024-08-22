@@ -59,10 +59,10 @@ def patch(params):
     end_issue = datetime.strptime(params["patch"]["end_issue"], "%Y-%m-%d")
 
     logger.info(
-        "Start patching",
-        filename=params["patch"]["patch_dir"],
-        start_date=issue_date.strftime("%Y-%m-%d"),
-        end_date=end_issue.strftime("%Y-%m-%d"),
+        "Starting patching",
+        patch_directory=params["patch"]["patch_dir"],
+        start_issue=issue_date.strftime("%Y-%m-%d"),
+        end_issue=end_issue.strftime("%Y-%m-%d"),
     )
 
     makedirs(params["patch"]["patch_dir"], exist_ok=True)

@@ -56,7 +56,7 @@ def get_from_s3(start_date, end_date, bucket, logger):
     seen_files = set()
     for search_date in [start_date + timedelta(days=x) for x in range(n_days)]:
         if search_date in s3_files.keys():
-            logger.info("Pulling data received", search_date=search_date.date())
+            logger.info("Pulling data received on date", search_date=search_date.date())
 
             # Fetch data received on the same day
             for fn in s3_files[search_date]:

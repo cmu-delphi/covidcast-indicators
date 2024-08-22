@@ -90,17 +90,16 @@ def run_module(params, logger=None):  # pylint: disable=too-many-statements
     startdate = str(startdate_dt.date())
 
     logger.info(
-        "Loaded params",
+        "Using params",
         startdate=startdate,
         enddate=enddate,
         dropdate=dropdate,
-        n_backfill_days=params["indicator"]["n_backfill_days"],
-        n_waiting_days=params["indicator"]["n_waiting_days"],
-        geos=params["indicator"]["geos"],
-        outpath=params["common"]["export_dir"],
+        n_backfill_days=n_backfill_days,
+        n_waiting_days=n_waiting_days,
+        outpath=export_dir,
         parallel=params["indicator"]["parallel"],
         weekday=params["indicator"]["weekday"],
-        write_se=params["indicator"]["write_se"],
+        write_se=se,
         prefix=prefix,
     )
 
@@ -139,7 +138,7 @@ def run_module(params, logger=None):  # pylint: disable=too-many-statements
             write_to_csv(sensor, geo, se, out_name, logger, export_dir)
             max_dates.append(sensor.date.max())
             n_csv_export.append(sensor.date.unique().shape[0])
-            logger.debug("Wrote files", filename=export_dir)
+            logger.debug("Wrote files", directory=export_dir)
         logger.info("Finished updating", geo=geo)
 
     # Remove all the raw files

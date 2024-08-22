@@ -23,7 +23,7 @@ from .update_indicator import ClaimsHospIndicatorUpdater
 from .backfill import (store_backfill_file, merge_backfill_file)
 
 
-def run_module(params):
+def run_module(params, logger=None):
     """
     Generate updated claims-based hospitalization indicator values.
 
@@ -54,19 +54,24 @@ def run_module(params):
                 adjustments (False).
     """
     start_time = time.time()
-    logger = get_structured_logger(
-        __name__, filename=params["common"].get("log_filename"),
-        log_exceptions=params["common"].get("log_exceptions", True))
+    issue_date_str = params.get("patch", {}).get("current_issue", None)
+    issue_date = datetime.strptime(issue_date_str, "%Y-%m-%d")
+    if not logger:
+        logger = get_structured_logger(
+            __name__,
+            filename=params["common"].get("log_filename"),
+            log_exceptions=params["common"].get("log_exceptions", True),
+        )
 
     # pull latest data
     download(params["indicator"]["ftp_credentials"],
-             params["indicator"]["input_dir"], logger)
+             params["indicator"]["input_dir"], logger, issue_date=issue_date)
 
     # aggregate data
     modify_and_write(params["indicator"]["input_dir"], logger)
 
     # find the latest files (these have timestamps)
-    claims_file = get_latest_filename(params["indicator"]["input_dir"], logger)
+    claims_file = get_latest_filename(params["indicator"]["input_dir"], logger, issue_date=issue_date)
 
     # handle range of estimates to produce
     # filename expected to have format: EDI_AGG_INPATIENT_DDMMYYYY_HHMM{timezone}.csv.gz

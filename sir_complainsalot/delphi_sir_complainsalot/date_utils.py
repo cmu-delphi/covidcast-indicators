@@ -1,7 +1,8 @@
 from datetime import datetime
 
-from epiweeks import Week
 import pandas as pd
+from epiweeks import Week
+
 
 def _date_to_api_string(d: datetime, time_type: str = "day") -> str:
     """Convert a date object to a YYYYMMDD or YYYYMM string expected by the API."""
@@ -11,6 +12,7 @@ def _date_to_api_string(d: datetime, time_type: str = "day") -> str:
         return Week.fromdate(d).cdcformat()
     raise ValueError(f"Unknown time_type: {time_type}")
 
+
 def _parse_datetimes(df: pd.DataFrame, col: str, date_format: str = "%Y%m%d") -> pd.Series:
     """Convert a DataFrame date or epiweek column into datetimes.
 
@@ -19,10 +21,12 @@ def _parse_datetimes(df: pd.DataFrame, col: str, date_format: str = "%Y%m%d") ->
     format and return the date of the first day of the week.
     """
     df[col] = df[col].astype("str")
+
     def parse_row(row):
         if row["time_type"] == "day":
             return pd.to_datetime(row[col], format=date_format)
         if row["time_type"] == "week":
             return pd.to_datetime(Week(int(row[col][:4]), int(row[col][-2:])).startdate())
         return row[col]
+
     return df.apply(parse_row, axis=1)

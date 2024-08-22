@@ -30,7 +30,15 @@ def run_module():
     start_time = time.time()
     params = read_params()
     Epidata.auth = ("epidata", params["api_credentials"])
-    meta = pd.DataFrame.from_dict(Epidata.covidcast_meta().get("epidata", dict()))
+    response = Epidata.covidcast_meta()
+
+    meta = None
+    if response["result"] == 1:
+        meta = pd.DataFrame.from_dict(response["epidata"])
+    else:
+        # Something failed in the API and we did not get real metadata
+        raise RuntimeError("Error when fetching signal data from the API", response["message"])
+
     meta["max_time"] = _parse_datetimes(meta, "max_time")
     slack_notifier = None
     if "channel" in params and "slack_token" in params:

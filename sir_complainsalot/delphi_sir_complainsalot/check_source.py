@@ -30,9 +30,12 @@ class Complaint:
     def to_md(self):
         """Markdown formatted form of complaint."""
         return "*{source}* `{signal}` ({geos}) {message}; last updated {updated}.".format(
-            source=self.data_source, signal=self.signal, geos=", ".join(self.geo_types),
-            message=self.message, updated=self.last_updated.strftime("%Y-%m-%d"))
-
+            source=self.data_source,
+            signal=self.signal,
+            geos=", ".join(self.geo_types),
+            message=self.message,
+            updated=self.last_updated.strftime("%Y-%m-%d"),
+        )
 
 
 def check_source(data_source, meta, params, grace, logger):  # pylint: disable=too-many-locals
@@ -76,7 +79,8 @@ def check_source(data_source, meta, params, grace, logger):  # pylint: disable=t
             start_day=start_date.strftime("%Y-%m-%d"),
             end_day=end_date.strftime("%Y-%m-%d"),
             geo_type=row["geo_type"],
-            time_type=row["time_type"])
+            time_type=row["time_type"],
+        )
 
         response = Epidata.covidcast(
             data_source,
@@ -91,7 +95,7 @@ def check_source(data_source, meta, params, grace, logger):  # pylint: disable=t
         lag_calculated_from_api = False
         latest_data = None
 
-        if response["result"] == 1:
+        if response["result"] == 1 and response["message"] == "success":
             latest_data = pd.DataFrame.from_dict(response["epidata"])
             latest_data["time_value"] = _parse_datetimes(latest_data, "time_value")
             latest_data["issue"] = _parse_datetimes(latest_data, "issue")
@@ -100,6 +104,10 @@ def check_source(data_source, meta, params, grace, logger):  # pylint: disable=t
             unique_dates = list(latest_data["time_value"].dt.date.unique())
             current_lag_in_days = (datetime.now().date() - max(unique_dates)).days
             lag_calculated_from_api = True
+
+        else:
+            # Something failed in the API and we did not get real signal data
+            raise RuntimeError("Error when fetching signal data from the API", message=response["message"])
 
         logger.info("Signal lag",
                     current_lag_in_days = current_lag_in_days,

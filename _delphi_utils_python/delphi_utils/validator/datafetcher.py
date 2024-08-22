@@ -118,15 +118,13 @@ def get_geo_signal_combos(data_source, api_key):
     source_signal_mappings = {i['source']:i['db_source'] for i in
         meta_response.json()}
 
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
+    response = Epidata.covidcast_meta()
 
-        response = Epidata.covidcast_meta()
+    if response["result"] != 1:
+        # Something failed in the API and we did not get real metadata
+        raise RuntimeError("Error when fetching metadata from the API", response["message"])
 
-        if response["result"] != 1:
-            # Something failed in the API and we did not get real metadata
-            raise RuntimeError("Error when fetching metadata from the API", response["message"])
-
+    else:
         meta = pd.DataFrame.from_dict(response["epidata"])
         # note: this will fail for signals with weekly data, but currently not supported for validation
         meta = meta[meta["time_type"] == "day"]
@@ -183,11 +181,31 @@ def fetch_api_reference(data_source, start_date, end_date, geo_type, signal_type
         time_type="day",
         geo_type=geo_type,
         time_values=Epidata.range(start_date.strftime("%Y%m%d"), end_date.strftime("%Y%m%d")),
-        geo_value="*"
+        geo_value="*",
     )
     if response["result"] != 1:
-        # Something failed in the API and we did not get real metadata
+        # Something failed in the API and we did not get real signal data
         raise RuntimeError("Error when fetching signal data from the API", response["message"])
+
+    if response["message"] not in {"success", "no results"}:
+        warnings.warn(
+            "Problem obtaining data",
+            RuntimeWarning,
+            message=response["message"],
+            data_source=data_source,
+            signal=signal,
+            time_value=params["time_values"],
+            geo_type=geo_type,
+        )
+        logger.info(f"Trying calling covidcast again")
+        response = Epidata.covidcast(
+            data_source,
+            signal_type,
+            time_type="day",
+            geo_type=geo_type,
+            time_values=Epidata.range(start_date.strftime("%Y%m%d"), end_date.strftime("%Y%m%d")),
+            geo_value="*",
+        )
 
     api_df = None
     if len(response["epidata"]) > 0:
@@ -204,8 +222,6 @@ def fetch_api_reference(data_source, start_date, end_date, geo_type, signal_type
 
     if api_df is None:
         raise APIDataFetchError("Error: no API data was returned " + error_context)
-    if not isinstance(api_df, pd.DataFrame):
-        raise APIDataFetchError("Error: API return value was not a dataframe " + error_context)
 
     column_names = ["geo_id", "val",
                     "se", "sample_size", "time_value"]

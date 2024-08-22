@@ -112,9 +112,9 @@ def run_module(params, logger=None):  # pylint: disable=too-many-statements
     for geo in geos:
         for weekday in params["indicator"]["weekday"]:
             if weekday:
-                logger.info("Starting with weekday adj", geo=geo)
+                logger.info("Starting with weekday adj", geo_type=geo)
             else:
-                logger.info("Starting with no adj", geo=geo)
+                logger.info("Starting with no adj", geo_type=geo)
             sensor = update_sensor(
                 filepath=claims_file,
                 startdate=startdate,
@@ -138,8 +138,8 @@ def run_module(params, logger=None):  # pylint: disable=too-many-statements
             write_to_csv(sensor, geo, se, out_name, logger, export_dir)
             max_dates.append(sensor.date.max())
             n_csv_export.append(sensor.date.unique().shape[0])
-            logger.debug("Wrote files", directory=export_dir)
-        logger.info("Finished updating", geo=geo)
+            logger.debug("Wrote files", export_dir=export_dir)
+        logger.info("Finished updating", geo_type=geo)
 
     # Remove all the raw files
     for fn in os.listdir(params["indicator"]["input_dir"]):

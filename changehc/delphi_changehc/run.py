@@ -178,9 +178,9 @@ def run_module(params: Dict[str, Dict[str, Any]]):
         for numtype in params["indicator"]["types"]:
             for weekday in params["indicator"]["weekday"]:
                 if weekday:
-                    logger.info("Starting weekday adj", geo=geo, numtype=numtype)
+                    logger.info("Starting weekday adj", geo_type=geo, numtype=numtype)
                 else:
-                    logger.info("Starting no adj", geo=geo, numtype=numtype)
+                    logger.info("Starting no adj", geo_type=geo, numtype=numtype)
                 su_inst = CHCSensorUpdater(
                     startdate,
                     enddate,
@@ -213,7 +213,7 @@ def run_module(params: Dict[str, Dict[str, Any]]):
                 )
                 stats.extend(more_stats)
 
-            logger.info("Finished processing", geo=geo)
+            logger.info("Finished processing", geo_type=geo)
 
     elapsed_time_in_seconds = round(time.time() - start_time, 2)
     min_max_date = stats and min(s[0] for s in stats)

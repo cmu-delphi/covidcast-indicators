@@ -216,7 +216,7 @@ class ClaimsHospIndicatorUpdater:
         }
 
         self.write_to_csv(output_dict, outpath)
-        self.logger.debug("Wrote files", directory=outpath)
+        self.logger.debug("Wrote files", export_dir=outpath)
 
     def write_to_csv(self, output_dict, output_path="./receiving"):
         """

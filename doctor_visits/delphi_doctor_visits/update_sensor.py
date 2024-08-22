@@ -64,7 +64,7 @@ def write_to_csv(output_df: pd.DataFrame, geo_level, se, out_name, logger, outpu
                     outfile.write(
                         "%s,%f,%s,%s,%s\n" % (geo_id, sensor, "NA", "NA", "NA"))
                 out_n += 1
-    logger.debug(f"wrote {out_n} rows for {geo_level}")
+    logger.debug(f"Wrote rows", num_rows=out_n, geo_type=geo_level)
 
 
 def update_sensor(

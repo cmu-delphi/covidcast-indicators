@@ -110,11 +110,11 @@ def fix_date(df, logger):
     df.insert(2, "timestamp", df["TestDate"])
 
     mask = df["TestDate"] <= df["StorageDate"]
-    logger.info("Removing unusual data", percent= "%.2f" % (len(df) - np.sum(mask)) * 100 / len(df))
+    logger.info("Removing unusual data", percent= round((len(df) - np.sum(mask)) * 100 / len(df), 2))
     df = df[mask]
 
     mask = df["StorageDate"] - df["TestDate"] > pd.Timedelta(days=90)
-    logger.info("Fixing outdated data", percent="%.2f" % (np.sum(mask) * 100 / len(df)))
+    logger.info("Fixing outdated data", percent=round((np.sum(mask) * 100 / len(df)), 2))
     df["timestamp"].values[mask] = df["StorageDate"].values[mask]
     return df
 

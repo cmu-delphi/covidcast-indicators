@@ -352,7 +352,9 @@ All patch modules should expect settings from `params.json` of the form
 }
 ```
 
-It should generate data for that range of issue dates, and store them in batch issue format:
+The `custom_run` parameter should [default to false](https://github.com/cmu-delphi/covidcast-indicators/blob/d435bf0f0d5880ddf8905ea60f242976e6702342/nssp/delphi_nssp/run.py#L73), and [warn](https://github.com/cmu-delphi/covidcast-indicators/blob/d435bf0f0d5880ddf8905ea60f242976e6702342/nssp/delphi_nssp/run.py#L75-L83) if parameters and arguments disagree.
+
+Patching should generate data for that range of issue dates, and store them in batch issue format:
 `<patch_dir as provided in the params>/issue_<issue date>/<indicator name as stored in our DB>/xxx.csv`.
 
 Acquisition in `delphi-epidata` includes [code that allow files in this issue-specific structure](https://github.com/cmu-delphi/delphi-epidata/blob/694d89ad763fa85bd644e1f64552c9bc85f688ef/src/acquisition/covidcast/csv_to_database.py#L43C32-L43C61) to be added to the database. This output format is designed to match the `issue`-type acquisition format. The issue-specific mode is triggered with the flag `specific_issue_date`. [A Cronicle job](https://cronicle-prod-01.delphi.cmu.edu/#Schedule?sub=edit_event&id=elh59ynwobf) has already been set up to call acquisition using the flag; please use it to load patches into the database.

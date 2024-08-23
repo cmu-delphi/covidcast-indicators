@@ -195,7 +195,14 @@ Generally, indicators have:
   Do other geo handling (e.g. finding and reporting DC as a state).
 * `constants.py`: Lists of geos to produce, signals to produce, dataset ids, data source URL, etc.
 
-Your code should be _extensively_ commented! Especially note sections where you took an unusual approach (make sure to say why and consider briefly discussing alternate approaches).
+Your code should be _extensively_ commented! Especially note sections where you took an unusual approach (make sure to say why and consider briefly discussing alternate approaches that were discarded or could be useful in the future).
+
+#### Development environment
+
+Make sure you have a functional environment with python 3.8.15+.
+For local runs, the makefile’s make install target will set up a local virtual environment with necessary packages.
+
+(If working in R (very much NOT recommended), local runs can be run without a virtual environment or using the [`renv` package](https://rstudio.github.io/renv/articles/renv.html), but production runs should be set up to use Docker.)
 
 #### Function stubs
 
@@ -235,12 +242,14 @@ def api_call(token: str):
 
 After that, generalize your code to be able to be run on all geos of interest, take settings from params.json, use constants for easy maintenance, with extensive documentation, etc.
 
-#### Development environment
+#### Testing
 
-Make sure you have a functional environment with python 3.8.15+.
-For local runs, the makefile’s make install target will set up a local virtual environment with necessary packages.
+As a general rule, it helps to decompose your functions into operations for which you can write unit tests.
+To run the tests, use `make test` in the top-level indicator directory.
 
-(If working in R (very much NOT recommended), local runs can be run without a virtual environment or using the [`renv` package](https://rstudio.github.io/renv/articles/renv.html), but production runs should be set up to use Docker.)
+Unit tests are required for all functions.
+Integration tests are highly desired, but may be difficult to set up depending on where the data is being fetched from.
+Mocking functions are useful in this case.
 
 #### Dealing with data-types
 
@@ -260,6 +269,7 @@ In an ideal case, the data exists at one of our [already covered geos](https://c
 * ZIP
 * MSA (metro statistical area, int)
 * HRR (hospital referral region, int)
+* Nation
 
 If you want to map from one of these to another, the [`delphi_utils.geomapper`](https://github.com/cmu-delphi/covidcast-indicators/blob/6912077acba97e835aff7d0cd3d64309a1a9241d/_delphi_utils_python/delphi_utils/geomap.py) utility covers most cases.
 A brief example of aggregating from states to hhs regions via their population:
@@ -273,19 +283,6 @@ hhs_version = geo_mapper.replace_geocode(df, "state_code","hhs", new_col = "geo_
 ```
 
 This example is taken from [`hhs_hosp`](https://github.com/cmu-delphi/covidcast-indicators/blob/main/hhs_hosp/delphi_hhs/run.py); more documentation can be found in the `geomapper` class definition.
-
-#### Implement a Missing Value code system
-
-The column is described [here](https://cmu-delphi.github.io/delphi-epidata/api/missing_codes.html).
-
-#### Local testing
-
-As a general rule, it helps to decompose your functions into operations for which you can write unit tests.
-To run the tests, use `make test` in the top-level indicator directory.
-
-Unit tests are required for all functions.
-Integration tests are highly desired, but may be difficult to set up depending on where the data is being fetched from.
-Mocking functions are useful in this case.
 
 #### Naming
 
@@ -323,6 +320,50 @@ Using this tag dictionary, we can interpret the following signals as
 
 * `confirmed_admissions_influenza_1d_prop` = raw (unsmoothed) daily ("1d") confirmed influenza hospital admissions ("confirmed_admissions_influenza") per 100,000 population ("prop").
 * `confirmed_admissions_influenza_1d_prop_7dav` = the same as above, but smoothed with a 7-day moving average ("7dav").
+
+#### Implement a Missing Value code system
+
+The column is described [here](https://cmu-delphi.github.io/delphi-epidata/api/missing_codes.html).
+
+#### Implement a patching method
+
+After normal data reporting is restored following an outage, we would like to be able to easily reconstruct the version history of the data. To do so, implement a `patch` method that runs an indicator's main `run_module` for every issue date in a range. An [example patch module](https://github.com/cmu-delphi/covidcast-indicators/blob/b784f30/google_symptoms/delphi_google_symptoms/patch.py).
+
+An outage can be external to Delphi, e.g. the data provider was unable to provide new data on the historically-expected schedule, or internal, e.g. Delphi code had a bug that caused our pipeline to fail. The goal of the patch feature is to recreate every missing issue _as if we had ingested it on the correct day_.
+
+The patch feature should be easy to use. The only manual parts should be modifying `params.json`, and running the patch module and acquisition. Any setup that needs to be done (e.g. cache creation, dir creation) should be done automatically as part of the patch function.
+
+All patch modules should expect settings from `params.json` of the form
+
+```
+{
+  "common": {
+    ...
+    "custom_run": true
+  },
+  "validation": {
+    ...
+  },
+  "patch": {
+    "patch_dir": "<path to dir>/<patch dir name>",
+    "start_issue": "2024-04-20",
+    "end_issue": "2024-04-21"
+  }
+}
+```
+
+It should generate data for that range of issue dates, and store them in batch issue format:
+`<patch_dir as provided in the params>/issue_<issue date>/<indicator name as stored in our DB>/xxx.csv`.
+
+Acquisition in `delphi-epidata` includes [code that allow files in this issue-specific structure](https://github.com/cmu-delphi/delphi-epidata/blob/694d89ad763fa85bd644e1f64552c9bc85f688ef/src/acquisition/covidcast/csv_to_database.py#L43C32-L43C61) to be added to the database. This output format is designed to match the `issue`-type acquisition format. The issue-specific mode is triggered with the flag `specific_issue_date`. [A Cronicle job](https://cronicle-prod-01.delphi.cmu.edu/#Schedule?sub=edit_event&id=elh59ynwobf) has already been set up to call acquisition using the flag; please use it to load patches into the database.
+
+Sometimes source data is already versioned, and to reconstruct an issue we simply need to filter the source data to include only values that would have been available on that issue day. If we receive data drops directly, we can filter by the file creation date instead.
+
+However, it is not always possible to reconstruct issues; many datasets aren't versioned by the provider. If a source has no revisions (for example, `google-symptoms`), then we can guess which dates of data would have been available that issue day based on the normal lag of the source. For example, `google-symptoms` normally has a lag of 4 days, i.e. "today" the most recent data we see in the source data is from 4 days ago. So to reconstruct data for issue 2024-01-10, we just need to report data with a `time_value` (reference date) from 2024-01-06 and earlier. (How much earlier depends on the behavior we normally expect from the indicator code; if we normally report 2 weeks of data, filter to 2024-01-06 - 14 days through 2024-01-06.)
+
+Some datasets, such as those on healthdata.gov, provide metadata indicating when certain rows were updated.
+
+In other cases (such as datasetes that both have revisions _and_ don't track revisions), please discuss with the indicator stakeholder and consider [what you know about how the data works](#step-1-exploratory-analysis).
 
 ### Statistical review
 

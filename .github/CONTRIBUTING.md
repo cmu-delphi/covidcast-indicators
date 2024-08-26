@@ -12,7 +12,9 @@ The production branch is configured to automatically deploy to our production en
 
 * everything else
 
-All other branches are development branches. We don't enforce a naming policy.
+All other branches are development branches. We don't enforce a naming policy, but it is recommended to prefix all branches you create with your name, username, or initials (e.g. `username/branch-name`).
+
+We don't forbid force-pushing, but please keep to a minimum and be careful of using when modifying a branch at the same time as others.
 
 ## Issues
 

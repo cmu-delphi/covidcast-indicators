@@ -2,6 +2,7 @@
 import os
 from copy import deepcopy
 from os.path import join, exists
+import json
 from tempfile import TemporaryDirectory
 
 # third party
@@ -13,6 +14,7 @@ import pytest
 # first party
 from delphi_claims_hosp.config import Config, GeoConstants
 from delphi_claims_hosp.update_indicator import ClaimsHospIndicatorUpdater
+from delphi_utils.export import create_export_csv
 
 CONFIG = Config()
 CONSTANTS = GeoConstants()
@@ -35,6 +37,9 @@ class TestClaimsHospIndicatorUpdater:
     weekday = False
     write_se = False
     prefix = "foo"
+    start_date = "02-01-2020"
+    end_date = "06-01-2020"
+    drop_date = "2020-06-12"
     small_test_data = pd.DataFrame({
         "num": [0, 100, 200, 300, 400, 500, 600, 100, 200, 300, 400, 500, 600],
         "hrr": [1.0] * 7 + [2.0] * 6,
@@ -44,9 +49,9 @@ class TestClaimsHospIndicatorUpdater:
 
     def test_shift_dates(self):
         updater = ClaimsHospIndicatorUpdater(
-            "02-01-2020",
-            "06-01-2020",
-            "06-12-2020",
+            self.start_date,
+            self.end_date,
+            self.drop_date,
             self.geo,
             self.parallel,
             self.weekday,
@@ -65,9 +70,9 @@ class TestClaimsHospIndicatorUpdater:
 
     def test_geo_reindex(self):
         updater = ClaimsHospIndicatorUpdater(
-            "02-01-2020",
-            "06-01-2020",
-            "06-12-2020",
+            self.start_date,
+            self.end_date,
+            self.drop_date,
             self.geo,
             self.parallel,
             self.weekday,
@@ -83,9 +88,9 @@ class TestClaimsHospIndicatorUpdater:
         for geo in ["state", "hrr", "hhs", "nation"]:
             td = TemporaryDirectory()
             updater = ClaimsHospIndicatorUpdater(
-                "02-01-2020",
-                "06-01-2020",
-                "06-12-2020",
+                self.start_date,
+                self.end_date,
+                self.drop_date,
                 geo,
                 self.parallel,
                 self.weekday,
@@ -93,11 +98,12 @@ class TestClaimsHospIndicatorUpdater:
                 Config.signal_name
             )
 
-            updater.update_indicator(
+            output = updater.update_indicator(
                 DATA_FILEPATH,
-                td.name,
                 TEST_LOGGER
             )
+
+            updater.write_to_csv(output, td.name)
 
             assert len(os.listdir(td.name)) == len(
                 updater.output_dates), f"failed {geo} update_indicator test"
@@ -105,9 +111,9 @@ class TestClaimsHospIndicatorUpdater:
 
     def test_write_to_csv_results(self):
         updater = ClaimsHospIndicatorUpdater(
-            "02-01-2020",
-            "06-01-2020",
-            "06-12-2020",
+            self.start_date,
+            self.end_date,
+            self.drop_date,
             self.geo,
             self.parallel,
             self.weekday,
@@ -185,9 +191,9 @@ class TestClaimsHospIndicatorUpdater:
         obfuscated_name = PARAMS["indicator"]["obfuscated_prefix"]
         signal_name = obfuscated_name + "_" + Config.signal_weekday_name
         updater = ClaimsHospIndicatorUpdater(
-            "02-01-2020",
-            "06-01-2020",
-            "06-12-2020",
+            self.start_date,
+            self.end_date,
+            self.drop_date,
             self.geo,
             self.parallel,
             True,
@@ -236,9 +242,9 @@ class TestClaimsHospIndicatorUpdater:
 
     def test_write_to_csv_wrong_results(self):
         updater = ClaimsHospIndicatorUpdater(
-            "02-01-2020",
-            "06-01-2020",
-            "06-12-2020",
+            self.start_date,
+            self.end_date,
+            self.drop_date,
             self.geo,
             self.parallel,
             self.weekday,
@@ -288,4 +294,47 @@ class TestClaimsHospIndicatorUpdater:
         with pytest.raises(AssertionError):
             updater.write_to_csv(res3, td.name)
 
+        td.cleanup()
+
+    def test_prefilter_results(self):
+        td = TemporaryDirectory()
+        td2 = TemporaryDirectory()
+
+        updater = ClaimsHospIndicatorUpdater(
+            self.start_date,
+            self.end_date,
+            self.drop_date,
+            "state",
+            self.parallel,
+            self.weekday,
+            self.write_se,
+            Config.signal_name
+        )
+
+        output = updater.update_indicator(
+            "test_data/EDI_AGG_INPATIENT_1_06092020_1451CDT.csv.gz",
+            TEST_LOGGER
+        )
+
+        updater.write_to_csv(output, td.name)
+
+        output_df = updater.update_indicator_to_df(
+            "test_data/EDI_AGG_INPATIENT_1_06092020_1451CDT.csv.gz",
+            TEST_LOGGER
+        )
+
+        filtered_output_df = updater.filter_output(output_df)
+        create_export_csv(filtered_output_df, td2.name,
+                          start_date=self.start_date,
+                          end_date=self.end_date,
+                          geo_res="state",
+                          sensor=Config.signal_name)
+        expected_files = sorted(os.listdir(td.name))
+        actual_files = sorted(os.listdir(td2.name))
+        for expected, actual in zip(expected_files, actual_files):
+            with open(join(td2.name, expected), "rb") as expected_f, \
+                 open(join(td2.name, actual), "rb") as actual_f:
+                expected_df = pd.read_csv(expected_f)
+                actual_df = pd.read_csv(actual_f)
+                pd.testing.assert_frame_equal(expected_df, actual_df)
         td.cleanup()

@@ -133,14 +133,76 @@ class ClaimsHospIndicatorUpdater:
         data_frame.fillna(0, inplace=True)
         return data_frame
 
-    def update_indicator(self, input_filepath, outpath, logger):
+    def update_indicator_to_df(self, input_filepath, logger):
         """
         Generate and output indicator values.
 
         Args:
             input_filepath: path to the aggregated claims data
-            outpath: output path for the csv results
+        """
+        self.shift_dates()
+        final_output_inds = (self.burn_in_dates >= self.startdate) & (self.burn_in_dates <= self.enddate)
 
+        # load data
+        base_geo = Config.HRR_COL if self.geo == Config.HRR_COL else Config.FIPS_COL
+        data = load_data(input_filepath, self.dropdate, base_geo)
+        data_frame = self.geo_reindex(data)
+
+        # handle if we need to adjust by weekday
+        wd_params = (
+            Weekday.get_params_legacy(
+                data_frame,
+                "den",
+                ["num"],
+                Config.DATE_COL,
+                [1, 1e5],
+                logger,
+            )
+            if self.weekday
+            else None
+        )
+        output_df = pd.DataFrame()
+        if not self.parallel:
+            for geo_id, sub_data in data_frame.groupby(level=0):
+                sub_data.reset_index(inplace=True)
+                if self.weekday:
+                    sub_data = Weekday.calc_adjustment(wd_params, sub_data, ["num"], Config.DATE_COL)
+                sub_data.set_index(Config.DATE_COL, inplace=True)
+                res = ClaimsHospIndicator.fit(sub_data, self.burnindate, geo_id)
+                output_df = output_df.append(pd.DataFrame(res))
+        else:
+
+            n_cpu = min(Config.MAX_CPU_POOL, cpu_count())
+            logging.debug("starting pool with %d workers", n_cpu)
+            with Pool(n_cpu) as pool:
+                pool_results = []
+                for geo_id, sub_data in data_frame.groupby(level=0, as_index=False):
+                    sub_data.reset_index(inplace=True)
+                    if self.weekday:
+                        sub_data = Weekday.calc_adjustment(wd_params, sub_data, ["num"], Config.DATE_COL)
+                    sub_data.set_index(Config.DATE_COL, inplace=True)
+                    pool_results.append(
+                        pool.apply_async(
+                            ClaimsHospIndicator.fit,
+                            args=(
+                                sub_data,
+                                self.burnindate,
+                                geo_id,
+                            ),
+                        )
+                    )
+                pool_results = [proc.get() for proc in pool_results]
+                for res in pool_results:
+                    output_df.append(pd.DataFrame(res))
+
+        return output_df
+
+    def update_indicator(self, input_filepath, logger):
+        """
+        Generate and output indicator values.
+
+        Args:
+            input_filepath: path to the aggregated claims data
         """
         self.shift_dates()
         final_output_inds = \
@@ -215,10 +277,30 @@ class ClaimsHospIndicatorUpdater:
             "geo_level": self.geo,
             "include": valid_inds,
         }
+        return output_dict
 
-        self.write_to_csv(output_dict, outpath)
-        logging.debug("wrote files to %s", outpath)
+    def filter_output(self, df):
+        filtered_df = df[df["incl"]]
+        filtered_df = filtered_df.reset_index()
+        filtered_df.rename(columns={"rate": "val"}, inplace=True)
+        filtered_df["timestamp"] = filtered_df["timestamp"].astype(str)
+        output_df = pd.DataFrame()
+        for geo_id, group in filtered_df.groupby("geo_id"):
+            assert not group.val.isnull().any()
+            assert not group.se.isnull().any()
+            assert np.all(group.se < 5), f"se suspicious, {geo_id}: {np.where(group.se >= 5)[0]}"
+            if np.any(group.val > 90):
+                for sus_val in np.where(group.val > 90):
+                    logging.warning("value suspicious, %s: %d", geo_id, sus_val)
+            if self.write_se:
+                assert np.all(group.val > 0) and np.all(group.se > 0), "p=0, std_err=0 invalid"
+            else:
+                group["se"] = np.NaN
+            group.drop("incl", inplace=True, axis="columns")
+            group["direction"] = np.NaN
+            output_df = output_df.append(group)
 
+        return output_df
     def write_to_csv(self, output_dict, output_path="./receiving"):
         """
         Write values to csv.
@@ -228,6 +310,7 @@ class ClaimsHospIndicatorUpdater:
             output_path: outfile path to write the csv
 
         """
+
         if self.write_se:
             logging.info("========= WARNING: WRITING SEs TO %s =========",
                          self.signal_name)
@@ -268,3 +351,4 @@ class ClaimsHospIndicatorUpdater:
                         out_n += 1
 
         logging.debug("wrote %d rows for %d %s", out_n, len(geo_ids), geo_level)
+        logging.debug("wrote files to %s", output_path)

@@ -29,7 +29,7 @@ So, how does one go about developing a pipeline for a new data source?
 ### tl;dr
 
 1. Create your new indicator branch from `main`.
-2. Build it using the appropriate template, following the guidelines in the included README.md and REVIEW.md files.
+2. Build it using the [indicator template](https://github.com/cmu-delphi/covidcast-indicators/tree/main/_template_python), following the guidelines in the included README.md, REVIEW.md, and INDICATOR_DEV_GUIDE.md files.
 3. Make some stuff!
 4. When your stuff works, push your development branch to remote, and open a PR against `main` for review.
 5. Once your PR has been merged, consult with a platform engineer for the remaining production setup needs. They will create a deployment workflow for your indicator including any necessary production parameters. Production secrets are encrypted in the Ansible vault. This workflow will be tested in staging by admins, who will consult you about any problems they encounter.
@@ -50,7 +50,7 @@ git checkout -b dev-my-feature-branch
 
 ### Creating your indicator
 
-Create a directory for your new indicator by making a copy of `_template_r` or `_template_python` depending on the programming language you intend to use. If using Python, add the name of the directory to the list found in `jobs > build > strategy > matrix > packages` in `.github/workflows/python-ci.yml`, which will enable automated checks for your indicator when you make PRs. The template copies of `README.md` and `REVIEW.md` include the minimum requirements for code structure, documentation, linting, testing, and method of configuration. Beyond that, we don't have any established restrictions on implementation; you can look at other existing indicators see some examples of code layout, organization, and general approach.
+Create a directory for your new indicator by making a copy of `_template_python`. (We also make a `_template_r` available, but R should be only used as a last resort, due to complications using it in production.) Add the name of the directory to the list found in `jobs > build > strategy > matrix > packages` in `.github/workflows/python-ci.yml`, which will enable automated checks for your indicator when you make PRs. The template copies of `README.md` and `REVIEW.md` include the minimum requirements for code structure, documentation, linting, testing, and method of configuration. Beyond that, we don't have any established restrictions on implementation; you can look at other existing indicators see some examples of code layout, organization, and general approach.
 
 * Consult your peers with questions! :handshake:
 
@@ -62,7 +62,7 @@ Once you have something that runs locally and passes tests you set up your remot
 git push -u origin dev-my-feature-branch
 ```
 
-You can then draft public API documentation for people who would fetch this
+You can then draft [public API documentation](https://cmu-delphi.github.io/delphi-epidata/) for people who would fetch this
 data from the API. Public API documentation is kept in the delphi-epidata
 repository, and there is a [template Markdown
 file](https://github.com/cmu-delphi/delphi-epidata/blob/main/docs/api/covidcast-signals/_source-template.md)

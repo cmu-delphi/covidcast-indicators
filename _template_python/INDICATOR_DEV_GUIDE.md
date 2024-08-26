@@ -472,14 +472,17 @@ Refer to [this guide](https://docs.google.com/document/d/1Bbuvtoxowt7x2_8USx_JY-
 
 * Add module name to the `build` job in `.github/workflows/python-ci.yml`.
   This allows github actions to run on this indicator code, which includes unit tests and linting.
-* Add top-level directory name to `indicator_list` in `Jenkinsfile`.
+* Add module name to the ["Copy version to indicator directory" step](https://github.com/cmu-delphi/covidcast-indicators/blob/f01185767a9847d8082baf4f1e17be50a39047c2/.github/workflows/create-release.yml#L64) in `.github/workflows/create-release.yml`.
+* Add top-level directory name to [`indicator_list` in `Jenkinsfile`](https://github.com/cmu-delphi/covidcast-indicators/blob/f01185767a9847d8082baf4f1e17be50a39047c2/Jenkinsfile#L13).
   This allows your code to be automatically deployed to staging after your branch is merged to main, and deployed to prod after `covidcast-indicators` is released.
 * Create `ansible/templates/{top_level_directory_name}-params-prod.json.j2` based on your `params.json.template` with some adjustment:
    * "export_dir": "/common/covidcast/receiving/{data-source-name}"
    * "log_filename": "/var/log/indicators/{top_level_directory_name}.log"
+* Define any sensitive variables as "secrets" in the [Ansible `vars.yaml`](https://github.com/cmu-delphi/covidcast-indicators/blob/main/ansible/vars.yaml) and [vault](https://github.com/cmu-delphi/covidcast-indicators/blob/main/ansible/vault.yaml).
+Refer to [this guide](https://docs.google.com/document/d/1Bbuvtoxowt7x2_8USx_JY-yTo-Av3oAFlhyG-vXGG-c/edit#heading=h.8kkoy8sx3t7f) for more vault info.
+* Add configs for Sir Complains-a-Lot ("sirCAL") alerting in sirCAL's [local](https://github.com/cmu-delphi/covidcast-indicators/blob/main/sir_complainsalot/params.json.template) and [Ansible](https://github.com/cmu-delphi/covidcast-indicators/blob/main/ansible/templates/sir_complainsalot-params-prod.json.j2) params templates.
 
 Pay attention to the receiving/export directory, as well as how you can store credentials in vault.
-Refer to [this guide](https://docs.google.com/document/d/1Bbuvtoxowt7x2_8USx_JY-yTo-Av3oAFlhyG-vXGG-c/edit#heading=h.8kkoy8sx3t7f) for more vault info.
 
 ### Staging
 

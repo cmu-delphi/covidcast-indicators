@@ -106,7 +106,8 @@ We use a branch-based git workflow coupled with [Jenkins](https://www.jenkins.io
   * Package - Tar and gzip the built environment.
   * Deploy - Trigger an Ansible playbook to place the built package onto the runtime host, place any necessary production configuration, and adjust the runtime envirnemnt (if necessary).
 
-There are several additional Jenkins-specific files that will need to be created for each indicator, as well as some configuration additions to the runtime host. It will be important to pair with a platform engineer to prepare the necessary production environment needs, test the workflow, validate on production, and ultimately sign off on a production release.
+There are several additional Jenkins-specific files that will need to be created for each indicator, as well as some configuration additions to the runtime host.
+It will be important to pair with a platform engineer to prepare the necessary production environment needs, test the workflow, validate on production, and ultimately sign off on a production release.
 
 ### Preparing container images of indicators
 

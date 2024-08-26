@@ -50,6 +50,7 @@ This is the general extract-transform-load procedure used by all COVIDcast indic
 7. Deliver the CSV output files to the `receiving/` directory on the API server.
 
 Adding a new indicator typically means implementing steps 1-3. Step 4 is included via the function ` create_export_csv`. Steps 5 (the validator), 6 (the archive differ) and 7 (acquisition) are all handled by runners in production.
+
 ## Step 0: Keep revision history (important!)
 
 If the data provider doesn’t provide or it is unclear if they provide historical versions of the data, immediately set up a script (bash, Python, etc) to automatically (e.g. cron) download the data every day and save locally with versioning.
@@ -250,6 +251,14 @@ To run the tests, use `make test` in the top-level indicator directory.
 Unit tests are required for all functions.
 Integration tests are highly desired, but may be difficult to set up depending on where the data is being fetched from.
 Mocking functions are useful in this case.
+
+#### Dealing with dates
+
+We keep track of two different date fields for each dataset. The first field is called "reference value" (field name `time_value`) and tracks the date that a value is reported _for_, that is, when the event happened. The second field is called "issue date" or "version" (field name `issue`) and tracks when a value was recorded, not when it happened.
+
+For example, flu test positivity of 80% for a reference date of Jan 1 and an issue date of Jan 5 means that _on_ Jan 1, the test positivity rate was 80%. But we only received and recorded the value on Jan 5, 4 days later (AKA a lag of 4 days).
+
+It's important to track issue date because many data sources are revised over time, and reported values can change substantially between issues.
 
 #### Dealing with data-types
 

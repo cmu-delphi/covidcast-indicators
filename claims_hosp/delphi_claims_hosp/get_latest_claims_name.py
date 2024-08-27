@@ -23,8 +23,8 @@ def get_latest_filename(dir_path, logger, issue_date=None):
                 if timestamp <= current_date:
                     latest_timestamp = timestamp
                     latest_filename = file
-
-    assert current_date.date() == latest_timestamp.date(), "no drop for today"
+    if issue_date is None:
+        assert current_date.date() == latest_timestamp.date(), "no drop for today"
 
     logger.info("Latest claims file", filename=latest_filename)
 

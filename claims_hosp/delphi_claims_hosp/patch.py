@@ -62,7 +62,7 @@ def patch():
         params["patch"]["current_issue"] = current_issue.strftime("%Y-%m-%d")
 
         current_issue_yyyymmdd = current_issue.strftime("%Y%m%d")
-        current_issue_dir = f"""{params["patch"]["patch_dir"]}/issue_{current_issue_yyyymmdd}/doctor-visits"""
+        current_issue_dir = f"""{params["patch"]["patch_dir"]}/issue_{current_issue_yyyymmdd}/hospital-admissions"""
         makedirs(f"{current_issue_dir}", exist_ok=True)
         params["common"]["export_dir"] = f"""{current_issue_dir}"""
 

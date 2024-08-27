@@ -1,13 +1,14 @@
 """Retrieve data and wrangle into appropriate format."""
 # -*- coding: utf-8 -*-
 import re
+import time
 from datetime import date, datetime  # pylint: disable=unused-import
 
 import numpy as np
 import pandas as pd
 import pandas_gbq
 from google.oauth2 import service_account
-
+from google.api_core.exceptions import BadRequest
 from .constants import COMBINED_METRIC, DC_FIPS, DTYPE_CONVERSIONS, METRICS, SYMPTOM_SETS
 from .date_utils import generate_query_dates
 
@@ -184,16 +185,21 @@ def pull_gs_data_one_geolevel(level, date_range):
     pd.DataFrame
     """
     query = produce_query(level, date_range)
+    df = pd.DataFrame()
+    try:
+        df = pandas_gbq.read_gbq(query, progress_bar_type=None, dtypes = DTYPE_CONVERSIONS)
+    except BadRequest as e:
+        if e.reason == "backendError":
+            time.sleep(5)
+            df = pandas_gbq.read_gbq(query, progress_bar_type=None, dtypes=DTYPE_CONVERSIONS)
+    else:
+        if len(df) == 0:
+            df = pd.DataFrame(
+                columns=["open_covid_region_code", "date"] +
+                        list(colname_map.keys())
+            )
 
-    df = pandas_gbq.read_gbq(query, progress_bar_type=None, dtypes = DTYPE_CONVERSIONS)
-    if len(df) == 0:
-        df = pd.DataFrame(
-            columns=["open_covid_region_code", "date"] +
-            list(colname_map.keys())
-        )
-
-    df = preprocess(df, level)
-
+        df = preprocess(df, level)
     return df
 
 

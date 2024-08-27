@@ -96,7 +96,7 @@ def run_module(params, logger=None):  # pylint: disable=too-many-statements
         dropdate=dropdate,
         n_backfill_days=n_backfill_days,
         n_waiting_days=n_waiting_days,
-        outpath=export_dir,
+        export_dir=export_dir,
         parallel=params["indicator"]["parallel"],
         weekday=params["indicator"]["weekday"],
         write_se=se,

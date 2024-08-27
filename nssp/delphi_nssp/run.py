@@ -111,6 +111,14 @@ def run_module(params):
                 df = geo_mapper.add_geocode(df, "fips", "msa", from_col="fips", new_col="geo_id")
                 df = geo_mapper.aggregate_by_weighted_sum(df, "geo_id", "val", "timestamp", "population")
                 df = df.rename(columns={"weighted_val": "val"})
+            elif geo == "hhs":
+                df = df[(df["county"] == "All") & (df["geography"] != "United States")]
+                df = df[["geography", "val", "timestamp"]]
+                df = geo_mapper.add_population_column(df, geocode_type="state_name", geocode_col="geography")
+                df = geo_mapper.add_geocode(df, "state_name", "state_code", from_col="state_name")
+                df = geo_mapper.add_geocode(df, "state_code", "hhs", from_col="state_code", new_col="geo_id")
+                df = geo_mapper.aggregate_by_weighted_sum(df, "geo_id", "val", "timestamp", "population")
+                df = df.rename(columns={"weighted_val": "val"})
             else:
                 df = df[df["county"] != "All"]
                 df["geo_id"] = df["fips"]

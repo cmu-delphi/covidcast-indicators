@@ -6,6 +6,7 @@ GEOS = [
     "nation",
     "state",
     "county",
+    "hhs",
 ]
 
 SIGNALS_MAP = {

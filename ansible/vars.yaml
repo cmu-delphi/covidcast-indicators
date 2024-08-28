@@ -53,9 +53,6 @@ doctor_visits_midas_password: "{{ vault_doctor_visits_midas_password }}"
 # NCHS
 nchs_mortality_token: "{{ vault_cdc_socrata_token }}"
 
-# NWSS
-nwss_wastewater_token: "{{ vault_cdc_socrata_token }}"
-
 # nssp
 nssp_token: "{{ vault_cdc_socrata_token }}"
 
@@ -100,4 +97,4 @@ backfillcorr_aws_bucket_name: "{{ vault_backfillcorr_aws_bucket_name }}"
 # Archive differ S3 bucket
 archive_differ_bucket_user_access_key_id: "{{ vault_archive_differ_bucket_user_access_key_id }}"
 archive_differ_bucket_user_secret_access_key: "{{ vault_archive_differ_bucket_user_secret_access_key }}"
-archive_differ_bucket_name: 'delphi-covidcast-indicator-output-scsdr'
+archive_differ_bucket_name: "delphi-covidcast-indicator-output-scsdr"

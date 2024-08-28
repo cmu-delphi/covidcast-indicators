@@ -38,7 +38,7 @@ def pull_nssp_data(socrata_token: str):
     Parameters
     ----------
     socrata_token: str
-        My App Token for pulling the NWSS data (could be the same as the nchs data)
+        My App Token for pulling the nssp data (could be the same as the nchs data)
     test_file: Optional[str]
         When not null, name of file from which to read test data
 

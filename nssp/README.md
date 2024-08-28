@@ -77,7 +77,7 @@ should not include critical sub-routines.
 ## Running Patches:
 A daily backup of from source in the form of csv files can be found on `bigchunk-dev-02` under `/common/source_backup/nssp`. Talk to your sysadmin for access. 
 
-You can also generate your own backup from source by setting up a cron job that runs the following .py every day when a pipeline outtage is going on on our side but aource api is still available:
+You can also generate your own backup from source by setting up a cron job that runs the following .py every day when a pipeline outtage is going on on our side but source api is still available:
 ```
 import numpy as np
 import pandas as pd

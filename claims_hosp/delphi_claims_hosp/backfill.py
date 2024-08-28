@@ -5,14 +5,17 @@ Author: Jingjing Tang
 Created: 2022-08-03
 
 """
-import os
+
 import glob
+import os
+import re
+import shutil
 from datetime import datetime
+from typing import Union
 
 # third party
 import pandas as pd
 from delphi_utils import GeoMapper
-
 
 from .config import Config
 
@@ -69,9 +72,58 @@ def store_backfill_file(claims_filepath, _end_date, backfill_dir):
         "/claims_hosp_as_of_%s.parquet"%datetime.strftime(_end_date, "%Y%m%d")
     # Store intermediate file into the backfill folder
     backfilldata.to_parquet(path, index=False)
+    return path
 
-def merge_backfill_file(backfill_dir, backfill_merge_day, today,
-                        test_mode=False, check_nd=25):
+
+def merge_existing_backfill_files(backfill_dir, backfill_file, issue_date, logger):
+    """
+    Merge existing backfill with the patch data included.
+    Parameters
+    ----------
+    issue_date : datetime
+        The most recent date when the raw data is received
+    backfill_dir : str
+        specified path to store backfill files.
+    backfill_file : str
+
+    """
+
+    new_files = glob.glob(backfill_dir + "/claims_hosp_*")
+
+    def get_file_with_date(files) -> Union[str, None]:
+        for filename in files:
+            pattern = re.findall(r"\d{8}", filename)
+            if len(pattern) == 2:
+                start_date = datetime.strptime(pattern[0], "%Y%m%d")
+                end_date = datetime.strptime(pattern[1], "%Y%m%d")
+                if start_date <= issue_date or end_date <= issue_date:
+                    return filename
+        return ""
+
+    file_name = get_file_with_date(new_files)
+
+    if len(file_name) == 0:
+        logger.info("patch file is too recent to merge", issue_date=issue_date.strftime("%Y-%m-%d"))
+        return
+
+    # Start to merge files
+    merge_file = f"{file_name.split('.')[0]}_after_merge.parquet"
+    try:
+        shutil.copyfile(file_name, merge_file)
+        existing_df = pd.read_parquet(merge_file, engine="pyarrow")
+        df = pd.read_parquet(backfill_file, engine="pyarrow")
+        merged_df = pd.concat([existing_df, df]).sort_values(["time_value", "fips"])
+        merged_df.to_parquet(merge_file, index=False)
+        os.remove(file_name)
+        os.rename(merge_file, file_name)
+    # pylint: disable=W0703:
+    except Exception as e:
+        os.remove(merge_file)
+        logger.error(e)
+    return
+
+
+def merge_backfill_file(backfill_dir, backfill_merge_day, most_recent, test_mode=False, check_nd=25):
     """
     Merge ~4 weeks' backfill data into one file.
 
@@ -80,7 +132,7 @@ def merge_backfill_file(backfill_dir, backfill_merge_day, today,
     threshold to allow flexibility in data delivery.
     Parameters
     ----------
-    today : datetime
+    most_recent : datetime
         The most recent date when the raw data is received
     backfill_dir : str
         specified path to store backfill files.
@@ -109,7 +161,7 @@ def merge_backfill_file(backfill_dir, backfill_merge_day, today,
 
     # Check whether to merge
     # Check the number of files that are not merged
-    if today.weekday() != backfill_merge_day or (today-earliest_date).days <= check_nd:
+    if most_recent.weekday() != backfill_merge_day or (most_recent - earliest_date).days <= check_nd:
         return
 
     # Start to merge files

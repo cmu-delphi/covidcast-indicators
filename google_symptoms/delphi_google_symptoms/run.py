@@ -80,7 +80,9 @@ def run_module(params, logger=None):
         if len(df_pull) == 0:
             continue
         for metric, smoother in product(COMBINED_METRIC, SMOOTHERS):
-            logger.info("Generating signal and exporting to CSV", geo_type=geo_res, signal=f"{geo_res}_{metric}_{sensor_name}")
+            logger.info(
+                "Generating signal and exporting to CSV", geo_type=geo_res, signal=f"{geo_res}_{metric}_{sensor_name}"
+            )
             df = df_pull
             df["val"] = df[metric].astype(float)
             df["val"] = df[["geo_id", "val"]].groupby(

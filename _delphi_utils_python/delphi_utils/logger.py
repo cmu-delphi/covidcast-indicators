@@ -44,7 +44,7 @@ def handle_exceptions(logger):
     threading.excepthook = threading_exception_handler
 
 
-def get_structured_logger(name=__name__, filename=None, log_exceptions=True):
+def get_structured_logger(name=__name__, filename=None, log_exceptions=True, is_real=True):
     """Create a new structlog logger.
 
     Use the logger returned from this in indicator code using the standard
@@ -63,6 +63,9 @@ def get_structured_logger(name=__name__, filename=None, log_exceptions=True):
     name: Name to use for logger (included in log lines), __name__ from caller
     is a good choice.
     filename: An (optional) file to write log output.
+    log_exceptions: should we log exceptions?
+    is_real: is this logger *not* in a testing environment? Used to avoid
+      setting features that interfere with testing the logging output
     """
     # Set the underlying logging configuration
     if "LOG_DEBUG" in os.environ:
@@ -109,7 +112,7 @@ def get_structured_logger(name=__name__, filename=None, log_exceptions=True):
         # Use a standard wrapper class for utilities like log.warning()
         wrapper_class=structlog.stdlib.BoundLogger,
         # Cache the logger
-        cache_logger_on_first_use=True,
+        cache_logger_on_first_use=is_real,
     )
 
     # Create the underlying python logger and wrap it with structlog

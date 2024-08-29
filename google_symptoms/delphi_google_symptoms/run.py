@@ -81,7 +81,7 @@ def run_module(params, logger=None):
             continue
         for metric, smoother in product(COMBINED_METRIC, SMOOTHERS):
             logger.info(
-                "Generating signal and exporting to CSV", geo_type=geo_res, signal=f"{geo_res}_{metric}_{sensor_name}"
+                "Generating signal and exporting to CSV", geo_type=geo_res, signal=f"{metric}_{sensor_name}"
             )
             df = df_pull
             df["val"] = df[metric].astype(float)
@@ -95,7 +95,7 @@ def run_module(params, logger=None):
             df = df.reset_index()
             sensor_name = "_".join([smoother, "search"])
             if len(df) == 0:
-                logger.info("No data for signal", geo_type=geo_res, signal=f"{geo_res}_{metric}_{sensor_name}")
+                logger.info("No data for signal", geo_type=geo_res, signal=f"{metric}_{sensor_name}")
                 continue
             exported_csv_dates = create_export_csv(
                 df,

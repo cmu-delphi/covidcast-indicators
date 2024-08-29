@@ -22,8 +22,7 @@ def filter_contradicting_missing_codes(df, sensor, metric, date, logger=None):
     for mask in masks:
         if not logger is None and df.loc[mask].size > 0:
             logger.info(
-                "Filtering contradictory missing code in " +
-                "{0}_{1}_{2}.".format(sensor, metric, date.strftime(format="%Y-%m-%d"))
+                "Filtering contradictory missing code", sensor=sensor, metric=metric, date=date.strftime(format="%Y-%m-%d")
             )
             df = df.loc[~mask]
         elif logger is None and df.loc[mask].size > 0:

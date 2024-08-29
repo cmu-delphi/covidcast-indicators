@@ -6,19 +6,14 @@ when the module is run with `python -m delphi_claims_hosp`.
 """
 
 import os
-
-# standard packages
 import time
 from datetime import datetime, timedelta
 from pathlib import Path
 
-# third party
 from delphi_utils import get_structured_logger
 from delphi_utils.export import create_export_csv
 
 from .backfill import merge_backfill_file, store_backfill_file
-
-# first party
 from .config import Config
 from .download_claims_ftp_files import download
 from .get_latest_claims_name import get_latest_filename
@@ -142,10 +137,9 @@ def run_module(params):
             )
             output = updater.update_indicator_to_df(
                 claims_file,
-                params["common"]["export_dir"],
                 logger,
             )
-            filtered_output_df = updater.filter_output(output)
+            filtered_output_df = updater.preprocess_output(output)
             create_export_csv(
                 filtered_output_df,
                 export_dir=params["common"]["export_dir"],

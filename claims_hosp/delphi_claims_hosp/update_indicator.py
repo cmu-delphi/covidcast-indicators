@@ -161,6 +161,7 @@ class ClaimsHospIndicatorUpdater:
             if self.weekday
             else None
         )
+        df_lst = []
         output_df = pd.DataFrame()
         if not self.parallel:
             for geo_id, sub_data in data_frame.groupby(level=0):
@@ -169,9 +170,11 @@ class ClaimsHospIndicatorUpdater:
                     sub_data = Weekday.calc_adjustment(wd_params, sub_data, ["num"], Config.DATE_COL)
                 sub_data.set_index(Config.DATE_COL, inplace=True)
                 res = ClaimsHospIndicator.fit(sub_data, self.burnindate, geo_id)
-                output_df = output_df.append(pd.DataFrame(res))
+                temp_df = pd.DataFrame(res)
+                temp_df = temp_df.loc[final_output_inds]
+                df_lst.append(pd.DataFrame(temp_df))
+            output_df = pd.concat(df_lst)
         else:
-
             n_cpu = min(Config.MAX_CPU_POOL, cpu_count())
             logging.debug("starting pool with %d workers", n_cpu)
             with Pool(n_cpu) as pool:
@@ -191,9 +194,8 @@ class ClaimsHospIndicatorUpdater:
                             ),
                         )
                     )
-                pool_results = [proc.get() for proc in pool_results]
-                for res in pool_results:
-                    output_df.append(pd.DataFrame(res))
+                df_lst = [pd.DataFrame(proc.get()).loc([final_output_inds]) for proc in pool_results]
+                output_df = pd.concat(df_lst)
 
         return output_df
 
@@ -279,7 +281,17 @@ class ClaimsHospIndicatorUpdater:
         }
         return output_dict
 
-    def filter_output(self, df):
+    def preprocess_output(self, df) -> pd.DataFrame:
+        """
+        Checks for any anomlies and formats the output for exports.
+        Parameters
+        ----------
+        df
+
+        Returns
+        -------
+        df
+        """
         filtered_df = df[df["incl"]]
         filtered_df = filtered_df.reset_index()
         filtered_df.rename(columns={"rate": "val"}, inplace=True)

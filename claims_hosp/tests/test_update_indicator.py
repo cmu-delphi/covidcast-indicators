@@ -323,7 +323,7 @@ class TestClaimsHospIndicatorUpdater:
             TEST_LOGGER
         )
 
-        filtered_output_df = updater.filter_output(output_df)
+        filtered_output_df = updater.preprocess_output(output_df)
         create_export_csv(filtered_output_df, td2.name,
                           start_date=self.start_date,
                           end_date=self.end_date,

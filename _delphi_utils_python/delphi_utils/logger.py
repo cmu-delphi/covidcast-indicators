@@ -23,8 +23,7 @@ def handle_exceptions(logger):
     """Handle exceptions using the provided logger."""
 
     def exception_handler(scope, etype, value, traceback):
-        logger.exception("Top-level exception occurred",
-                         scope=scope, exc_info=(etype, value, traceback))
+        logger.exception("Top-level exception occurred", scope=scope, exc_info=(etype, value, traceback))
 
     def sys_exception_handler(etype, value, traceback):
         exception_handler("sys", etype, value, traceback)
@@ -33,21 +32,19 @@ def handle_exceptions(logger):
         if args.exc_type == SystemExit and args.exc_value.code == 0:
             # `sys.exit(0)` is considered "successful termination":
             #   https://docs.python.org/3/library/sys.html#sys.exit
-            logger.debug("normal thread exit", thread=args.thread,
-                        stack="".join(
-                            format_exception(
-                                args.exc_type, args.exc_value, args.exc_traceback)))
+            logger.debug(
+                "normal thread exit",
+                thread=args.thread,
+                stack="".join(format_exception(args.exc_type, args.exc_value, args.exc_traceback)),
+            )
         else:
-            exception_handler(f"thread: {args.thread}",
-                              args.exc_type, args.exc_value, args.exc_traceback)
+            exception_handler(f"thread: {args.thread}", args.exc_type, args.exc_value, args.exc_traceback)
 
     sys.excepthook = sys_exception_handler
     threading.excepthook = threading_exception_handler
 
 
-def get_structured_logger(name=__name__,
-                          filename=None,
-                          log_exceptions=True):
+def get_structured_logger(name=__name__, filename=None, log_exceptions=True):
     """Create a new structlog logger.
 
     Use the logger returned from this in indicator code using the standard
@@ -73,10 +70,7 @@ def get_structured_logger(name=__name__,
     else:
         log_level = logging.INFO
 
-    logging.basicConfig(
-        format="%(message)s",
-        level=log_level,
-        handlers=[logging.StreamHandler()])
+    logging.basicConfig(format="%(message)s", level=log_level, handlers=[logging.StreamHandler()])
 
     def add_pid(_logger, _method_name, event_dict):
         """Add current PID to the event dict."""
@@ -131,7 +125,7 @@ def get_structured_logger(name=__name__,
     return logger
 
 
-class LoggerThread():
+class LoggerThread:
     """
     A construct to use a logger from multiprocessing workers/jobs.
 
@@ -149,7 +143,7 @@ class LoggerThread():
     docs.python.org/3/howto/logging-cookbook.html#logging-to-a-single-file-from-multiple-processes
     """
 
-    class SubLogger():
+    class SubLogger:
         """MP-safe logger-like interface to convey log messages to a listening LoggerThread."""
 
         def __init__(self, queue):
@@ -157,7 +151,7 @@ class LoggerThread():
             self.queue = queue
 
         def _log(self, level, *args, **kwargs):
-            kwargs_plus = {'sub_pid': multiprocessing.current_process().pid}
+            kwargs_plus = {"sub_pid": multiprocessing.current_process().pid}
             kwargs_plus.update(kwargs)
             self.queue.put([level, args, kwargs_plus])
 
@@ -181,7 +175,6 @@ class LoggerThread():
             """Log a CRITICAL level message."""
             self._log(logging.CRITICAL, *args, **kwargs)
 
-
     def get_sublogger(self):
         """Retrieve SubLogger for this LoggerThread."""
         return self.sublogger
@@ -195,25 +188,22 @@ class LoggerThread():
             self.msg_queue = multiprocessing.Queue()
 
         def logger_thread_worker():
-            logger.info('thread started')
+            logger.info("thread started")
             while True:
                 msg = self.msg_queue.get()
-                if msg == 'STOP':
-                    logger.debug('received stop signal')
+                if msg == "STOP":
+                    logger.debug("received stop signal")
                     break
                 level, args, kwargs = msg
-                if level in [logging.DEBUG, logging.INFO, logging.WARNING,
-                             logging.ERROR, logging.CRITICAL]:
+                if level in [logging.DEBUG, logging.INFO, logging.WARNING, logging.ERROR, logging.CRITICAL]:
                     logger.log(level, *args, **kwargs)
                 else:
-                    logger.error('received unknown logging level!  exiting...',
-                                 level=level, args_kwargs=(args, kwargs))
+                    logger.error("received unknown logging level!  exiting...", level=level, args_kwargs=(args, kwargs))
                     break
-            logger.debug('stopping thread')
+            logger.debug("stopping thread")
 
-        self.thread = threading.Thread(target=logger_thread_worker,
-                                       name="LoggerThread__"+logger.name)
-        logger.debug('starting thread')
+        self.thread = threading.Thread(target=logger_thread_worker, name="LoggerThread__" + logger.name)
+        logger.debug("starting thread")
         self.thread.start()
 
         self.sublogger = LoggerThread.SubLogger(self.msg_queue)
@@ -222,13 +212,13 @@ class LoggerThread():
     def stop(self):
         """Terminate this LoggerThread."""
         if not self.running:
-            self.logger.warning('thread already stopped')
+            self.logger.warning("thread already stopped")
             return
-        self.logger.debug('sending stop signal')
-        self.msg_queue.put('STOP')
+        self.logger.debug("sending stop signal")
+        self.msg_queue.put("STOP")
         self.thread.join()
         self.running = False
-        self.logger.info('thread stopped')
+        self.logger.info("thread stopped")
 
 
 @contextlib.contextmanager

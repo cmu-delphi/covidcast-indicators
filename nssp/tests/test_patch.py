@@ -1,12 +1,47 @@
 import pytest
-from unittest.mock import patch as mock_patch, call
-from delphi_nssp.patch import patch, good_patch_config
+from unittest.mock import patch as mock_patch, call, MagicMock
+from delphi_nssp.patch import patch, good_patch_config, get_source_data
 import os
 import shutil
 from datetime import datetime, timedelta
 import pandas as pd
 
 class TestPatchModule:
+    @mock_patch('paramiko.SSHClient')
+    def test_get_source_data(self,mock_ssh):
+        # Mock the SSH and SFTP clients
+        mock_sftp = MagicMock()
+        mock_ssh.return_value.open_sftp.return_value = mock_sftp
+
+        # Define the parameters for the function
+        params = {
+            "patch": {
+                "source_backup_credentials": {
+                    "host": "hostname",
+                    "user": "user",
+                    "path": "/path/to/remote/dir"
+                },
+                "start_issue": "2021-01-01",
+                "end_issue": "2021-01-03",
+                "source_dir": "/path/to/local/dir"
+            }
+        }
+
+        # Mock the logger
+        logger = MagicMock()
+        # Call the function
+        get_source_data(params, logger)
+
+        # Check that the SSH client was used correctly
+        mock_ssh.return_value.connect.assert_called_once_with(params["patch"]["source_backup_credentials"]["host"], username=params["patch"]["source_backup_credentials"]["user"])
+        mock_ssh.return_value.close.assert_called_once()
+
+        # Check that the SFTP client was used correctly
+        mock_sftp.chdir.assert_called_once_with(params["patch"]["source_backup_credentials"]["path"])
+        assert mock_sftp.get.call_count == 3  # one call for each date in the range
+        mock_sftp.close.assert_called_once()
+        
+
     @mock_patch('logging.Logger')
     def test_config_missing_custom_run_and_patch_section(self, mock_logger):
         # Case 1: missing custom_run flag and patch section

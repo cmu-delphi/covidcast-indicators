@@ -13,6 +13,7 @@ required = [
     "epiweeks",
     "freezegun",
     "us",
+    "paramiko",
 ]
 
 setup(

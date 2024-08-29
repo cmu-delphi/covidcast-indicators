@@ -13,6 +13,11 @@ and specify the range of issue dates in params.json, like so:
     ...
   },
   "patch": {
+    "source_backup_credentials": {
+      "host": "bigchunk-dev-02.delphi.cmu.edu",
+      "user": "user",
+      "path": "/common/source_backup/nssp"
+    },
     "patch_dir": "/Users/minhkhuele/Desktop/delphi/covidcast-indicators/nssp/AprilPatch",
     "start_issue": "2024-04-20",
     "end_issue": "2024-04-21",
@@ -28,10 +33,53 @@ import sys
 from datetime import datetime, timedelta
 from os import makedirs, path
 
+import pandas as pd
+import paramiko
 from delphi_utils import get_structured_logger, read_params
 from epiweeks import Week
 
 from .run import run_module
+
+
+def get_source_data(params, logger):
+    """
+    Download source data from the backup server.
+
+    This function uses 'source_backup_credentials' in params to connect to a server where backup source data is stored.
+    It then searches for CSV files that match the inclusive range of issue dates
+    and location specified by 'path', 'start_issue', and 'end_issue'.
+    These CSV files are then downloaded and stored in the 'source_dir' directory.
+    """
+    ssh = paramiko.SSHClient()
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    host = params["patch"]["source_backup_credentials"]["host"]
+    user = params["patch"]["source_backup_credentials"]["user"]
+    ssh.connect(host, username=user)
+
+    # Generate file names of source files to download
+    dates = pd.date_range(start=params["patch"]["start_issue"], end=params["patch"]["end_issue"])
+    csv_file_names = [date.strftime("%Y-%m-%d") + ".csv" for date in dates]
+
+    # Download source files
+    sftp = ssh.open_sftp()
+    sftp.chdir(params["patch"]["source_backup_credentials"]["path"])
+    num_files_transferred = 0
+    for remote_file_name in csv_file_names:
+        try:
+            local_file_path = path.join(params["patch"]["source_dir"], remote_file_name)
+            sftp.stat(remote_file_name)
+            sftp.get(remote_file_name, local_file_path)
+            num_files_transferred += 1
+        except IOError:
+            logger.warning(
+                "Source backup for this date does not exist on the remote server.", missing_filename=remote_file_name
+            )
+    sftp.close()
+    ssh.close()
+
+    if num_files_transferred == 0:
+        logger.error("No source data was transferred. Check the source backup server for potential issues.")
+        sys.exit(1)
 
 
 def good_patch_config(params, logger):
@@ -87,6 +135,12 @@ def patch():
 
     The range of issue dates is specified in params.json using the following keys:
     - "patch": Only used for patching data
+        - "source_backup_credentials": (Optional)
+        Add this object to download source data from a backup server to source_dir.
+        Remove to assume source csv are already in source_dir.
+            - "host": str, hostname of the server where source data is backed up
+            - "user": str, username to log in to the server
+            - "path": str, path to the directory containing backup csv files
         - "start_date": str, YYYY-MM-DD format, first issue date
         - "end_date": str, YYYY-MM-DD format, last issue date
         - "patch_dir": str, directory to write all issues output
@@ -97,14 +151,16 @@ def patch():
     if not good_patch_config(params, logger):
         sys.exit(1)
 
+    if "source_backup_credentials" in params["patch"]:
+        get_source_data(params, logger)
+
     start_issue = datetime.strptime(params["patch"]["start_issue"], "%Y-%m-%d")
     end_issue = datetime.strptime(params["patch"]["end_issue"], "%Y-%m-%d")
 
-    logger.info(f"""Start patching {params["patch"]["patch_dir"]}""")
-    logger.info(f"""Start issue: {start_issue.strftime("%Y-%m-%d")}""")
-    logger.info(f"""End issue: {end_issue.strftime("%Y-%m-%d")}""")
-    logger.info(f"""Source from: {params["patch"]["source_dir"]}""")
-    logger.info(f"""Output to: {params["patch"]["patch_dir"]}""")
+    logger.info(start_issue=start_issue.strftime("%Y-%m-%d"))
+    logger.info(end_issue=end_issue.strftime("%Y-%m-%d"))
+    logger.info(source_dir=params["patch"]["source_dir"])
+    logger.info(patch_dir=params["patch"]["patch_dir"])
 
     makedirs(params["patch"]["patch_dir"], exist_ok=True)
 

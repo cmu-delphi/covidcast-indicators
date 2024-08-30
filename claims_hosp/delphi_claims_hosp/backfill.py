@@ -78,6 +78,7 @@ def store_backfill_file(claims_filepath, _end_date, backfill_dir):
 def merge_existing_backfill_files(backfill_dir, backfill_file, issue_date, logger):
     """
     Merge existing backfill with the patch data included.
+
     Parameters
     ----------
     issue_date : datetime
@@ -85,9 +86,7 @@ def merge_existing_backfill_files(backfill_dir, backfill_file, issue_date, logge
     backfill_dir : str
         specified path to store backfill files.
     backfill_file : str
-
     """
-
     new_files = glob.glob(backfill_dir + "/claims_hosp_*")
 
     def get_file_with_date(files) -> Union[str, None]:

@@ -71,7 +71,7 @@ def run_module(params, logger=None):
     """
     start_time = time.time()
     custom_run = params["common"].get("custom_run", False)
-    # logger doesn't exist yet means run_module is called from normal indicator run (instead of patching)
+    # logger doesn't exist yet means run_module is called from normal indicator run (instead of any custom run)
     if not logger:
         logger = get_structured_logger(
             __name__,
@@ -86,11 +86,11 @@ def run_module(params, logger=None):
     run_stats = []
     ## build the base version of the signal at the most detailed geo level you can get.
     ## compute stuff here or farm out to another function or file
-    if custom_run:
+    if custom_run and logger.name == "delphi_nssp.patch":
         issue_date = params.get("patch", {}).get("current_issue", None)
         source_dir = params.get("patch", {}).get("source_dir", None)
         df_pull = pull_nssp_data(socrata_token, logger, issue_date, source_dir)
-    else:
+    if not custom_run:
         df_pull = pull_nssp_data(socrata_token, logger)
     ## aggregate
     geo_mapper = GeoMapper()

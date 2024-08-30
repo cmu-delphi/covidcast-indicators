@@ -24,17 +24,28 @@ from delphi_nssp.constants import (
 class TestPullNSSPData(unittest.TestCase):
     @patch("delphi_nssp.pull.Socrata")
     def test_pull_nssp_data_for_patch(self, mock_socrata):
-        source_dir = "source_dir"
-        issue_date = "2021-01-02"
-        test_source_data = pd.read_csv(f"{source_dir}/{issue_date}.csv")
+        params = {
+            "common": {
+                "custom_run": True,
+            },
+            "patch": {
+                "current_issue": "2021-01-02",
+                "source_dir": "source_dir"
+            }
+        }
         mock_logger = MagicMock()
-        result = pull_nssp_data("test_token", mock_logger, issue_date, source_dir)
+        mock_logger.name = "delphi_nssp.patch"
+        result = pull_nssp_data("test_token", params, mock_logger)
 
         # Check that loggger was called with correct info
-        mock_logger.info.assert_called_with(f"Grabbed {len(result)} records from {source_dir}/{issue_date}.csv")
+        mock_logger.info.assert_called_with("Number of records grabbed from source_dir/issue_date.csv",
+                                            num_records=len(result),
+                                            source="source_dir/2021-01-02.csv")
 
+        test_source_data = pd.read_csv("source_dir/2021-01-02.csv")
         assert test_source_data.shape[0] == result.shape[0] # Check if the number of rows are the same
         mock_socrata.assert_not_called()
+
 
     @patch("delphi_nssp.pull.Socrata")
     def test_pull_nssp_data(self, mock_socrata):
@@ -48,14 +59,17 @@ class TestPullNSSPData(unittest.TestCase):
         mock_socrata.return_value = mock_client
 
         mock_logger = MagicMock()
+        params = { "common": { "custom_run": False } }
 
         # Call function with test token
         test_token = "test_token"
-        result = pull_nssp_data(test_token, mock_logger)
+        result = pull_nssp_data(test_token, params, mock_logger)
         print(result)
 
         # Check that loggger was called with correct info
-        mock_logger.info.assert_called_with(f"Grabbed {len(result)} records from Socrata API")
+        mock_logger.info.assert_called_with("Number of records grabbed from Socrata API",
+                                            num_records=len(result),
+                                            source="Socrata API")
 
         # Check that Socrata client was initialized with correct arguments
         mock_socrata.assert_called_once_with("data.cdc.gov", test_token)

@@ -26,7 +26,7 @@ def warn_string(df, type_dict):
     return warn
 
 
-def pull_nssp_data(socrata_token: str, logger, issue_date: str = None, source_dir: str = None) -> pd.DataFrame:
+def pull_nssp_data(socrata_token: str, params: dict, logger) -> pd.DataFrame:
     """Pull the latest NSSP ER visits data, and conforms it into a dataset.
 
     The output dataset has:
@@ -38,13 +38,8 @@ def pull_nssp_data(socrata_token: str, logger, issue_date: str = None, source_di
     ----------
     socrata_token: str
         My App Token for pulling the NWSS data (could be the same as the nchs data)
-    issue_date: Optional[str]
-        (patching mode only) YYYY-MM-DD formatted date of the issue to pull data for
-    source_dir: Optional[str]
-        (patching mode only) Path to the directory containing the source data csv files
-        The files in source_dir are expected to be named yyyy-mm-dd.csv
-    test_file: Optional[str]
-        When not null, name of file from which to read test data
+    params: dict
+        Nested dictionary of parameters, should contain info on run type.
     logger:
         Logger object
 
@@ -53,7 +48,8 @@ def pull_nssp_data(socrata_token: str, logger, issue_date: str = None, source_di
     pd.DataFrame
         Dataframe as described above.
     """
-    if not issue_date:
+    custom_run = params["common"].get("custom_run", False)
+    if not custom_run:
         # Pull data from Socrata API
         client = Socrata("data.cdc.gov", socrata_token)
         results = []
@@ -67,7 +63,9 @@ def pull_nssp_data(socrata_token: str, logger, issue_date: str = None, source_di
             offset += limit
         df_ervisits = pd.DataFrame.from_records(results)
         logger.info(f"Grabbed {len(df_ervisits)} records from Socrata API")
-    else:
+    elif custom_run and logger.name == "delphi_nssp.patch":
+        issue_date = params.get("patch", {}).get("current_issue", None)
+        source_dir = params.get("patch", {}).get("source_dir", None)
         df_ervisits = pd.read_csv(f"{source_dir}/{issue_date}.csv")
         logger.info(f"Grabbed {len(df_ervisits)} records from {source_dir}/{issue_date}.csv")
     df_ervisits = df_ervisits.rename(columns={"week_end": "timestamp"})

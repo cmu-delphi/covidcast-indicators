@@ -86,12 +86,7 @@ def run_module(params, logger=None):
     run_stats = []
     ## build the base version of the signal at the most detailed geo level you can get.
     ## compute stuff here or farm out to another function or file
-    if custom_run and logger.name == "delphi_nssp.patch":
-        issue_date = params.get("patch", {}).get("current_issue", None)
-        source_dir = params.get("patch", {}).get("source_dir", None)
-        df_pull = pull_nssp_data(socrata_token, logger, issue_date, source_dir)
-    if not custom_run:
-        df_pull = pull_nssp_data(socrata_token, logger)
+    df_pull = pull_nssp_data(socrata_token, params, logger)
     ## aggregate
     geo_mapper = GeoMapper()
     for signal in SIGNALS:

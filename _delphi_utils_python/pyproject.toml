@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools", "setuptools-scm>=8.0"]
+requires = ["setuptools>=70.1", "setuptools-scm>=8.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -36,6 +36,7 @@ Homepage = "https://github.com/cmu-delphi/covidcast-indicators"
 
 [project.optional-dependencies]
 dev = [
+    "build[virtualenv]",
     "darker[isort]~=2.1.1",
     "pylint==2.8.3",
     "pytest",
@@ -45,6 +46,7 @@ dev = [
     "moto~=4.2.14",
     "requests-mock",
     "freezegun",
+    "twine"
 ]
 flash = ["scipy"]
 

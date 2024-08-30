@@ -105,7 +105,7 @@ def good_patch_config(params, logger):
         required_patch_keys = ["start_issue", "end_issue", "patch_dir", "source_dir"]
         missing_keys = [key for key in required_patch_keys if key not in patch_config]
         if missing_keys:
-            logger.error(f"Patch section is missing required key(s): {', '.join(missing_keys)}")
+            logger.error("Patch section is missing required key(s)", missing_keys=missing_keys)
             valid_config = False
         else:
             try:  # issue dates validity check
@@ -119,7 +119,7 @@ def good_patch_config(params, logger):
                 valid_config = False
 
             if not path.isdir(patch_config["source_dir"]):
-                logger.error(f"Source directory {patch_config['source_dir']} does not exist.")
+                logger.error("Source directory does not exist.", source_dir=patch_config["source_dir"])
                 valid_config = False
 
     if valid_config:
@@ -166,13 +166,13 @@ def patch():
 
     current_issue = start_issue
     while current_issue <= end_issue:
-        logger.info(f"""Running issue {current_issue.strftime("%Y-%m-%d")}""")
+        logger.info("patching issue", issue_date=current_issue.strftime("%Y-%m-%d"))
 
         current_issue_source_csv = (
             f"""{params.get("patch", {}).get("source_dir")}/{current_issue.strftime("%Y-%m-%d")}.csv"""
         )
         if not path.isfile(current_issue_source_csv):
-            logger.info(f"No source data at {current_issue_source_csv}")
+            logger.info("No source data at this path", current_issue_source_csv=current_issue_source_csv)
             current_issue += timedelta(days=1)
             continue
 

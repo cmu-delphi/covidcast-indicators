@@ -62,12 +62,16 @@ def pull_nssp_data(socrata_token: str, params: dict, logger) -> pd.DataFrame:
             results.extend(page)
             offset += limit
         df_ervisits = pd.DataFrame.from_records(results)
-        logger.info(f"Grabbed {len(df_ervisits)} records from Socrata API")
+        logger.info("Number of records grabbed from Socrata API", num_records=len(df_ervisits), source="Socrata API")
     elif custom_run and logger.name == "delphi_nssp.patch":
         issue_date = params.get("patch", {}).get("current_issue", None)
         source_dir = params.get("patch", {}).get("source_dir", None)
         df_ervisits = pd.read_csv(f"{source_dir}/{issue_date}.csv")
-        logger.info(f"Grabbed {len(df_ervisits)} records from {source_dir}/{issue_date}.csv")
+        logger.info(
+            "Number of records grabbed from source_dir/issue_date.csv",
+            num_records=len(df_ervisits),
+            source=f"{source_dir}/{issue_date}.csv",
+        )
     df_ervisits = df_ervisits.rename(columns={"week_end": "timestamp"})
     df_ervisits = df_ervisits.rename(columns=SIGNALS_MAP)
 

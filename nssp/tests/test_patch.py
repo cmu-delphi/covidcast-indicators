@@ -69,7 +69,7 @@ class TestPatchModule:
         }
         assert not good_patch_config(patch_config, mock_logger)
         mock_logger.error.assert_has_calls([
-            call("Patch section is missing required key(s): end_issue"),
+            call("Patch section is missing required key(s)", missing_keys=["end_issue"]),
         ])
 
     @mock_patch('logging.Logger')
@@ -89,7 +89,7 @@ class TestPatchModule:
         assert not good_patch_config(patch_config, mock_logger)
         mock_logger.error.assert_has_calls([
             call("Issue dates must be in YYYY-MM-DD format."),
-            call("Source directory bad_source_dir does not exist.")
+            call("Source directory does not exist.", source_dir="bad_source_dir")
         ])
 
     @mock_patch('logging.Logger')
@@ -164,6 +164,7 @@ class TestPatchModule:
     @mock_patch('delphi_nssp.patch.get_structured_logger')
     @mock_patch('delphi_nssp.patch.read_params')
     def test_patch_confirm_values_generated(self, mock_read_params, mock_get_structured_logger):
+        mock_get_structured_logger.return_value.name = "delphi_nssp.patch"
         mock_read_params.return_value = {
             "common": {
                 "log_filename": "test.log",

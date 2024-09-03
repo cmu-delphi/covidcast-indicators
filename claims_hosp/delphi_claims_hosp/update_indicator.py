@@ -283,7 +283,8 @@ class ClaimsHospIndicatorUpdater:
 
     def preprocess_output(self, df) -> pd.DataFrame:
         """
-        Checks for any anomlies and formats the output for exports.
+        Check for any anomlies and formats the output for exports.
+
         Parameters
         ----------
         df
@@ -322,7 +323,6 @@ class ClaimsHospIndicatorUpdater:
             output_path: outfile path to write the csv
 
         """
-
         if self.write_se:
             logging.info("========= WARNING: WRITING SEs TO %s =========",
                          self.signal_name)

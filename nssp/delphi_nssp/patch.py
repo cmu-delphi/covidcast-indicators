@@ -32,6 +32,7 @@ It will generate data for that range of issue dates, and store them in batch iss
 import sys
 from datetime import datetime, timedelta
 from os import listdir, makedirs, path
+from shutil import rmtree
 
 from delphi_utils import get_structured_logger, read_params
 from epiweeks import Week
@@ -107,8 +108,10 @@ def patch():
         sys.exit(1)
 
     source_dir = params["patch"]["source_dir"]
+    downloaded_source = False
     if not path.isdir(source_dir) or not listdir(source_dir):
         get_source_data(params, logger)
+        downloaded_source = True
 
     start_issue = datetime.strptime(params["patch"]["start_issue"], "%Y-%m-%d")
     end_issue = datetime.strptime(params["patch"]["end_issue"], "%Y-%m-%d")
@@ -144,6 +147,8 @@ def patch():
         run_module(params, logger)
         current_issue += timedelta(days=1)
 
+    if downloaded_source:
+        rmtree(source_dir)
 
 if __name__ == "__main__":
     patch()

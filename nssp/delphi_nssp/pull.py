@@ -1,12 +1,59 @@
 # -*- coding: utf-8 -*-
 """Functions for pulling NSSP ER data."""
 
+import sys
 import textwrap
+from os import makedirs, path
 
 import pandas as pd
+import paramiko
 from sodapy import Socrata
 
 from .constants import NEWLINE, SIGNALS, SIGNALS_MAP, TYPE_DICT
+
+
+def get_source_data(params, logger):
+    """
+    Download historical source data from a backup server.
+
+    This function uses 'source_backup_credentials' configuration in params to connect
+    to a server where backup nssp source data is stored.
+    It then searches for CSV files that match the inclusive range of issue dates
+    and location specified by 'path', 'start_issue', and 'end_issue'.
+    These CSV files are then downloaded and stored in the 'source_dir' directory.
+    Note: This function is typically used in patching only. Normal runs grab latest data from SODA API.
+    """
+    makedirs(params["patch"]["source_dir"], exist_ok=True)
+    ssh = paramiko.SSHClient()
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    host = params["patch"]["source_backup_credentials"]["host"]
+    user = params["patch"]["source_backup_credentials"]["user"]
+    ssh.connect(host, username=user)
+
+    # Generate file names of source files to download
+    dates = pd.date_range(start=params["patch"]["start_issue"], end=params["patch"]["end_issue"])
+    csv_file_names = [date.strftime("%Y-%m-%d") + ".csv" for date in dates]
+
+    # Download source files
+    sftp = ssh.open_sftp()
+    sftp.chdir(params["patch"]["source_backup_credentials"]["path"])
+    num_files_transferred = 0
+    for remote_file_name in csv_file_names:
+        try:
+            local_file_path = path.join(params["patch"]["source_dir"], remote_file_name)
+            sftp.stat(remote_file_name)
+            sftp.get(remote_file_name, local_file_path)
+            num_files_transferred += 1
+        except IOError:
+            logger.warning(
+                "Source backup for this date does not exist on the remote server.", missing_filename=remote_file_name
+            )
+    sftp.close()
+    ssh.close()
+
+    if num_files_transferred == 0:
+        logger.error("No source data was transferred. Check the source backup server for potential issues.")
+        sys.exit(1)
 
 def warn_string(df, type_dict):
     """Format the warning string."""

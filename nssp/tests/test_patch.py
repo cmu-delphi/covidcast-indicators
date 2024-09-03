@@ -7,41 +7,6 @@ from datetime import datetime, timedelta
 import pandas as pd
 
 class TestPatchModule:
-    @mock_patch('paramiko.SSHClient')
-    def test_get_source_data(self,mock_ssh):
-        # Mock the SSH and SFTP clients
-        mock_sftp = MagicMock()
-        mock_ssh.return_value.open_sftp.return_value = mock_sftp
-
-        # Define the parameters for the function
-        params = {
-            "patch": {
-                "source_backup_credentials": {
-                    "host": "hostname",
-                    "user": "user",
-                    "path": "/path/to/remote/dir"
-                },
-                "start_issue": "2021-01-01",
-                "end_issue": "2021-01-03",
-                "source_dir": "/path/to/local/dir"
-            }
-        }
-
-        # Mock the logger
-        logger = MagicMock()
-        # Call the function
-        get_source_data(params, logger)
-
-        # Check that the SSH client was used correctly
-        mock_ssh.return_value.connect.assert_called_once_with(params["patch"]["source_backup_credentials"]["host"], username=params["patch"]["source_backup_credentials"]["user"])
-        mock_ssh.return_value.close.assert_called_once()
-
-        # Check that the SFTP client was used correctly
-        mock_sftp.chdir.assert_called_once_with(params["patch"]["source_backup_credentials"]["path"])
-        assert mock_sftp.get.call_count == 3  # one call for each date in the range
-        mock_sftp.close.assert_called_once()
-        
-
     @mock_patch('logging.Logger')
     def test_config_missing_custom_run_and_patch_section(self, mock_logger):
         # Case 1: missing custom_run flag and patch section
@@ -73,8 +38,8 @@ class TestPatchModule:
         ])
 
     @mock_patch('logging.Logger')
-    def test_config_invalid_start_issue_and_missing_source_dir(self, mock_logger):
-        # Case 3: start_issue not in yyyy-mm-dd format and source_dir doesn't exist.
+    def test_config_invalid_start_issue(self, mock_logger):
+        # Case 3: start_issue not in yyyy-mm-dd format
         patch_config = {
             "common": {
                 "custom_run": True,
@@ -83,13 +48,12 @@ class TestPatchModule:
                 "patch_dir": "dir",
                 "start_issue": "01-01-2024",
                 "end_issue": "2024-04-22",
-                "source_dir": "bad_source_dir"
+                "source_dir": "source_dir"
             }
         }
         assert not good_patch_config(patch_config, mock_logger)
         mock_logger.error.assert_has_calls([
-            call("Issue dates must be in YYYY-MM-DD format."),
-            call("Source directory does not exist.", source_dir="bad_source_dir")
+            call("Issue dates must be in YYYY-MM-DD format.")
         ])
 
     @mock_patch('logging.Logger')

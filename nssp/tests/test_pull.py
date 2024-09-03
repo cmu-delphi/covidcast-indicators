@@ -4,6 +4,7 @@ import unittest
 from unittest.mock import patch, MagicMock
 import tempfile
 import os
+import shutil
 import time
 from datetime import datetime
 import pdb
@@ -11,6 +12,7 @@ import pandas as pd
 import pandas.api.types as ptypes
 
 from delphi_nssp.pull import (
+    get_source_data,
     pull_nssp_data,
 )
 from delphi_nssp.constants import (
@@ -22,6 +24,38 @@ from delphi_nssp.constants import (
 
 
 class TestPullNSSPData(unittest.TestCase):
+    @patch('paramiko.SSHClient')
+    def test_get_source_data(self,mock_ssh):
+        mock_sftp = MagicMock()
+        mock_ssh.return_value.open_sftp.return_value = mock_sftp
+
+        params = {
+            "patch": {
+                "source_backup_credentials": {
+                    "host": "hostname",
+                    "user": "user",
+                    "path": "/path/to/remote/dir"
+                },
+                "start_issue": "2021-01-01",
+                "end_issue": "2021-01-03",
+                "source_dir": "./source_data"
+            }
+        }
+        logger = MagicMock()
+
+        get_source_data(params, logger)
+
+        # Check that the SSH client was used correctly
+        mock_ssh.return_value.connect.assert_called_once_with(params["patch"]["source_backup_credentials"]["host"], username=params["patch"]["source_backup_credentials"]["user"])
+        mock_ssh.return_value.close.assert_called_once()
+
+        # Check that the SFTP client was used correctly
+        mock_sftp.chdir.assert_called_once_with(params["patch"]["source_backup_credentials"]["path"])
+        assert mock_sftp.get.call_count == 3  # one call for each date in the range
+        mock_sftp.close.assert_called_once()
+
+        shutil.rmtree(params['patch']['source_dir'])
+
     @patch("delphi_nssp.pull.Socrata")
     def test_pull_nssp_data_for_patch(self, mock_socrata):
         params = {

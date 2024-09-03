@@ -146,7 +146,7 @@ def run_module(params):
         df = generate_weights(df, sensor)
 
         for geo in GEOS:
-            logger.info("Generating signal and exporting to CSV", geo=geo, signal=sensor)
+            logger.info("Generating signal and exporting to CSV", geo_type=geo, signal=sensor)
             if geo == "nation":
                 agg_df = weighted_nation_sum(df, sensor)
             else:

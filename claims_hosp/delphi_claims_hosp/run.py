@@ -135,7 +135,7 @@ def run_module(params):
                 params["indicator"]["write_se"],
                 signal_name
             )
-            output = updater.update_indicator_to_df(
+            output = updater.update_indicator(
                 claims_file,
                 logger,
             )

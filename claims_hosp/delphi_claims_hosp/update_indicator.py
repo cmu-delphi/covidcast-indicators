@@ -133,7 +133,7 @@ class ClaimsHospIndicatorUpdater:
         data_frame.fillna(0, inplace=True)
         return data_frame
 
-    def update_indicator_to_df(self, input_filepath, logger):
+    def update_indicator(self, input_filepath, logger):
         """
         Generate and output indicator values.
 
@@ -199,88 +199,6 @@ class ClaimsHospIndicatorUpdater:
 
         return output_df
 
-    def update_indicator(self, input_filepath, logger):
-        """
-        Generate and output indicator values.
-
-        Args:
-            input_filepath: path to the aggregated claims data
-        """
-        self.shift_dates()
-        final_output_inds = \
-            (self.burn_in_dates >= self.startdate) & (self.burn_in_dates <= self.enddate)
-
-        # load data
-        base_geo = Config.HRR_COL if self.geo == Config.HRR_COL else Config.FIPS_COL
-        data = load_data(input_filepath, self.dropdate, base_geo)
-        data_frame = self.geo_reindex(data)
-
-        # handle if we need to adjust by weekday
-        wd_params = (
-            Weekday.get_params_legacy(
-                data_frame,
-                "den",
-                ["num"],
-                Config.DATE_COL,
-                [1, 1e5],
-                logger,
-            )
-            if self.weekday
-            else None
-        )
-        # run fitting code (maybe in parallel)
-        rates = {}
-        std_errs = {}
-        valid_inds = {}
-        if not self.parallel:
-            for geo_id, sub_data in data_frame.groupby(level=0):
-                sub_data.reset_index(inplace=True)
-                if self.weekday:
-                    sub_data = Weekday.calc_adjustment(
-                        wd_params, sub_data, ["num"], Config.DATE_COL)
-                sub_data.set_index(Config.DATE_COL, inplace=True)
-                res = ClaimsHospIndicator.fit(sub_data, self.burnindate, geo_id)
-                res = pd.DataFrame(res)
-                rates[geo_id] = np.array(res.loc[final_output_inds, "rate"])
-                std_errs[geo_id] = np.array(res.loc[final_output_inds, "se"])
-                valid_inds[geo_id] = np.array(res.loc[final_output_inds, "incl"])
-        else:
-            n_cpu = min(Config.MAX_CPU_POOL, cpu_count())
-            logging.debug("starting pool with %d workers", n_cpu)
-            with Pool(n_cpu) as pool:
-                pool_results = []
-                for geo_id, sub_data in data_frame.groupby(level=0, as_index=False):
-                    sub_data.reset_index(inplace=True)
-                    if self.weekday:
-                        sub_data = Weekday.calc_adjustment(
-                            wd_params, sub_data, ["num"], Config.DATE_COL)
-                    sub_data.set_index(Config.DATE_COL, inplace=True)
-                    pool_results.append(
-                        pool.apply_async(
-                            ClaimsHospIndicator.fit,
-                            args=(sub_data, self.burnindate, geo_id,),
-                        )
-                    )
-                pool_results = [proc.get() for proc in pool_results]
-                for res in pool_results:
-                    geo_id = res["geo_id"]
-                    res = pd.DataFrame(res)
-                    rates[geo_id] = np.array(res.loc[final_output_inds, "rate"])
-                    std_errs[geo_id] = np.array(res.loc[final_output_inds, "se"])
-                    valid_inds[geo_id] = np.array(res.loc[final_output_inds, "incl"])
-
-        # write out results
-        unique_geo_ids = list(rates.keys())
-        output_dict = {
-            "rates": rates,
-            "se": std_errs,
-            "dates": self.output_dates,
-            "geo_ids": unique_geo_ids,
-            "geo_level": self.geo,
-            "include": valid_inds,
-        }
-        return output_dict
-
     def preprocess_output(self, df) -> pd.DataFrame:
         """
         Check for any anomlies and formats the output for exports.
@@ -314,53 +232,3 @@ class ClaimsHospIndicatorUpdater:
             output_df = output_df.append(group)
 
         return output_df
-    def write_to_csv(self, output_dict, output_path="./receiving"):
-        """
-        Write values to csv.
-
-        Args:
-            output_dict: dictionary containing values, se, unique dates, and unique geo_id
-            output_path: outfile path to write the csv
-
-        """
-        if self.write_se:
-            logging.info("========= WARNING: WRITING SEs TO %s =========",
-                         self.signal_name)
-
-        geo_level = output_dict["geo_level"]
-        dates = output_dict["dates"]
-        geo_ids = output_dict["geo_ids"]
-        all_rates = output_dict["rates"]
-        all_se = output_dict["se"]
-        all_include = output_dict["include"]
-        out_n = 0
-        for i, date in enumerate(dates):
-            filename = "%s/%s_%s_%s.csv" % (
-                output_path,
-                (date + Config.DAY_SHIFT).strftime("%Y%m%d"),
-                geo_level,
-                self.signal_name,
-            )
-            with open(filename, "w") as outfile:
-                outfile.write("geo_id,val,se,direction,sample_size\n")
-                for geo_id in geo_ids:
-                    val = all_rates[geo_id][i]
-                    se = all_se[geo_id][i]
-                    if all_include[geo_id][i]:
-                        assert not np.isnan(val), "value for included value is nan"
-                        assert not np.isnan(se), "se for included rate is nan"
-                        if val > 90:
-                            logging.warning("value suspicious, %s: %d", geo_id, val)
-                        assert se < 5, f"se suspicious, {geo_id}: {se}"
-                        if self.write_se:
-                            assert val > 0 and se > 0, "p=0, std_err=0 invalid"
-                            outfile.write(
-                                "%s,%f,%s,%s,%s\n" % (geo_id, val, se, "NA", "NA"))
-                        else:
-                            # for privacy reasons we will not report the standard error
-                            outfile.write(
-                                "%s,%f,%s,%s,%s\n" % (geo_id, val, "NA", "NA", "NA"))
-                        out_n += 1
-
-        logging.debug("wrote %d rows for %d %s", out_n, len(geo_ids), geo_level)
-        logging.debug("wrote files to %s", output_path)

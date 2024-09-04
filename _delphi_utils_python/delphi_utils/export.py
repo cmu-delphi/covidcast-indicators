@@ -113,10 +113,12 @@ def create_export_csv(
             "geo_id",
             "val",
             "se",
+            "direction",
             "sample_size",
             "missing_val",
             "missing_se",
-            "missing_sample_size"
+            "missing_sample_size",
+            "missing_direction",
         ]
         export_df = df[df["timestamp"] == date].filter(items=expected_columns)
         if "missing_val" in export_df.columns:

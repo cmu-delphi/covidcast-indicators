@@ -118,7 +118,6 @@ def create_export_csv(
             "missing_val",
             "missing_se",
             "missing_sample_size",
-            "missing_direction",
         ]
         export_df = df[df["timestamp"] == date].filter(items=expected_columns)
         if "missing_val" in export_df.columns:

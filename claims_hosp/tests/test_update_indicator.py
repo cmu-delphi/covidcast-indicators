@@ -38,7 +38,7 @@ class TestClaimsHospIndicatorUpdater:
     prefix = "foo"
     start_date = "02-01-2020"
     end_date = "06-01-2020"
-    drop_date = "2020-06-12"
+    drop_date = "06-12-2020"
     small_test_data = pd.DataFrame({
         "num": [0, 100, 200, 300, 400, 500, 600, 100, 200, 300, 400, 500, 600],
         "hrr": [1.0] * 7 + [2.0] * 6,

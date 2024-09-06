@@ -177,7 +177,7 @@ def update_sensor(
 
     else:
         n_cpu = min(10, cpu_count())
-        logger.debug(f"Starting pool", n_workers=n_cpu)
+        logger.debug("Starting pool", n_workers=n_cpu)
 
         with Pool(n_cpu) as pool:
             pool_results = []

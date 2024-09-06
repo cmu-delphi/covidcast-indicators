@@ -1,5 +1,10 @@
 """Structured logger utility for creating JSON logs.
 
+To make our structured logging as useful as it can be, particularly within the context of how we use logs in Elastic,
+the `event` argument (typically the first unnamed arg) should be a static string (to make filtering easier),
+and each dynamic/varying value should be specified in an individual meaningfully- and consistently-named argument
+to the logger call (for use in filtering, thresholding, grouping, visualization, etc)
+
 See the delphi_utils README.md for usage examples.
 
 The Delphi group uses two ~identical versions of this file.

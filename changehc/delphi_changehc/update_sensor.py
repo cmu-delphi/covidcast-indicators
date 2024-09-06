@@ -62,8 +62,8 @@ def write_to_csv(df, geo_level, write_se, day_shift, out_name, logger, output_pa
         sensor=out_name,
         write_empty_days=True
     )
-    logger.debug("Wrote rows", num_rows=df.size, geo_type=geo_level)
-    logger.debug("Wrote files", file_name=output_path)
+    logger.debug("Wrote rows", num_rows=df.size, geo_type=geo_level, num_geo_ids=df["geo_id"].unique().size)
+    logger.debug("Wrote files", export_dir=output_path)
     return dates
 
 
@@ -222,7 +222,7 @@ class CHCSensorUpdater:  # pylint: disable=too-many-instance-attributes
                 dfs.append(res)
         else:
             n_cpu = min(10, cpu_count())
-            self.logger.debug("Starting pool", n_worker=n_cpu)
+            self.logger.debug("Starting pool", n_workers=n_cpu)
             with Pool(n_cpu) as pool:
                 pool_results = []
                 for geo_id, sub_data in data_frame.groupby(level=0,as_index=False):

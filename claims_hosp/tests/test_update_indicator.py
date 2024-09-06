@@ -110,8 +110,8 @@ class TestClaimsHospIndicatorUpdater:
                               geo_res=geo,
                               write_empty_days=True,
                               sensor=Config.signal_name)
-            # output date range is half exclusive (2020-02-01 to 2020-05-31)
-            # while the export function takes the dates fully inclusive to start and end_date
+            # output date range is half exclusive [2020-02-01 to 2020-06-01)
+            # while the export function considers fully inclusive [2020-02-01. 2020-06-01]
             assert len(os.listdir(td.name)) == len(
                 updater.output_dates) + 1, f"failed {geo} update_indicator test"
             td.cleanup()

@@ -114,7 +114,7 @@ class ClaimsHospIndicatorUpdater:
             data_frame = data  # data is already adjusted in aggregation step above
         else:
             self.logger.error(
-                "geo is invalid, pick one of 'county', 'state', 'msa', 'hrr', 'hhs', nation'", geo=self.geo
+                "geo is invalid, pick one of 'county', 'state', 'msa', 'hrr', 'hhs', nation'", geo_type=self.geo
             )
             return False
 

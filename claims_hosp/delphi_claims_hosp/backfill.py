@@ -79,6 +79,9 @@ def merge_existing_backfill_files(backfill_dir, backfill_file, issue_date, logge
     """
     Merge existing backfill with the patch data included.
 
+    When the indicator fails for some reason or another, there's a gap in the backfill files.
+    The patch to fill in the missing dates happens later down the line when the backfill files are already merged.
+    This function takes the merged files with the missing date, insert the particular date, and merge back the file.
     Parameters
     ----------
     issue_date : datetime

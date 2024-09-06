@@ -1,17 +1,18 @@
 """
-This module is used for patching data in the delphi_doctor_visits package.
+This module is used for patching data in the delphi_claims_hosp package.
 
 To use this module, you need to specify the range of issue dates in params.json, like so:
 
 {
   "common": {
+    "custom_flag" : true,
     ...
   },
   "validation": {
     ...
   },
   "patch": {
-    "patch_dir": "/covidcast-indicators/doctor_visits/AprilPatch",
+    "patch_dir": "/covidcast-indicators/hopspital-admissions/patch",
     "start_issue": "2024-04-20",
     "end_issue": "2024-04-21"
   }
@@ -31,7 +32,7 @@ from .run import run_module
 
 def patch():
     """
-    Run the doctor visits indicator for a range of issue dates.
+    Run the hospital-admissions indicator for a range of issue dates.
 
     The range of issue dates is specified in params.json using the following keys:
     - "patch": Only used for patching data

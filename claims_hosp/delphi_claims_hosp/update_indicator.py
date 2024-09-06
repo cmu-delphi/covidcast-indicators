@@ -253,7 +253,7 @@ class ClaimsHospIndicatorUpdater:
                         assert not np.isnan(val), "value for included value is nan"
                         assert not np.isnan(se), "se for included rate is nan"
                         if val > 90:
-                            self.logger.warning("value suspicious", geo_type=geo_id, value=val)
+                            self.logger.warning("value suspicious", geo_type=geo_level, geo_value=geo_id, value=val)
                         assert se < 5, f"se suspicious, {geo_id}: {se}"
                         if self.write_se:
                             assert val > 0 and se > 0, "p=0, std_err=0 invalid"
@@ -265,4 +265,4 @@ class ClaimsHospIndicatorUpdater:
                                 "%s,%f,%s,%s,%s\n" % (geo_id, val, "NA", "NA", "NA"))
                         out_n += 1
 
-        self.logger.debug("Wrote rows", num_rows=out_n, num_geo_ids=len(geo_ids))
+        self.logger.debug("Wrote rows", num_rows=out_n, geo_type=geo_level, num_geo_ids=len(geo_ids))

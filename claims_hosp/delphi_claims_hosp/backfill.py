@@ -77,7 +77,7 @@ def store_backfill_file(claims_filepath, _end_date, backfill_dir):
 
 def merge_existing_backfill_files(backfill_dir, backfill_file, issue_date, logger):
     """
-    Merge existing backfill with the patch data included.
+    Merge existing backfill with the patch data included. This function is specifically run for patching.
 
     When the indicator fails for some reason or another, there's a gap in the backfill files.
     The patch to fill in the missing dates happens later down the line when the backfill files are already merged.

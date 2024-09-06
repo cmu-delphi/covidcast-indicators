@@ -215,7 +215,7 @@ class ClaimsHospIndicatorUpdater:
         filtered_df = filtered_df.reset_index()
         filtered_df.rename(columns={"rate": "val"}, inplace=True)
         filtered_df["timestamp"] = filtered_df["timestamp"].astype(str)
-        output_df = pd.DataFrame()
+        df_list = []
         for geo_id, group in filtered_df.groupby("geo_id"):
             assert not group.val.isnull().any()
             assert not group.se.isnull().any()
@@ -227,8 +227,8 @@ class ClaimsHospIndicatorUpdater:
                 assert np.all(group.val > 0) and np.all(group.se > 0), "p=0, std_err=0 invalid"
             else:
                 group["se"] = np.NaN
-            group.drop("incl", inplace=True, axis="columns")
             group["direction"] = np.NaN
-            output_df = output_df.append(group)
+            df_list.append(group)
 
+        output_df = pd.concat(df_list)
         return output_df

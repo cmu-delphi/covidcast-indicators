@@ -216,6 +216,8 @@ class ClaimsHospIndicatorUpdater:
         filtered_df.rename(columns={"rate": "val"}, inplace=True)
         filtered_df["timestamp"] = filtered_df["timestamp"].astype(str)
         df_list = []
+        if self.write_se:
+            logging.info("WARNING: WRITING SEs")
         for geo_id, group in filtered_df.groupby("geo_id"):
             assert not group.val.isnull().any()
             assert not group.se.isnull().any()

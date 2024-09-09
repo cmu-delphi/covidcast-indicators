@@ -227,8 +227,9 @@ class ClaimsHospIndicatorUpdater:
                 assert np.all(group.val > 0) and np.all(group.se > 0), "p=0, std_err=0 invalid"
             else:
                 group["se"] = np.NaN
-            group["direction"] = np.NaN
+            group["sample_size"] = np.NaN
             df_list.append(group)
 
         output_df = pd.concat(df_list)
+        assert sorted(list(output_df.columns)) == ['geo_id', 'incl', 'sample_size', 'se', 'timestamp', 'val']
         return output_df

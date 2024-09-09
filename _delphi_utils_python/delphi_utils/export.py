@@ -113,7 +113,6 @@ def create_export_csv(
             "geo_id",
             "val",
             "se",
-            "direction",
             "sample_size",
             "missing_val",
             "missing_se",

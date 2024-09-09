@@ -121,8 +121,8 @@ class TestClaimsHospIndicatorUpdater:
         for geo in d.get("geo_ids"):
            df_list.append(pd.DataFrame({"geo_id": geo,"rate": d["rates"][geo], "se": d["se"][geo],
                                        "incl": d["include"][geo], "timestamp": d["dates"],
-                                        "sample_size": [np.nan, np.nan, np.nan],
-                                "direction": [np.nan, np.nan, np.nan]}))
+                                        "sample_size": [np.nan, np.nan, np.nan]
+                                        }))
 
         output_df = pd.concat(df_list)
         output_df.index = output_df.timestamp
@@ -177,38 +177,35 @@ class TestClaimsHospIndicatorUpdater:
         assert exists(join(td.name, expected_name))
         output_data = pd.read_csv(join(td.name, expected_name))
         assert (
-                output_data.columns == ["geo_id", "val", "se", "direction", "sample_size"]
+                output_data.columns == ["geo_id", "val", "se", "sample_size"]
         ).all()
         assert (output_data.geo_id == ["a", "b"]).all()
         assert np.array_equal(output_data.val.values, np.array([0.1, 1]))
 
         # for privacy we do not usually report SEs
         assert np.isnan(output_data.se.values).all()
-        assert np.isnan(output_data.direction.values).all()
         assert np.isnan(output_data.sample_size.values).all()
 
         expected_name = f"20200502_geography_{Config.signal_name}.csv"
         assert exists(join(td.name, expected_name))
         output_data = pd.read_csv(join(td.name, expected_name))
         assert (
-                output_data.columns == ["geo_id", "val", "se", "direction", "sample_size"]
+                output_data.columns == ["geo_id", "val", "se", "sample_size"]
         ).all()
         assert (output_data.geo_id == ["a"]).all()
         assert np.array_equal(output_data.val.values, np.array([0.5]))
         assert np.isnan(output_data.se.values).all()
-        assert np.isnan(output_data.direction.values).all()
         assert np.isnan(output_data.sample_size.values).all()
 
         expected_name = f"20200504_geography_{Config.signal_name}.csv"
         assert exists(join(td.name, expected_name))
         output_data = pd.read_csv(join(td.name, expected_name))
         assert (
-                output_data.columns == ["geo_id", "val", "se", "direction", "sample_size"]
+                output_data.columns == ["geo_id", "val", "se", "sample_size"]
         ).all()
         assert (output_data.geo_id == ["a", "b"]).all()
         assert np.array_equal(output_data.val.values, np.array([1.5, 3]))
         assert np.isnan(output_data.se.values).all()
-        assert np.isnan(output_data.direction.values).all()
         assert np.isnan(output_data.sample_size.values).all()
 
         td.cleanup()
@@ -265,12 +262,11 @@ class TestClaimsHospIndicatorUpdater:
         assert exists(join(td.name, expected_name))
         output_data = pd.read_csv(join(td.name, expected_name))
         assert (
-                output_data.columns == ["geo_id", "val", "se", "direction", "sample_size"]
+                output_data.columns == ["geo_id", "val", "se", "sample_size"]
         ).all()
         assert (output_data.geo_id == ["a", "b"]).all()
         assert np.array_equal(output_data.val.values, np.array([0.1, 1]))
         assert np.array_equal(output_data.se.values, np.array([0.1, 0.5]))
-        assert np.isnan(output_data.direction.values).all()
         assert np.isnan(output_data.sample_size.values).all()
         td.cleanup()
 

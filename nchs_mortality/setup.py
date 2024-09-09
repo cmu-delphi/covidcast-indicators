@@ -2,10 +2,12 @@ from setuptools import setup
 from setuptools import find_packages
 
 required = [
+    "boto3",
     "darker[isort]~=2.1.1",
     "delphi-utils",
     "epiweeks",
     "freezegun",
+    "moto~=4.2.14",
     "numpy",
     "pandas",
     "pydocstyle",

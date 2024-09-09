@@ -49,9 +49,7 @@ def write_to_csv(df, geo_level, write_se, day_shift, out_name, logger, output_pa
     suspicious_val_mask = df["val"].gt(90)
     if not df[suspicious_val_mask].empty:
         for geo in df.loc[suspicious_val_mask, "geo_id"]:
-            logger.warning("value suspiciously high, {0}: {1}".format(
-                geo, out_name
-            ))
+            logger.warning("value suspiciously high", geo_type=geo, filename=out_name)
 
     dates = create_export_csv(
         df,
@@ -146,8 +144,8 @@ class CHCSensorUpdater:  # pylint: disable=too-many-instance-attributes
         geo = self.geo
         gmpr = GeoMapper()
         if geo not in {"county", "state", "msa", "hrr", "nation", "hhs"}:
-            self.logger.error("{0} is invalid, pick one of 'county', "
-                          "'state', 'msa', 'hrr', 'hss','nation'".format(geo))
+            self.logger.error(f"{geo} is invalid, pick one of 'county', "
+                          "'state', 'msa', 'hrr', 'hss','nation'", geo_type=geo)
             return False
         if geo == "county":
             data_frame = gmpr.fips_to_megacounty(data,

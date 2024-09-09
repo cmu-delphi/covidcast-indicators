@@ -231,5 +231,6 @@ class ClaimsHospIndicatorUpdater:
             df_list.append(group)
 
         output_df = pd.concat(df_list)
-        assert sorted(list(output_df.columns)) == ['geo_id', 'incl', 'sample_size', 'se', 'timestamp', 'val']
+        output_df.drop(columns=["incl"], inplace=True)
+        assert sorted(list(output_df.columns)) == ["geo_id", "sample_size", "se", "timestamp", "val"]
         return output_df

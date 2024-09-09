@@ -130,5 +130,5 @@ def create_export_csv(
             export_df = export_df.sort_values(by="geo_id")
         export_df.to_csv(export_file, index=False, na_rep="NA")
 
-        logger.debug("Wrote rows", num_rows=df.size, geo_type=geo_level, num_geo_ids=export_df["geo_id"].unique().size)
+        logger.debug("Wrote rows", num_rows=df.size, geo_type=geo_res, num_geo_ids=export_df["geo_id"].unique().size)
     return dates

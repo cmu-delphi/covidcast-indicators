@@ -171,7 +171,8 @@ class TestClaimsHospIndicatorUpdater:
                           start_date=self.start_date,
                           end_date=self.end_date,
                           geo_res=res0["geo_level"],
-                          sensor=Config.signal_name)
+                          sensor=Config.signal_name,
+                          logger=TEST_LOGGER)
         # check outputs
         expected_name = f"20200501_geography_{Config.signal_name}.csv"
         assert exists(join(td.name, expected_name))
@@ -255,7 +256,8 @@ class TestClaimsHospIndicatorUpdater:
                           start_date=self.start_date,
                           end_date=self.end_date,
                           geo_res=res0["geo_level"],
-                          sensor=signal_name)
+                          sensor=signal_name,
+                          logger=TEST_LOGGER)
 
         # check outputs
         expected_name = f"20200501_geography_{signal_name}.csv"

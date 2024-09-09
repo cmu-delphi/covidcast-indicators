@@ -146,6 +146,7 @@ def run_module(params):
                 start_date=startdate,
                 geo_res=geo,
                 sensor=signal_name,
+                logger=logger
             )
 
             max_dates.append(updater.output_dates[-1])

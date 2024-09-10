@@ -114,7 +114,7 @@ class ClaimsHospIndicatorUpdater:
             data_frame = data  # data is already adjusted in aggregation step above
         else:
             self.logger.error(
-                "geo is invalid, pick one of 'county', 'state', 'msa', 'hrr', 'hhs', nation'", geo_type=self.geo
+                "Geo is invalid, pick one of 'county', 'state', 'msa', 'hrr', 'hhs', nation'", geo_type=self.geo
             )
             return False
 
@@ -253,7 +253,7 @@ class ClaimsHospIndicatorUpdater:
                         assert not np.isnan(val), "value for included value is nan"
                         assert not np.isnan(se), "se for included rate is nan"
                         if val > 90:
-                            self.logger.warning("value suspicious", geo_type=geo_level, geo_value=geo_id, value=val)
+                            self.logger.warning("Value suspicious", geo_type=geo_level, geo_value=geo_id, value=val)
                         assert se < 5, f"se suspicious, {geo_id}: {se}"
                         if self.write_se:
                             assert val > 0 and se > 0, "p=0, std_err=0 invalid"

@@ -125,6 +125,7 @@ def run_module(params):
                 export_dir=export_dir,
                 sensor=signal,
                 weekly_dates=True,
+                logger=logger
             )
             if len(dates) > 0:
                 run_stats.append((max(dates), len(dates)))

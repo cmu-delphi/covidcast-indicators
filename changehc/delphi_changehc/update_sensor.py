@@ -60,7 +60,8 @@ def write_to_csv(df, geo_level, write_se, day_shift, out_name, logger, output_pa
         start_date=start_date,
         end_date=end_date,
         sensor=out_name,
-        write_empty_days=True
+        write_empty_days=True,
+        logger=logger
     )
     logger.debug("wrote {0} rows for {1} {2}".format(
         df.size, df["geo_id"].unique().size, geo_level

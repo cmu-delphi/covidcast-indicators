@@ -155,7 +155,7 @@ def run_module(params):
             agg_df = add_needed_columns(agg_df)
             # actual export
             dates = create_export_csv(
-                agg_df, geo_res=geo, export_dir=export_dir, sensor=sensor
+                agg_df, geo_res=geo, export_dir=export_dir, sensor=sensor, logger=logger
             )
             if len(dates) > 0:
                 run_stats.append((max(dates), len(dates)))

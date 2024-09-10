@@ -109,7 +109,9 @@ class TestClaimsHospIndicatorUpdater:
                               end_date=self.end_date,
                               geo_res=geo,
                               write_empty_days=True,
-                              sensor=Config.signal_name)
+                              sensor=Config.signal_name,
+                              logger=TEST_LOGGER
+                              )
             # output date range is half exclusive [2020-02-01 to 2020-06-01)
             # while the export function considers fully inclusive [2020-02-01. 2020-06-01]
             assert len(os.listdir(td.name)) == len(

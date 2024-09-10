@@ -1,4 +1,5 @@
 """Tests for exporting CSV files."""
+import logging
 from datetime import datetime
 from os import listdir
 from os.path import join
@@ -11,6 +12,7 @@ from pandas.testing import assert_frame_equal
 
 from delphi_utils import create_export_csv, Nans
 
+TEST_LOGGER = logging.getLogger()
 
 def _set_df_dtypes(df: pd.DataFrame, dtypes: Dict[str, Any]) -> pd.DataFrame:
     assert all(isinstance(e, type) or isinstance(e, str) for e in dtypes.values()), (
@@ -102,6 +104,7 @@ class TestExport:
             metric="deaths",
             geo_res="county",
             sensor="test",
+            logger=TEST_LOGGER
         )
 
         assert set(listdir(tmp_path)) == set(
@@ -122,6 +125,7 @@ class TestExport:
             metric="deaths",
             geo_res="county",
             sensor="test",
+            logger=TEST_LOGGER
         )
         assert_frame_equal(
             pd.read_csv(join(tmp_path, "20200215_county_deaths_test.csv")),
@@ -144,6 +148,7 @@ class TestExport:
             export_dir=tmp_path,
             geo_res="county",
             sensor="test",
+            logger=TEST_LOGGER
         )
 
         assert set(listdir(tmp_path)) == set(
@@ -163,6 +168,7 @@ class TestExport:
             export_dir=tmp_path,
             geo_res="county",
             sensor="test",
+            logger=TEST_LOGGER
         )
 
         assert set(listdir(tmp_path)) == set(
@@ -182,6 +188,7 @@ class TestExport:
             export_dir=tmp_path,
             geo_res="county",
             sensor="test",
+            logger=TEST_LOGGER
         )
 
         assert set(listdir(tmp_path)) == set(
@@ -199,6 +206,7 @@ class TestExport:
             export_dir=tmp_path,
             geo_res="state",
             sensor="test",
+            logger=TEST_LOGGER
         )
 
         assert set(listdir(tmp_path)) == set(
@@ -228,7 +236,8 @@ class TestExport:
             export_dir=tmp_path,
             geo_res="state",
             sensor="test",
-            remove_null_samples=True
+            remove_null_samples=True,
+            logger=TEST_LOGGER
         )
 
         assert set(listdir(tmp_path)) == set(
@@ -259,7 +268,8 @@ class TestExport:
             export_dir=tmp_path,
             geo_res="state",
             sensor="test",
-            remove_null_samples=False
+            remove_null_samples=False,
+            logger=TEST_LOGGER
         )
 
         assert set(listdir(tmp_path)) == set(
@@ -275,7 +285,7 @@ class TestExport:
     def test_export_df_without_missingness(self, tmp_path):
 
         create_export_csv(
-            df=self.DF.copy(), export_dir=tmp_path, geo_res="county", sensor="test"
+            df=self.DF.copy(), export_dir=tmp_path, geo_res="county", sensor="test", logger=TEST_LOGGER
         )
         df = pd.read_csv(join(tmp_path, "20200215_county_test.csv")).astype(
             {"geo_id": str, "sample_size": int}
@@ -297,6 +307,7 @@ class TestExport:
             export_dir=tmp_path,
             geo_res="county",
             sensor="test",
+            logger=TEST_LOGGER
         )
         assert set(listdir(tmp_path)) == set(
             [
@@ -358,7 +369,8 @@ class TestExport:
             unsorted_df,
             export_dir=tmp_path,
             geo_res="county",
-            sensor="test"
+            sensor="test",
+            logger=TEST_LOGGER
         )
         expected_df = pd.DataFrame({
             "geo_id": ["51175", "51093"],
@@ -374,7 +386,8 @@ class TestExport:
             export_dir=tmp_path,
             geo_res="county",
             sensor="test",
-            sort_geos=True
+            sort_geos=True,
+            logger=TEST_LOGGER
         )
         expected_df = pd.DataFrame({
             "geo_id": ["51093", "51175"],

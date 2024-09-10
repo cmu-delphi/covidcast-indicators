@@ -104,7 +104,9 @@ def run_module(params, logger=None):
                 start_date=SMOOTHERS_MAP[smoother][1](export_start_date),
                 metric=metric.lower(),
                 geo_res=geo_res,
-                sensor=sensor_name)
+                sensor=sensor_name,
+                logger=logger
+            )
             if not exported_csv_dates.empty:
                 logger.info("Exported CSV",
                             csv_export_count=exported_csv_dates.size,

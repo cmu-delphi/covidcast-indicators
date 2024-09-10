@@ -126,7 +126,9 @@ def run_module(params):
                           params["common"]["export_dir"],
                           geo,
                           sensor_name,
-                          start_date=start_date)
+                          start_date=start_date,
+                          logger=logger
+                                  )
         if len(dates) > 0:
             stats.append((max(dates), len(dates)))
 

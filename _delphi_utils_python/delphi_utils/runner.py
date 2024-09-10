@@ -60,10 +60,16 @@ def run_indicator_pipeline(indicator_fn:  Callable[[Params], None],
                 if "current_version" in line:
                     current_version = str.strip(line)
                     current_version = current_version.replace("current_version = ", "")
-        # Logging - Starting Indicator
-        logger.info("Started a covidcast-indicator", indicator_name=ind_name, current_version=current_version)
+    #Logging - Starting Indicator
+        logger.info(
+            "Started a covidcast-indicator",
+            indicator_name=ind_name,
+            current_version=current_version
+        )
     else:
-        logger.info("Started a covidcast-indicator without version.cfg", indicator_name=ind_name)
+        logger.info(
+            "Started a covidcast-indicator without version.cfg", indicator_name=ind_name
+        )
 
     indicator_fn(params)
     validator = validator_fn(params)
@@ -79,7 +85,9 @@ def run_indicator_pipeline(indicator_fn:  Callable[[Params], None],
             break
         time.sleep(1)
     else:
-        logger.error("Flash step timed out, terminating", elapsed_time_in_seconds=round(time.time() - start, 2))
+        logger.error("Flash step timed out, terminating",
+                     elapsed_time_in_seconds=round(time.time() - start, 2)
+                 )
         t1.terminate()
         t1.join()
     if validator:

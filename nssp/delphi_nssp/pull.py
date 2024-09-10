@@ -47,7 +47,7 @@ def get_source_data(params, logger):
     sftp.chdir(params["patch"]["source_backup_credentials"]["path"])
     num_files_transferred = 0
     for remote_file_name in csv_file_names:
-        callback_for_filename = functools.partial(print_callback, remote_file_name, logger, progress_chunks=[0,50])
+        callback_for_filename = functools.partial(print_callback, remote_file_name, logger, progress_chunks=[0, 50])
         local_file_path = path.join(params["patch"]["source_dir"], remote_file_name)
         try:
             sftp.get(remote_file_name, local_file_path, callback=callback_for_filename)

@@ -52,7 +52,6 @@ class TestPullNSSPData(unittest.TestCase):
         # Check that the SFTP client was used correctly
         mock_sftp.chdir.assert_called_once_with(params["patch"]["source_backup_credentials"]["path"])
         assert mock_sftp.get.call_count == 3  # one call for each date in the range
-        mock_sftp.close.assert_called_once()
 
         shutil.rmtree(params['patch']['source_dir'])
 

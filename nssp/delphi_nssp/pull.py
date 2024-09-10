@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Functions for pulling NSSP ER data."""
 
+import functools
 import sys
 import textwrap
 from os import makedirs, path
@@ -11,6 +12,13 @@ from sodapy import Socrata
 
 from .constants import NEWLINE, SIGNALS, SIGNALS_MAP, TYPE_DICT
 
+def print_callback(remote_file_name, logger, bytes_so_far, bytes_total, progress_chunks):
+    """Print the callback information."""
+    rough_percent_transferred = int(100 * (bytes_so_far / bytes_total))
+    if rough_percent_transferred in progress_chunks:
+        logger.info("Transfer in progress", remote_file_name=remote_file_name, percent=rough_percent_transferred)
+        # Remove progress chunk, so it is not logged again
+        progress_chunks.remove(rough_percent_transferred)
 
 def get_source_data(params, logger):
     """
@@ -39,9 +47,11 @@ def get_source_data(params, logger):
     sftp.chdir(params["patch"]["source_backup_credentials"]["path"])
     num_files_transferred = 0
     for remote_file_name in csv_file_names:
+        callback_for_filename = functools.partial(print_callback, remote_file_name, logger, progress_chunks=[0,50])
+        local_file_path = path.join(params["patch"]["source_dir"], remote_file_name)
         try:
-            local_file_path = path.join(params["patch"]["source_dir"], remote_file_name)
-            sftp.get(remote_file_name, local_file_path)
+            sftp.get(remote_file_name, local_file_path, callback=callback_for_filename)
+            logger.info("Transfer finished", remote_file_name=remote_file_name, local_file_path=local_file_path)
             num_files_transferred += 1
         except IOError:
             logger.warning(

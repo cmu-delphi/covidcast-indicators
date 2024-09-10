@@ -49,7 +49,7 @@ def write_to_csv(df, geo_level, write_se, day_shift, out_name, logger, output_pa
     suspicious_val_mask = df["val"].gt(90)
     if not df[suspicious_val_mask].empty:
         for geo in df.loc[suspicious_val_mask, "geo_id"]:
-            logger.warning("value suspiciously high", geo_type=geo, filename=out_name)
+            logger.warning("Value suspiciously high", geo_value=geo, filename=out_name)
 
     dates = create_export_csv(
         df,

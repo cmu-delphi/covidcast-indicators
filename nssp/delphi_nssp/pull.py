@@ -48,7 +48,6 @@ def get_source_data(params, logger):
             logger.warning(
                 "Source backup for this date does not exist on the remote server.", missing_filename=remote_file_name
             )
-    sftp.close()
     ssh.close()
 
     if num_files_transferred == 0:

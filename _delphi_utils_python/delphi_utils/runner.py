@@ -64,7 +64,7 @@ def run_indicator_pipeline(indicator_fn:  Callable[[Params], None],
         logger.info(
             "Started a covidcast-indicator",
             indicator_name=ind_name,
-            current_version=current_version
+            current_version=current_version,
         )
     else:
         logger.info(
@@ -86,7 +86,7 @@ def run_indicator_pipeline(indicator_fn:  Callable[[Params], None],
         time.sleep(1)
     else:
         logger.error("Flash step timed out, terminating",
-                     elapsed_time_in_seconds=round(time.time() - start, 2)
+                     elapsed_time_in_seconds=round(time.time() - start, 2),
                  )
         t1.terminate()
         t1.join()

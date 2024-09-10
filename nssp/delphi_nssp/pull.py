@@ -41,7 +41,6 @@ def get_source_data(params, logger):
     for remote_file_name in csv_file_names:
         try:
             local_file_path = path.join(params["patch"]["source_dir"], remote_file_name)
-            sftp.stat(remote_file_name)
             sftp.get(remote_file_name, local_file_path)
             num_files_transferred += 1
         except IOError:

@@ -87,7 +87,7 @@ def run_indicator_pipeline(indicator_fn:  Callable[[Params], None],
     else:
         logger.error("Flash step timed out, terminating",
                      elapsed_time_in_seconds=round(time.time() - start, 2),
-                 )
+        )
         t1.terminate()
         t1.join()
     if validator:

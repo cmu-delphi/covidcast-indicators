@@ -12,6 +12,7 @@ from sodapy import Socrata
 
 from .constants import NEWLINE, SIGNALS, SIGNALS_MAP, TYPE_DICT
 
+
 def print_callback(remote_file_name, logger, bytes_so_far, bytes_total, progress_chunks):
     """Print the callback information."""
     rough_percent_transferred = int(100 * (bytes_so_far / bytes_total))
@@ -19,6 +20,7 @@ def print_callback(remote_file_name, logger, bytes_so_far, bytes_total, progress
         logger.info("Transfer in progress", remote_file_name=remote_file_name, percent=rough_percent_transferred)
         # Remove progress chunk, so it is not logged again
         progress_chunks.remove(rough_percent_transferred)
+
 
 def get_source_data(params, logger):
     """

@@ -6,11 +6,6 @@ and each dynamic/varying value should be specified in an individual meaningfully
 to the logger call (for use in filtering, thresholding, grouping, visualization, etc)
 
 See the delphi_utils README.md for usage examples.
-
-The Delphi group uses two ~identical versions of this file.
-Try to keep them in sync with edits, for sanity.
-  https://github.com/cmu-delphi/covidcast-indicators/blob/main/_delphi_utils_python/delphi_utils/logger.py
-  https://github.com/cmu-delphi/delphi-epidata/blob/dev/src/common/logger.py
 """
 
 import contextlib

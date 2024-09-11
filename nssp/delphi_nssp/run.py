@@ -120,12 +120,7 @@ def run_module(params):
             df_csv = df[CSV_COLS + ["timestamp"]]
             # actual export
             dates = create_export_csv(
-                df_csv,
-                geo_res=geo,
-                export_dir=export_dir,
-                sensor=signal,
-                weekly_dates=True,
-                logger=logger
+                df_csv, geo_res=geo, export_dir=export_dir, sensor=signal, weekly_dates=True, logger=logger
             )
             if len(dates) > 0:
                 run_stats.append((max(dates), len(dates)))

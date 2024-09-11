@@ -92,7 +92,7 @@ def run_module(params: Dict[str, Any]):
                     start_date=datetime.strptime(export_start_date, "%Y-%m-%d"),
                     sensor=SENSOR_NAME_MAP[metric],
                     weekly_dates=True,
-                    logger=logger
+                    logger=logger,
                 )
             else:
                 for sensor in SENSORS:
@@ -118,7 +118,7 @@ def run_module(params: Dict[str, Any]):
                         start_date=datetime.strptime(export_start_date, "%Y-%m-%d"),
                         sensor=sensor_name,
                         weekly_dates=True,
-                        logger=logger
+                        logger=logger,
                     )
             if len(dates) > 0:
                 stats.append((max(dates), len(dates)))

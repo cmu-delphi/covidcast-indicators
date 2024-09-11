@@ -63,17 +63,17 @@ def generate_and_export_for_nonparent_geo(geo_groups, res_key, smooth, device,
                                           export_start_date, export_end_date, # export args
                                           threaded_logger): # logger args
     """Generate sensors, create export CSV then return stats."""
-    threaded_logger.info("Generating signal and exporting to CSV",
-                         geo_res=geo_res,
-                         sensor=sensor_name)
-    res_df = generate_sensor_for_nonparent_geo(geo_groups, res_key, smooth, device,
-                                               first_date, last_date, suffix)
-    dates = create_export_csv(res_df, geo_res=geo_res,
-                              sensor=sensor_name, export_dir=export_dir,
-                              start_date=export_start_date,
-                              end_date=export_end_date,
-                              logger=threaded_logger
-                              )
+    threaded_logger.info("Generating signal and exporting to CSV", geo_res=geo_res, sensor=sensor_name)
+    res_df = generate_sensor_for_nonparent_geo(geo_groups, res_key, smooth, device, first_date, last_date, suffix)
+    dates = create_export_csv(
+        res_df,
+        geo_res=geo_res,
+        sensor=sensor_name,
+        export_dir=export_dir,
+        start_date=export_start_date,
+        end_date=export_end_date,
+        logger=threaded_logger,
+    )
     return dates
 
 def generate_and_export_for_parent_geo(geo_groups, geo_data, res_key, smooth, device,
@@ -82,17 +82,20 @@ def generate_and_export_for_parent_geo(geo_groups, geo_data, res_key, smooth, de
                                        export_start_date, export_end_date, # export args
                                        threaded_logger): # logger args
     """Generate sensors, create export CSV then return stats."""
-    threaded_logger.info("Generating signal and exporting to CSV",
-                         geo_res=geo_res,
-                         sensor=sensor_name)
-    res_df = generate_sensor_for_parent_geo(geo_groups, geo_data, res_key, smooth, device,
-                                            first_date, last_date, suffix)
-    dates = create_export_csv(res_df, geo_res=geo_res,
-                              sensor=sensor_name, export_dir=export_dir,
-                              start_date=export_start_date,
-                              end_date=export_end_date,
-                              remove_null_samples=True,
-                              logger=threaded_logger) # for parent geo, remove null sample size
+    threaded_logger.info("Generating signal and exporting to CSV", geo_res=geo_res, sensor=sensor_name)
+    res_df = generate_sensor_for_parent_geo(
+        geo_groups, geo_data, res_key, smooth, device, first_date, last_date, suffix
+    )
+    dates = create_export_csv(
+        res_df,
+        geo_res=geo_res,
+        sensor=sensor_name,
+        export_dir=export_dir,
+        start_date=export_start_date,
+        end_date=export_end_date,
+        remove_null_samples=True,
+        logger=threaded_logger,
+    )  # for parent geo, remove null sample size
     return dates
 
 def run_module(params: Dict[str, Any]):

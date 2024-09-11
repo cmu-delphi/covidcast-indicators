@@ -154,9 +154,7 @@ def run_module(params):
             # add se, sample_size, and na codes
             agg_df = add_needed_columns(agg_df)
             # actual export
-            dates = create_export_csv(
-                agg_df, geo_res=geo, export_dir=export_dir, sensor=sensor, logger=logger
-            )
+            dates = create_export_csv(agg_df, geo_res=geo, export_dir=export_dir, sensor=sensor, logger=logger)
             if len(dates) > 0:
                 run_stats.append((max(dates), len(dates)))
     ## log this indicator run

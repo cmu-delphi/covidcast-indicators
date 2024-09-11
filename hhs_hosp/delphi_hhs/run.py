@@ -122,13 +122,9 @@ def run_module(params):
         sensor_name = sensor + smoother[1]
         # don't export first 6 days for smoothed signals since they'll be nan.
         start_date = min(df.timestamp) + timedelta(6) if smoother[1] else min(df.timestamp)
-        dates = create_export_csv(df,
-                          params["common"]["export_dir"],
-                          geo,
-                          sensor_name,
-                          start_date=start_date,
-                          logger=logger
-                                  )
+        dates = create_export_csv(
+            df, params["common"]["export_dir"], geo, sensor_name, start_date=start_date, logger=logger
+        )
         if len(dates) > 0:
             stats.append((max(dates), len(dates)))
 

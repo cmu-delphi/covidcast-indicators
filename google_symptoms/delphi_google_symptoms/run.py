@@ -105,7 +105,7 @@ def run_module(params, logger=None):
                 metric=metric.lower(),
                 geo_res=geo_res,
                 sensor=sensor_name,
-                logger=logger
+                logger=logger,
             )
             if not exported_csv_dates.empty:
                 logger.info("Exported CSV",

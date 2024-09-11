@@ -144,7 +144,7 @@ class ClaimsHospIndicator:
         rate_data['se'] = se_valid
 
         logging.debug(
-            "%s: %05.3f, [%05.3f]".format(geo_id, rate_data["rate"][-1], rate_data["se"][-1]),
+            f"{geo_id}: %05.3f, [%05.3f]".format(rate_data["rate"][-1], rate_data["se"][-1]),
             geo_value=geo_id,
             value=rate_data["rate"][-1],
             se=rate_data["se"][-1],

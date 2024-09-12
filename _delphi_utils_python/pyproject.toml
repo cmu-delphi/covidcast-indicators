@@ -13,7 +13,7 @@ classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
     "Programming Language :: Python :: 3.8",
-    "License :: MIT",
+    "License :: OSI Approved :: MIT License",
 ]
 dependencies = [
     "boto3",

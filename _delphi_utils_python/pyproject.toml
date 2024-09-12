@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "delphi-utils"
-version = "0.3.24"
+version = "0.3.25"
 description = "Shared Utility Functions for Indicators"
 readme = "README.md"
 requires-python = "== 3.8.*"

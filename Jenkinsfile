@@ -10,7 +10,7 @@
    - TODO: #527 Get this list automatically from python-ci.yml at runtime.
  */
 
-def indicator_list = ["backfill_corrections", "changehc", "claims_hosp", "google_symptoms", "hhs_hosp", "nchs_mortality", "quidel_covidtest", "sir_complainsalot", "doctor_visits", "nwss_wastewater", "nssp"]
+def indicator_list = ['backfill_corrections', 'changehc', 'claims_hosp', 'google_symptoms', 'hhs_hosp', 'nchs_mortality', 'quidel_covidtest', 'sir_complainsalot', 'doctor_visits', 'nwss_wastewater', 'nssp']
 def build_package_main = [:]
 def build_package_prod = [:]
 def deploy_staging = [:]
@@ -19,39 +19,62 @@ def deploy_production = [:]
 pipeline {
     agent any
     stages {
-        stage('Build and Package main') {
-            when {
-                branch "main";
+        stage('Build dev/feature branch') {
+            when  {
+                not {
+                    anyOf {
+                        branch 'main'
+                        branch 'prod'
+                    }
+                }
             }
             steps {
                 script {
                     indicator_list.each { indicator ->
-                        build_package_main[indicator] = {
-                            sh "jenkins/build-and-package.sh ${indicator} main"
+                        stage("Build ${indicator}") {
+                            sh "jenkins/build-indicator.sh ${indicator}"
                         }
                     }
-                    parallel build_package_main
                 }
             }
         }
-        stage('Build and Package prod') {
+        stage('Build and Package main branch') {
             when {
-                branch "prod";
+                branch 'main'
             }
             steps {
                 script {
                     indicator_list.each { indicator ->
-                        build_package_prod[indicator] = {
-                            sh "jenkins/build-and-package.sh ${indicator} prod"
+                        stage("Build ${indicator}") {
+                            sh "jenkins/build-indicator.sh ${indicator}"
+                        }
+                        stage("Package ${indicator}") {
+                            sh "jenkins/package-indicator.sh ${indicator} main"
                         }
                     }
-                    parallel build_package_prod
                 }
             }
         }
-        stage('Deploy staging') {
+        stage('Build and Package prod branch') {
             when {
-                branch "main";
+                branch 'prod'
+            }
+            steps {
+                script {
+                    indicator_list.each { indicator ->
+                        stage("Build ${indicator}") {
+                            sh "jenkins/build-indicator.sh ${indicator}"
+                        }
+                        stage("Package ${indicator}") {
+                            sh "jenkins/package-indicator.sh ${indicator} prod"
+                        }
+                    }
+                }
+            }
+        }
+        stage('Deploy main branch to staging env') {
+            when {
+                branch 'main'
             }
             steps {
                 script {
@@ -64,9 +87,9 @@ pipeline {
                 }
             }
         }
-        stage('Deploy production') {
+        stage('Deploy prod branch to production env') {
             when {
-                branch "prod";
+                branch 'prod'
             }
             steps {
                 script {

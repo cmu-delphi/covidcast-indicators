@@ -6,6 +6,7 @@ required = [
     "covidcast",
     "darker[isort]~=2.1.1",
     "delphi-utils",
+    "mock",
     "moto~=4.2.14",
     "numpy",
     "pandas",

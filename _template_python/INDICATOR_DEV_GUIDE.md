@@ -50,6 +50,7 @@ This is the general extract-transform-load procedure used by all COVIDcast indic
 7. Deliver the CSV output files to the `receiving/` directory on the API server.
 
 Adding a new indicator typically means implementing steps 1-3. Step 4 is included via the function ` create_export_csv`. Steps 5 (the validator), 6 (the archive differ) and 7 (acquisition) are all handled by runners in production.
+
 ## Step 0: Keep revision history (important!)
 
 If the data provider doesn’t provide or it is unclear if they provide historical versions of the data, immediately set up a script (bash, Python, etc) to automatically (e.g. cron) download the data every day and save locally with versioning.
@@ -195,7 +196,14 @@ Generally, indicators have:
   Do other geo handling (e.g. finding and reporting DC as a state).
 * `constants.py`: Lists of geos to produce, signals to produce, dataset ids, data source URL, etc.
 
-Your code should be _extensively_ commented! Especially note sections where you took an unusual approach (make sure to say why and consider briefly discussing alternate approaches).
+Your code should be _extensively_ commented! Especially note sections where you took an unusual approach (make sure to say why and consider briefly discussing alternate approaches that were discarded or could be useful in the future).
+
+#### Development environment
+
+Make sure you have a functional environment with python 3.8.15+.
+For local runs, the makefile’s make install target will set up a local virtual environment with necessary packages.
+
+(If working in R (very much NOT recommended), local runs can be run without a virtual environment or using the [`renv` package](https://rstudio.github.io/renv/articles/renv.html), but production runs should be set up to use Docker.)
 
 #### Function stubs
 
@@ -235,12 +243,22 @@ def api_call(token: str):
 
 After that, generalize your code to be able to be run on all geos of interest, take settings from params.json, use constants for easy maintenance, with extensive documentation, etc.
 
-#### Development environment
+#### Testing
 
-Make sure you have a functional environment with python 3.8.15+.
-For local runs, the makefile’s make install target will set up a local virtual environment with necessary packages.
+As a general rule, it helps to decompose your functions into operations for which you can write unit tests.
+To run the tests, use `make test` in the top-level indicator directory.
 
-(If working in R (very much NOT recommended), local runs can be run without a virtual environment or using the [`renv` package](https://rstudio.github.io/renv/articles/renv.html), but production runs should be set up to use Docker.)
+Unit tests are required for all functions.
+Integration tests are highly desired, but may be difficult to set up depending on where the data is being fetched from.
+Mocking functions are useful in this case.
+
+#### Dealing with dates
+
+We keep track of two different date fields for each dataset. The first field is called "reference value" (field name `time_value`) and tracks the date that a value is reported _for_, that is, when the event happened. The second field is called "issue date" or "version" (field name `issue`) and tracks when a value was recorded, not when it happened.
+
+For example, flu test positivity of 80% for a reference date of Jan 1 and an issue date of Jan 5 means that _on_ Jan 1, the test positivity rate was 80%. But we only received and recorded the value on Jan 5, 4 days later (AKA a lag of 4 days).
+
+It's important to track issue date because many data sources are revised over time, and reported values can change substantially between issues.
 
 #### Dealing with data-types
 
@@ -255,14 +273,16 @@ E.g. which geo values are allowed, should every valid date be present in some wa
 
 In an ideal case, the data exists at one of our [already covered geos](https://cmu-delphi.github.io/delphi-epidata/api/covidcast_geography.html):
 
-* State: state_code (string, leftpadded to 2 digits with 0) or state_id (string)
+* Zip code
 * FIPS (state+county codes, string leftpadded to 5 digits with 0)
-* ZIP
 * MSA (metro statistical area, int)
 * HRR (hospital referral region, int)
+* State: state_code (string, leftpadded to 2 digits with 0) or state_id (string)
+* HHS ([Department of Health and Human Services-defined regions](https://www.hhs.gov/about/agencies/iea/regional-offices/index.html))
+* Nation
 
-If you want to map from one of these to another, the [`delphi_utils.geomapper`](https://github.com/cmu-delphi/covidcast-indicators/blob/6912077acba97e835aff7d0cd3d64309a1a9241d/_delphi_utils_python/delphi_utils/geomap.py) utility covers most cases.
-A brief example of aggregating from states to hhs regions via their population:
+If you want to map from one of these to a higher level, the [`delphi_utils.geomapper`](https://github.com/cmu-delphi/covidcast-indicators/blob/6912077acba97e835aff7d0cd3d64309a1a9241d/_delphi_utils_python/delphi_utils/geomap.py) utility covers most cases.
+Here's a brief example of aggregating from states to hhs regions via their population:
 
 ```{python}
 from delphi_utils.geomap import GeoMapper
@@ -273,19 +293,6 @@ hhs_version = geo_mapper.replace_geocode(df, "state_code","hhs", new_col = "geo_
 ```
 
 This example is taken from [`hhs_hosp`](https://github.com/cmu-delphi/covidcast-indicators/blob/main/hhs_hosp/delphi_hhs/run.py); more documentation can be found in the `geomapper` class definition.
-
-#### Implement a Missing Value code system
-
-The column is described [here](https://cmu-delphi.github.io/delphi-epidata/api/missing_codes.html).
-
-#### Testing
-
-As a general rule, it helps to decompose your functions into operations for which you can write unit tests.
-To run the tests, use `make test` in the top-level indicator directory.
-
-Unit tests are required for all functions.
-Integration tests are highly desired, but may be difficult to set up depending on where the data is being fetched from.
-Mocking functions are useful in this case.
 
 #### Naming
 
@@ -323,6 +330,52 @@ Using this tag dictionary, we can interpret the following signals as
 
 * `confirmed_admissions_influenza_1d_prop` = raw (unsmoothed) daily ("1d") confirmed influenza hospital admissions ("confirmed_admissions_influenza") per 100,000 population ("prop").
 * `confirmed_admissions_influenza_1d_prop_7dav` = the same as above, but smoothed with a 7-day moving average ("7dav").
+
+#### Implement a Missing Value code system
+
+The column is described [here](https://cmu-delphi.github.io/delphi-epidata/api/missing_codes.html).
+
+#### Implement a patching method
+
+After normal data reporting is restored following an outage, we would like to be able to easily reconstruct the version history of the data. To do so, implement a `patch` method that runs an indicator's main `run_module` for every issue date in a range. An [example patch module](https://github.com/cmu-delphi/covidcast-indicators/blob/b784f30/google_symptoms/delphi_google_symptoms/patch.py).
+
+An outage can be external to Delphi, e.g. the data provider was unable to provide new data on the historically-expected schedule, or internal, e.g. Delphi code had a bug that caused our pipeline to fail. The goal of the patch feature is to recreate every missing issue _as if we had ingested it on the correct day_.
+
+The patch feature should be easy to use. The only manual parts should be modifying `params.json`, and running the patch module and acquisition. Any setup that needs to be done (e.g. cache creation, dir creation) should be done automatically as part of the patch function.
+
+All patch modules should expect settings from `params.json` of the form
+
+```
+{
+  "common": {
+    ...
+    "custom_run": true
+  },
+  "validation": {
+    ...
+  },
+  "patch": {
+    "patch_dir": "<path to dir>/<patch dir name>",
+    "start_issue": "2024-04-20",
+    "end_issue": "2024-04-21"
+  }
+}
+```
+
+The `custom_run` parameter should [default to false](https://github.com/cmu-delphi/covidcast-indicators/blob/d435bf0f0d5880ddf8905ea60f242976e6702342/nssp/delphi_nssp/run.py#L73), and [warn](https://github.com/cmu-delphi/covidcast-indicators/blob/d435bf0f0d5880ddf8905ea60f242976e6702342/nssp/delphi_nssp/run.py#L75-L83) if parameters and arguments disagree.
+
+Patching should generate data for that range of issue dates, and store them in batch issue format:
+`<patch_dir as provided in the params>/issue_<issue date>/<indicator name as stored in our DB>/xxx.csv`.
+
+Acquisition in `delphi-epidata` includes [code that allow files in this issue-specific structure](https://github.com/cmu-delphi/delphi-epidata/blob/694d89ad763fa85bd644e1f64552c9bc85f688ef/src/acquisition/covidcast/csv_to_database.py#L43C32-L43C61) to be added to the database. This output format is designed to match the `issue`-type acquisition format. The issue-specific mode is triggered with the flag `specific_issue_date`. [A Cronicle job](https://cronicle-prod-01.delphi.cmu.edu/#Schedule?sub=edit_event&id=elh59ynwobf) has already been set up to call acquisition using the flag; please use it to load patches into the database.
+
+Sometimes source data is already versioned, and to reconstruct an issue we simply need to filter the source data to include only values that would have been available on that issue day. If we receive data drops directly, we can filter by the file creation date instead.
+
+However, it is not always possible to reconstruct issues; many datasets aren't versioned by the provider. If a source has no revisions (for example, `google-symptoms`), then we can guess which dates of data would have been available that issue day based on the normal lag of the source. For example, `google-symptoms` normally has a lag of 4 days, i.e. "today" the most recent data we see in the source data is from 4 days ago. So to reconstruct data for issue 2024-01-10, we just need to report data with a `time_value` (reference date) from 2024-01-06 and earlier. (How much earlier depends on the behavior we normally expect from the indicator code; if we normally report 2 weeks of data, filter to 2024-01-06 - 14 days through 2024-01-06.)
+
+Some datasets, such as those on healthdata.gov, provide metadata indicating when certain rows were updated.
+
+In other cases (such as datasetes that both have revisions _and_ don't track revisions), please discuss with the indicator stakeholder and consider [what you know about how the data works](#step-1-exploratory-analysis).
 
 ### Statistical review
 
@@ -411,29 +464,162 @@ Next, the `acquisition.covidcast` component of the `delphi-epidata` codebase doe
       12. `value_updated_timestamp`: now
    2. Update the `epimetric_latest` table with any new keys or new versions of existing keys.
 
+Consider what settings to use in the `params.json.template` file in accordance with how you want to run the indicator and acquisition.
+Pay attention to the receiving directory, as well as how you can store credentials in vault.
+Refer to [this guide](https://docs.google.com/document/d/1Bbuvtoxowt7x2_8USx_JY-yTo-Av3oAFlhyG-vXGG-c/edit#heading=h.8kkoy8sx3t7f) for more vault info.
+
+### CI/CD
+
+* Add module name to the `build` job in `.github/workflows/python-ci.yml`.
+  This allows github actions to run on this indicator code, which includes unit tests and linting.
+* Add module name to the ["Copy version to indicator directory" step](https://github.com/cmu-delphi/covidcast-indicators/blob/f01185767a9847d8082baf4f1e17be50a39047c2/.github/workflows/create-release.yml#L64) in `.github/workflows/create-release.yml`.
+* Add top-level directory name to [`indicator_list` in `Jenkinsfile`](https://github.com/cmu-delphi/covidcast-indicators/blob/f01185767a9847d8082baf4f1e17be50a39047c2/Jenkinsfile#L13).
+  This allows your code to be automatically deployed to staging after your branch is merged to main, and deployed to prod after `covidcast-indicators` is released.
+* Create `ansible/templates/{top_level_directory_name}-params-prod.json.j2` based on your `params.json.template` with some adjustment:
+   * "export_dir": "/common/covidcast/receiving/{data-source-name}"
+   * "log_filename": "/var/log/indicators/{top_level_directory_name}.log"
+* Define any sensitive variables as "secrets" in the [Ansible `vars.yaml`](https://github.com/cmu-delphi/covidcast-indicators/blob/main/ansible/vars.yaml) and [vault](https://github.com/cmu-delphi/covidcast-indicators/blob/main/ansible/vault.yaml).
+Refer to [this guide](https://docs.google.com/document/d/1Bbuvtoxowt7x2_8USx_JY-yTo-Av3oAFlhyG-vXGG-c/edit#heading=h.8kkoy8sx3t7f) for more vault info.
+* Add configs for Sir Complains-a-Lot ("sirCAL") alerting in sirCAL's [local](https://github.com/cmu-delphi/covidcast-indicators/blob/main/sir_complainsalot/params.json.template) and [Ansible](https://github.com/cmu-delphi/covidcast-indicators/blob/main/ansible/templates/sir_complainsalot-params-prod.json.j2) params templates.
+
+Pay attention to the receiving/export directory, as well as how you can store credentials in vault.
+
 ### Staging
 
-After developing the pipeline code, but before deploying in development, the pipeline should be run on staging for at least a week.
-This involves setting up some cronicle jobs as follows:
+After developing the pipeline code, but before deploying in development, the pipeline should be tested on staging.
+Indicator runs should be set up to run automatically daily for at least a week.
 
-first the indicator run
+The indicator run code is automatically deployed on staging after your branch is merged into `main`.
+After merging, make sure you have proper access to Cronicle and staging server `app-mono-dev-01.delphi.cmu.edu` _and_ can see your code on staging at `/home/indicators/runtime/`.
 
-Then the acquisition run
+Then, on Cronicle, create two jobs: one to run the indicator and one to load the output csv files into database. 
+
+We start by setting up the acquisition job.
+
+#### Acquisition job
+
+The indicator job loads the location of the relevant csv output files into chained data, which this acquisition job then loads into our database.
+
+Example script:
+
+```
+#!/usr/bin/python3
+
+import subprocess
+import json
+
+str_data = input()
+print(str_data)
+
+data = json.loads(str_data, strict=False)
+chain_data = data["chain_data"]
+user = chain_data["user"]
+host = chain_data["host"]
+acq_ind_name = chain_data["acq_ind_name"]
+
+cmd = f'''ssh -T -l {user} {host} "cd ~/driver && python3 -m delphi.epidata.acquisition.covidcast.csv_to_database --data_dir=/common/covidcast --indicator_name={acq_ind_name} --log_file=/var/log/epidata/csv_upload_{acq_ind_name}.log"'''
+
+std_err, std_out = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+
+print(std_err.decode('UTF-8'))
+print(std_out.decode('UTF-8'))
+```
+
+#### Indicator run job
+
+This job signs into our staging server via ssh, runs the indicator, producing csv files as output.
+
+Example script:
+
+```
+#!/bin/sh
+
+# vars
+user='automation'
+host='app-mono-dev-01.delphi.cmu.edu'
+ind_name='nchs_mortality'
+acq_ind_name='nchs-mortality'
+
+# chain_data to be sent to acquisition job
+chain_data=$(jo chain_data=$(jo acq_ind_name=${acq_ind_name} ind_name=${ind_name} user=${user} host=${host}));
+echo "${chain_data}";
+
+ssh -T -l ${user} ${host} "sudo -u indicators -s bash -c 'cd /home/indicators/runtime/${ind_name} && env/bin/python -m delphi_${ind_name}'";
+```
+
+Note the staging hostname in `host` and how the acquisition job is chained to run right after the indicator job.
+
+Note that `ind_name` variable here refer to the top-level directory name where code is located, while `acq_ind_name` refer to the directory name where output csv files are located, which corresponds to the name of `source` column in our database, as mentioned in step 3.
+
+To automatically run acquisition job right after indicator job finishes successfully:
+
+1. In `Plugin` section, select `Interpret JSON in Output`.
+2. In `Chain Reaction` section, select your acquisition run job below to `Run Event on Success`
+
+You can read more about how the `chain_data` json object in the script above can be used in our subsequent acquisition job [here](https://github.com/jhuckaby/Cronicle/blob/master/docs/Plugins.md#chain-reaction-control).
+
+#### Staging database checks
+
+Apart from checking the logs of staging indicator run and acquisition jobs to identify potential issues with the pipeline, one can also check the contents of staging database for abnormalities.
+
+At this point, acquisition job should have loaded data onto staging mysql db, specifically the `covid` database.
+
+From staging:
+```
+[user@app-mono-dev-01 ~]$ mysql -u user -p
+Enter password: 
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 00000
+Server version: 8.0.36-28 Percona Server (GPL), Release 28, Revision 47601f19
+
+Copyright (c) 2009-2024 Percona LLC and/or its affiliates
+Copyright (c) 2000, 2024, Oracle and/or its affiliates.
+
+Oracle is a registered trademark of Oracle Corporation and/or its
+affiliates. Other names may be trademarks of their respective
+owners.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+mysql> use covid;
+Database changed
+```
+Check `signal_dim` table to see if new source and signal names are all present and reasonable. For example:
+```
+mysql> select * from signal_dim where source='nssp';
++---------------+--------+----------------------------------+
+| signal_key_id | source | signal                           |
++---------------+--------+----------------------------------+
+|           817 | nssp   | pct_ed_visits_combined           |
+|           818 | nssp   | pct_ed_visits_covid              |
+|           819 | nssp   | pct_ed_visits_influenza          |
+|           820 | nssp   | pct_ed_visits_rsv                |
+|           821 | nssp   | smoothed_pct_ed_visits_combined  |
+|           822 | nssp   | smoothed_pct_ed_visits_covid     |
+|           823 | nssp   | smoothed_pct_ed_visits_influenza |
+|           824 | nssp   | smoothed_pct_ed_visits_rsv       |
++---------------+--------+----------------------------------+
+```
+
+Then, check if the number of records ingested in db matches with the number of rows in csv when running locally.
+For example, the below query sets the `issue` date being the day acquisition job was run, and `signal_key_id` correspond with signals from our new source.
+Check if this count matches with local run result.
+
+```
+mysql> SELECT count(*) FROM epimetric_full WHERE issue=202425 AND signal_key_id > 816 AND signal_key_id < 825;
++----------+
+| count(*) |
++----------+
+|  2620872 |
++----------+
+1 row in set (0.80 sec)
+```
+
+You can also check how data looks more specifically at each geo level or among different signal names depending on the quirks of the source.
 
 See [@korlaxxalrok](https://www.github.com/korlaxxalrok) or [@minhkhul](https://www.github.com/minhkhul) for more information.
 
-https://cronicle-prod-01.delphi.cmu.edu/#Schedule?sub=edit_event&id=elr5clgy6rs
-
-https://cronicle-prod-01.delphi.cmu.edu/#Schedule?sub=edit_event&id=elr5ctl7art
-
-Note the staging hostname and how the acquisition job is chained to run right after the indicator job.
-Do a few test runs.
-
-If everything goes well (check staging db if data is ingested properly), make a prod version of the indicator run job and use that to run indicator on a daily basis.
-
-Another thing to do is setting up the params.json template file in accordance with how you want to run the indicator and acquisition.
-Pay attention to the receiving directory, as well as how you can store credentials in vault.
-Refer to [this guide](https://docs.google.com/document/d/1Bbuvtoxowt7x2_8USx_JY-yTo-Av3oAFlhyG-vXGG-c/edit#heading=h.8kkoy8sx3t7f) for more vault info.
+If everything goes well make a prod version of the indicator run job and use that to run indicator on a daily basis.
 
 ### Signal Documentation
 

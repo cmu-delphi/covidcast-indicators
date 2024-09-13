@@ -79,15 +79,13 @@ def generate_num_export_days(params: Dict, logger) -> [int]:
     if num_export_days is None and not custom_run:
         # Generate a list of signals we expect to produce
         sensor_names = set(
-            "_".join([metric, smoother, "search"])
-            for metric, smoother in product(COMBINED_METRIC, SMOOTHERS)
+            "_".join([metric, smoother, "search"]) for metric, smoother in product(COMBINED_METRIC, SMOOTHERS)
         )
         Epidata.auth = ("epidata", params["indicator"]["api_credentials"])
         # Fetch metadata to check how recent each signal is
         metadata = Epidata.covidcast_meta()
         # Filter to only those we currently want to produce, ignore any old or deprecated signals
-        gs_metadata = metadata[(metadata.data_source == "google-symptoms") &
-            (metadata.signal.isin(sensor_names))]
+        gs_metadata = metadata[(metadata.data_source == "google-symptoms") & (metadata.signal.isin(sensor_names))]
 
         if sensor_names.difference(set(gs_metadata.signal)):
             # If any signal not in metadata yet, we need to backfill its full history.

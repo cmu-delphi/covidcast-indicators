@@ -41,7 +41,6 @@ TEST_DIR = Path(__file__).parent
 # from `bigquery-public-data.covid19_symptom_search.counties_daily_2020` # Counties by day; includes state and county name, + FIPS code
 # where timestamp(date) between timestamp("2020-07-15") and timestamp("2020-08-22")
 
-
 good_input = {
     "state": f"{TEST_DIR}/test_data/small_states_2020_07_15_2020_08_22.csv",
     "county": f"{TEST_DIR}/test_data/small_counties_2020_07_15_2020_08_22.csv"
@@ -59,6 +58,17 @@ state_data = pd.read_csv(good_input["state"], parse_dates=["date"])[keep_cols]
 county_data = pd.read_csv(
     good_input["county"], parse_dates=["date"])[keep_cols]
 
+state_data_gap = pd.read_csv(patch_input["state"], parse_dates=["date"])[keep_cols]
+
+covidcast_backfill_metadata = pd.read_csv(f"{TEST_DIR}/test_data/covid_metadata_backfill.csv",
+                                          parse_dates=["max_time", "min_time", "max_issue", "last_update"])
+covidcast_metadata = pd.read_csv(f"{TEST_DIR}/test_data/covid_metadata.csv",
+                                 parse_dates=["max_time", "min_time", "max_issue", "last_update"])
+
+NEW_DATE = "2024-02-20"
+@pytest.fixture(scope="session")
+def logger():
+    return logging.getLogger()
 
 @pytest.fixture(scope="session")
 def params():
@@ -115,7 +125,7 @@ def run_as_module(params):
                     return_value=None), \
          mock.patch("pandas_gbq.read_gbq") as mock_read_gbq, \
          mock.patch("delphi_google_symptoms.pull.initialize_credentials", return_value=None), \
-         mock.patch("delphi_google_symptoms.run.Epidata.covidcast_meta", return_value=None) as mock_covidcast_meta:
+         mock.patch("delphi_google_symptoms.date_utils.Epidata.covidcast_meta", return_value=None) as mock_covidcast_meta:
         def side_effect(*args, **kwargs):
             if "symptom_search_sub_region_1_daily" in args[0]:
                 df = state_data

@@ -4,12 +4,11 @@ import pandas as pd
 from freezegun import freeze_time
 from conftest import TEST_DIR, NEW_DATE
 
-import covidcast
+from delphi_epidata import Epidata
 
 from delphi_utils.validator.utils import lag_converter
 from delphi_google_symptoms.constants import FULL_BKFILL_START_DATE
 from delphi_google_symptoms.date_utils import generate_query_dates, generate_num_export_days, generate_patch_dates
-
 
 class TestDateUtils:
 
@@ -41,7 +40,7 @@ class TestDateUtils:
 
     def test_generate_export_dates(self, params, logger, monkeypatch):
         metadata_df = pd.read_csv(f"{TEST_DIR}/test_data/covid_metadata.csv")
-        monkeypatch.setattr(covidcast, "metadata", lambda: metadata_df)
+        monkeypatch.setattr(Epidata, "covidcast_meta", lambda: metadata_df)
 
         num_export_days = generate_num_export_days(params, logger)
         expected_num_export_days = params["indicator"]["num_export_days"]
@@ -49,7 +48,7 @@ class TestDateUtils:
 
     def test_generate_export_dates_normal(self, params_w_no_date, logger, monkeypatch):
         metadata_df = pd.read_csv(f"{TEST_DIR}/test_data/covid_metadata.csv")
-        monkeypatch.setattr(covidcast, "metadata", lambda: metadata_df)
+        monkeypatch.setattr(Epidata, "covidcast_meta", lambda: metadata_df)
 
         num_export_days = generate_num_export_days(params_w_no_date, logger)
 
@@ -61,7 +60,7 @@ class TestDateUtils:
 
     def test_generate_export_date_missing(self, params_w_no_date, logger, monkeypatch):
         metadata_df = pd.read_csv(f"{TEST_DIR}/test_data/covid_metadata_missing.csv")
-        monkeypatch.setattr(covidcast, "metadata", lambda: metadata_df)
+        monkeypatch.setattr(Epidata, "covidcast_meta", lambda: metadata_df)
 
         num_export_days = generate_num_export_days(params_w_no_date, logger)
         expected_num_export_days = (date.today() - FULL_BKFILL_START_DATE.date()).days + 1

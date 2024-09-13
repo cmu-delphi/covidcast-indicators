@@ -1,6 +1,4 @@
-"""
-Utility for converting dates to a format accepted by epidata api.
-"""
+"""Utility for converting dates to a format accepted by epidata api."""
 
 from datetime import datetime
 

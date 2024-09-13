@@ -120,10 +120,12 @@ def get_geo_signal_combos(data_source, api_key):
 
     response = Epidata.covidcast_meta()
 
+    # pylint: disable=R1720
     if response["result"] != 1:
         # Something failed in the API and we did not get real metadata
         raise RuntimeError("Error when fetching metadata from the API", response["message"])
 
+    # pylint: disable=I0021
     else:
         meta = pd.DataFrame.from_dict(response["epidata"])
         # note: this will fail for signals with weekly data, but currently not supported for validation
@@ -187,9 +189,12 @@ def fetch_api_reference(data_source, start_date, end_date, geo_type, signal_type
         # Something failed in the API and we did not get real signal data
         raise RuntimeError("Error when fetching signal data from the API", response["message"])
 
+    # pylint: disable=E1124
     if response["message"] not in {"success", "no results"}:
+        # pylint: disable=E1123
         warnings.warn(
             "Problem obtaining data",
+            # pylint: disable=E0602
             RuntimeWarning,
             message=response["message"],
             data_source=data_source,
@@ -197,7 +202,6 @@ def fetch_api_reference(data_source, start_date, end_date, geo_type, signal_type
             time_value=params["time_values"],
             geo_type=geo_type,
         )
-        logger.info(f"Trying calling covidcast again")
         response = Epidata.covidcast(
             data_source,
             signal_type,

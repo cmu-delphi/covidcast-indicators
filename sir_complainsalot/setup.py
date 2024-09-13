@@ -3,6 +3,7 @@ from setuptools import find_packages
 
 required = [
     "darker[isort]~=2.1.1",
+    "delphi-epidata",
     "delphi-utils",
     "pandas",
     "pylint==2.8.3",

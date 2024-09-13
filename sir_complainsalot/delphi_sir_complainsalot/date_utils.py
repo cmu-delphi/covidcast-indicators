@@ -1,3 +1,7 @@
+"""
+Utility for converting dates to a format accepted by epidata api.
+"""
+
 from datetime import datetime
 
 import pandas as pd
@@ -6,6 +10,7 @@ from epiweeks import Week
 
 def _date_to_api_string(d: datetime, time_type: str = "day") -> str:
     """Convert a date object to a YYYYMMDD or YYYYMM string expected by the API."""
+    # pylint: disable=R1705
     if time_type == "day":
         return d.strftime("%Y%m%d")
     elif time_type == "week":

@@ -123,7 +123,9 @@ def get_geo_signal_combos(data_source, api_key):
     # pylint: disable=R1720
     if response["result"] != 1:
         # Something failed in the API and we did not get real metadata
-        raise RuntimeError("Error when fetching metadata from the API", response["message"])
+        raise RuntimeError(
+            "Error when fetching metadata from the API", response["message"]
+        )
 
     # pylint: disable=I0021
     else:
@@ -175,19 +177,24 @@ def fetch_api_reference(data_source, start_date, end_date, geo_type, signal_type
     """
     if start_date > end_date:
         raise ValueError(
-            "end_day must be on or after start_day, but " f"start_day = '{start_date}', end_day = '{end_date}'"
+            "end_day must be on or after start_day, but "
+            f"start_day = '{start_date}', end_day = '{end_date}'"
         )
     response = Epidata.covidcast(
         data_source,
         signal_type,
         time_type="day",
         geo_type=geo_type,
-        time_values=Epidata.range(start_date.strftime("%Y%m%d"), end_date.strftime("%Y%m%d")),
+        time_values=Epidata.range(
+            start_date.strftime("%Y%m%d"), end_date.strftime("%Y%m%d")
+        ),
         geo_value="*",
     )
     if response["result"] != 1:
         # Something failed in the API and we did not get real signal data
-        raise RuntimeError("Error when fetching signal data from the API", response["message"])
+        raise RuntimeError(
+            "Error when fetching signal data from the API", response["message"]
+        )
 
     # pylint: disable=E1124
     if response["message"] not in {"success", "no results"}:
@@ -207,7 +214,9 @@ def fetch_api_reference(data_source, start_date, end_date, geo_type, signal_type
             signal_type,
             time_type="day",
             geo_type=geo_type,
-            time_values=Epidata.range(start_date.strftime("%Y%m%d"), end_date.strftime("%Y%m%d")),
+            time_values=Epidata.range(
+                start_date.strftime("%Y%m%d"), end_date.strftime("%Y%m%d")
+            ),
             geo_value="*",
         )
 

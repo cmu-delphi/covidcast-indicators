@@ -17,7 +17,6 @@ classifiers = [
 ]
 dependencies = [
     "boto3",
-    "covidcast",
     "cvxpy",
     "epiweeks",
     "gitpython",

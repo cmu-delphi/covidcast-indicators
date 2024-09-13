@@ -18,9 +18,9 @@ from epiweeks import Week
 API_KEY = os.environ.get("DELPHI_API_KEY", os.environ.get("DELPHI_EPIDATA_KEY"))
 covidcast.use_api_key(API_KEY)
 Epidata.auth = ("epidata", API_KEY)
-CURRENT_DIR = Path(__file__).parent
-if not Path(f"{CURRENT_DIR}/covidcast_result").is_dir():
-    os.mkdir(f"{CURRENT_DIR}/covidcast_result")
+DIR = Path(__file__).parent
+if not Path(f"{DIR}/covidcast_result").is_dir():
+    os.mkdir(f"{DIR}/covidcast_result")
 
 
 def _parse_datetimes(df: pd.DataFrame, col: str, date_format: str = "%Y%m%d") -> pd.Series:

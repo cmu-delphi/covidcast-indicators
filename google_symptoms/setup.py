@@ -5,6 +5,7 @@ required = [
     "darker[isort]~=2.1.1",
     "db-dtypes",
     "delphi-utils",
+    "delphi-epidata",
     "freezegun",
     "mock",
     "numpy",

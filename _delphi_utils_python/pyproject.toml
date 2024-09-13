@@ -18,6 +18,7 @@ classifiers = [
 dependencies = [
     "boto3",
     "cvxpy",
+    "delphi-epidata",
     "epiweeks",
     "gitpython",
     "importlib_resources>=1.3",

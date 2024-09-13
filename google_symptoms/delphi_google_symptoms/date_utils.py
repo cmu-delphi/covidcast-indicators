@@ -4,7 +4,7 @@ from datetime import date, datetime, timedelta
 from itertools import product
 from typing import Dict, List, Union
 
-import covidcast
+from delphi_epidata import Epidata
 from delphi_utils.validator.utils import lag_converter
 from pandas import to_datetime
 
@@ -76,7 +76,7 @@ def generate_num_export_days(params: Dict, logger) -> [int]:
     num_export_days = params["indicator"]["num_export_days"]
     custom_run = False if not params["common"].get("custom_run") else params["common"].get("custom_run", False)
 
-    if num_export_days is None:
+    if num_export_days is None and not custom_run:
         # Generate a list of signals we expect to produce
         sensor_names = set(
             "_".join([metric, smoother, "search"])

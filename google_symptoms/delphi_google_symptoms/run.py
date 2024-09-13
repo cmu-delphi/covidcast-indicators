@@ -9,10 +9,7 @@ from datetime import date, datetime
 from itertools import product
 
 import numpy as np
-from delphi_epidata import Epidata
 from delphi_utils import create_export_csv, get_structured_logger
-from delphi_utils.validator.utils import lag_converter
-from pandas import to_datetime
 
 from .constants import COMBINED_METRIC, FULL_BKFILL_START_DATE, GEO_RESOLUTIONS, SMOOTHERS, SMOOTHERS_MAP
 from .date_utils import generate_num_export_days

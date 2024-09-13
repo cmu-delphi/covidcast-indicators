@@ -14,6 +14,7 @@ required = [
     "pylint==2.8.3",
     "pytest-cov",
     "pytest",
+    "pytest-freezegun~=0.4.2"
 ]
 
 setup(

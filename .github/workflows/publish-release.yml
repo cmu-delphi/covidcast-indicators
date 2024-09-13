@@ -86,7 +86,7 @@ jobs:
       - name: Release
         run: |
           make release
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
           name: delphi_utils
           path: _delphi_utils_python/dist/*.tar.gz

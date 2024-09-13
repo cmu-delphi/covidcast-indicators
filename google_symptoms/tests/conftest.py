@@ -1,16 +1,20 @@
 # -*- coding: utf-8 -*-
+import logging
+from pathlib import Path
+import re
 
+import copy
 import pytest
 import mock
 import pandas as pd
 
 from os import listdir, remove, makedirs
 from os.path import join, exists
-from datetime import datetime
 
 import delphi_google_symptoms
 from delphi_google_symptoms.constants import METRICS
 
+TEST_DIR = Path(__file__).parent
 
 # Set up fake data so that tests don't require BigQuery
 # credentials to run.
@@ -24,7 +28,7 @@ from delphi_google_symptoms.constants import METRICS
 #     end as open_covid_region_code,
 #     *
 # from `bigquery-public-data.covid19_symptom_search.states_daily_2020` # States by day
-# where timestamp(date) between timestamp("2020-07-26") and timestamp("2020-08-11")
+# where timestamp(date) between timestamp("2020-07-15") and timestamp("2020-08-22")
 
 # County data is created by running the following query in the BigQuery
 # browser console:
@@ -35,11 +39,16 @@ from delphi_google_symptoms.constants import METRICS
 #     end as open_covid_region_code,
 #     *
 # from `bigquery-public-data.covid19_symptom_search.counties_daily_2020` # Counties by day; includes state and county name, + FIPS code
-# where timestamp(date) between timestamp("2020-07-26") and timestamp("2020-08-11")
+# where timestamp(date) between timestamp("2020-07-15") and timestamp("2020-08-22")
+
 
 good_input = {
-    "state": "test_data/small_states_daily.csv",
-    "county": "test_data/small_counties_daily.csv"
+    "state": f"{TEST_DIR}/test_data/small_states_2020_07_15_2020_08_22.csv",
+    "county": f"{TEST_DIR}/test_data/small_counties_2020_07_15_2020_08_22.csv"
+}
+
+patch_input = {
+    "state": f"{TEST_DIR}/test_data/state_2024-05-16_2024-07-18.csv",
 }
 
 symptom_names = ["symptom_" +
@@ -52,19 +61,49 @@ county_data = pd.read_csv(
 
 
 @pytest.fixture(scope="session")
-def run_as_module():
+def params():
     params = {
         "common": {
-            "export_dir": "./receiving"
+            "export_dir": f"{TEST_DIR}/receiving",
+            "log_filename": f"{TEST_DIR}/test.log",
         },
         "indicator": {
-            "export_start_date": "2020-02-20",
-            "num_export_days": 14,
             "bigquery_credentials": {},
-            "static_file_dir": "../static"
+            "num_export_days": 14,
+            "custom_run": False,
+            "static_file_dir": "../static",
+            "api_credentials": "fakesecret"
+        },
+        "validation": {
+            "common": {
+                "span_length": 14,
+                "min_expected_lag": {"all": "3"},
+                "max_expected_lag": {"all": "4"},
+            }
         }
     }
+    return copy.deepcopy(params)
 
+@pytest.fixture
+def params_w_patch(params):
+    params_copy = copy.deepcopy(params)
+    params_copy["patch"] = {
+            "start_issue": "2024-06-27",
+            "end_issue": "2024-06-29",
+            "patch_dir": "./patch_dir"
+        }
+    return params_copy
+
+
+@pytest.fixture
+def params_w_no_date(params):
+    params_copy = copy.deepcopy(params)
+    params_copy["indicator"]["num_export_days"] = None
+    return params_copy
+
+
+@pytest.fixture(scope="session")
+def run_as_module(params):
     if exists("receiving"):
         # Clean receiving directory
         for fname in listdir("receiving"):
@@ -73,7 +112,23 @@ def run_as_module():
         makedirs("receiving")
 
     with mock.patch("delphi_google_symptoms.pull.initialize_credentials",
-                    return_value=None) as mock_credentials, \
-         mock.patch("pandas_gbq.read_gbq", side_effect=[state_data, county_data]) as mock_read_gbq, \
+                    return_value=None), \
+         mock.patch("pandas_gbq.read_gbq") as mock_read_gbq, \
+         mock.patch("delphi_google_symptoms.pull.initialize_credentials", return_value=None), \
          mock.patch("delphi_google_symptoms.run.Epidata.covidcast_meta", return_value=None) as mock_covidcast_meta:
-            delphi_google_symptoms.run.run_module(params)
+        def side_effect(*args, **kwargs):
+            if "symptom_search_sub_region_1_daily" in args[0]:
+                df = state_data
+                pattern = re.compile(r'\d{4}-\d{2}-\d{2}')
+                start_date, end_date = re.findall(pattern, args[0])
+                return df[(df["date"] >= start_date) & (df["date"] <= end_date)]
+            elif "symptom_search_sub_region_2_daily" in args[0]:
+                df = county_data
+                pattern = re.compile(r'\d{4}-\d{2}-\d{2}')
+                start_date, end_date = re.findall(pattern, args[0])
+                return df[(df["date"] >= start_date) & (df["date"] <= end_date)]
+            else:
+                return pd.DataFrame()
+
+        mock_read_gbq.side_effect = side_effect
+        delphi_google_symptoms.run.run_module(params)

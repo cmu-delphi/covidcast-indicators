@@ -2,6 +2,7 @@ from setuptools import setup
 from setuptools import find_packages
 
 required = [
+    "boto3",
     "darker[isort]~=2.1.1",
     "delphi-utils",
     "imap-tools",
@@ -13,7 +14,7 @@ required = [
     "pylint==2.8.3",
     "pytest-cov",
     "pytest",
-    "xlrd==1.2.0",
+    "xlrd==1.2.0", # needed by Pandas to read Excel files
 ]
 
 setup(

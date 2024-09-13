@@ -48,7 +48,7 @@ class TestDataFetcher:
                 {'source': 'covid-act-now', 'db_source': 'covid-act-now'}], 200)
         elif "params" in kwargs and kwargs["params"] == {'signal': 'chng:inactive'}:
             return MockResponse([{"signals": [{"active": False}]}], 200)
-        elif args[1] == 'https://api.delphi.cmu.edu/epidata/covidcast_meta/' and \
+        elif args[0] == 'https://api.delphi.cmu.edu/epidata/covidcast_meta/' and \
                 'delphi_epidata' in kwargs["headers"]["user-agent"]:
             with open(f"{TEST_DIR}/test_data/sample_epidata_metadata.json") as f:
                 epidata = json.load(f)

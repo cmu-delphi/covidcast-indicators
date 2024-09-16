@@ -186,7 +186,7 @@ def pull_gs_data_one_geolevel(level, date_range):
     pd.DataFrame
     """
     query = produce_query(level, date_range)
-    df = None
+    df = pd.DataFrame()
     for num_try in range(NUM_RETRIES):
         try:
             df = pandas_gbq.read_gbq(query, progress_bar_type=None, dtypes=DTYPE_CONVERSIONS)

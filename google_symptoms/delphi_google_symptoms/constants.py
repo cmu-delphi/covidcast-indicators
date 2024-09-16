@@ -113,3 +113,5 @@ DC_FIPS = "11001"
 FULL_BKFILL_START_DATE = datetime.strptime("2020-02-20", "%Y-%m-%d")
 
 PAD_DAYS = 7
+
+NUM_RETRIES = 3

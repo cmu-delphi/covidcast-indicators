@@ -7,9 +7,10 @@ from datetime import date, datetime  # pylint: disable=unused-import
 import numpy as np
 import pandas as pd
 import pandas_gbq
+from google.api_core.exceptions import BadRequest, ServerError
 from google.oauth2 import service_account
-from google.api_core.exceptions import BadRequest
-from .constants import COMBINED_METRIC, DC_FIPS, DTYPE_CONVERSIONS, METRICS, SYMPTOM_SETS
+
+from .constants import COMBINED_METRIC, DC_FIPS, DTYPE_CONVERSIONS, METRICS, NUM_RETRIES, SYMPTOM_SETS
 from .date_utils import generate_query_dates
 
 # Create map of BigQuery symptom column names to desired column names.
@@ -185,21 +186,25 @@ def pull_gs_data_one_geolevel(level, date_range):
     pd.DataFrame
     """
     query = produce_query(level, date_range)
-    df = pd.DataFrame()
-    try:
-        df = pandas_gbq.read_gbq(query, progress_bar_type=None, dtypes = DTYPE_CONVERSIONS)
-    except BadRequest as e:
-        if e.reason == "backendError":
-            time.sleep(5)
+    df = None
+    for num_try in range(NUM_RETRIES):
+        try:
             df = pandas_gbq.read_gbq(query, progress_bar_type=None, dtypes=DTYPE_CONVERSIONS)
-    else:
-        if len(df) == 0:
-            df = pd.DataFrame(
-                columns=["open_covid_region_code", "date"] +
-                        list(colname_map.keys())
-            )
+        except Exception as e:
+            # sometimes google throws out 400 error when it's 500
+            # https://github.com/googleapis/python-bigquery/issues/23
+            if num_try < NUM_RETRIES - 1 and (
+                (isinstance(e, BadRequest) and e.reason == "backendError") or isinstance(e, ServerError)
+            ):
+                # time.sleep(5)
+                continue
+            else:
+                raise e
 
-        df = preprocess(df, level)
+    if len(df) == 0:
+        df = pd.DataFrame(columns=["open_covid_region_code", "date"] + list(colname_map.keys()))
+
+    df = preprocess(df, level)
     return df
 
 

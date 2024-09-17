@@ -239,7 +239,7 @@ class DoctorVisitsSensor:
         se[include] = np.sqrt(
             np.divide((new_rates[include] * (1 - new_rates[include])), den[include]))
 
-        logger.debug(f"{geo_id}: {new_rates[-1]:.3f},[{se[-1]:.3f}]", geo_value=geo_id, value=new_rates[-1], se=se[-1])
+        logger.debug(".fit() DEBUG - last rate/se for geo", geo_value=geo_id, value=new_rates[-1], se=se[-1])
 
         included_indices = [x for x in final_sensor_idxs if include[x]]
 

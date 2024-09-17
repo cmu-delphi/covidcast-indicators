@@ -145,7 +145,7 @@ class CHCSensorUpdater:  # pylint: disable=too-many-instance-attributes
         gmpr = GeoMapper()
         if geo not in {"county", "state", "msa", "hrr", "nation", "hhs"}:
             self.logger.error(
-                f"{geo} is invalid, pick one of 'county', " "'state', 'msa', 'hrr', 'hss','nation'", geo_type=geo
+                "Geo is invalid, pick one of 'county', " "'state', 'msa', 'hrr', 'hss','nation'", geo_type=geo
             )
             return False
         if geo == "county":

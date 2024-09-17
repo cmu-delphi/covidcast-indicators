@@ -119,7 +119,7 @@ class CHCSensor:
         rate_data['se'] = se_valid
 
         logger.debug(
-            "{0}: {1:.3f},[{2:.3f}]".format(geo_id, rate_data["rate"][-1], rate_data["se"][-1]),
+            ".fit() DEBUG - last rate/se for geo",
             geo_value=geo_id,
             value=rate_data["rate"][-1],
             se=rate_data["se"][-1],

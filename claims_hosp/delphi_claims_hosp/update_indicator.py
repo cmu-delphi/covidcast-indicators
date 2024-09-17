@@ -162,7 +162,6 @@ class ClaimsHospIndicatorUpdater:
             else None
         )
         df_lst = []
-        output_df = pd.DataFrame()
         if not self.parallel:
             for geo_id, sub_data in data_frame.groupby(level=0):
                 sub_data.reset_index(inplace=True)
@@ -225,14 +224,14 @@ class ClaimsHospIndicatorUpdater:
             if np.any(group.val > 90):
                 for sus_val in np.where(group.val > 90):
                     logging.warning("value suspicious, %s: %d", geo_id, sus_val)
+            df_list.append(group)
             if self.write_se:
                 assert np.all(group.val > 0) and np.all(group.se > 0), "p=0, std_err=0 invalid"
-            else:
-                group["se"] = np.NaN
-            group["sample_size"] = np.NaN
-            df_list.append(group)
 
         output_df = pd.concat(df_list)
         output_df.drop(columns=["incl"], inplace=True)
+        if not self.write_se:
+            output_df["se"] = np.NaN
+        output_df["sample_size"] = np.NaN
         assert sorted(list(output_df.columns)) == ["geo_id", "sample_size", "se", "timestamp", "val"]
         return output_df

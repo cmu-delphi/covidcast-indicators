@@ -179,8 +179,12 @@ def fetch_api_reference(data_source, start_date, end_date, geo_type, signal_type
         geo_value="*",
     )
 
-    api_df = pd.DataFrame.from_dict(Epidata.check(response))
+    try:
+        epidata_dict = Epidata.check(response)
+    except Exception as e:
+        raise APIDataFetchError(str(e))
 
+    api_df = pd.DataFrame.from_dict(epidata_dict)
     if isinstance(api_df, pd.DataFrame) and len(api_df) > 0:
         # note: this will fail for signals with weekly data, but currently not supported for validation
         api_df["issue"] = pd.to_datetime(api_df["issue"], format="%Y%m%d")

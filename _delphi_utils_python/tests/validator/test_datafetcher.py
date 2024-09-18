@@ -9,6 +9,7 @@ import pandas as pd
 import pytest
 from requests.exceptions import HTTPError
 import requests_mock
+from delphi_epidata import delphi_epidata
 from delphi_utils.validator.datafetcher import (FILENAME_REGEX,
                                                 make_date_filter,
                                                 get_geo_signal_combos,
@@ -68,6 +69,8 @@ class TestDataFetcher:
                     epidata = json.load(f)
                     response = {"epidata": epidata, "result": 1, "message": "success"}
                     return MockResponse(response, 200)
+            if geo_type == "state" and signal_type == "b":
+                return MockResponse({"epidata": {}, "result": 0, "message": "failed"}, 200)
             return MockResponse({"epidata": {}, "result": 1, "message": "success"}, 200)
         else:
             return MockResponse([{"signals": [{"active": True}]}], 200)

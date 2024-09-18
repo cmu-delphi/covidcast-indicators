@@ -6,8 +6,7 @@ from typing import List
 
 import pandas as pd
 from delphi_epidata import Epidata
-
-from .date_utils import _date_to_api_string, _parse_datetimes
+from delphi_utils.date_utils import convert_apitime_column_to_datetimes, date_to_api_string
 
 
 @dataclass
@@ -69,8 +68,8 @@ def check_source(data_source, meta, params, grace, logger):  # pylint: disable=t
     age_complaints = {}
     gap_complaints = {}
 
-    start_date = datetime.now() - timedelta(days=14)
     end_date = datetime.now()
+    start_date = end_date - timedelta(days=14)
 
     for _, row in signals.iterrows():
         logger.info("Retrieving signal",
@@ -87,27 +86,22 @@ def check_source(data_source, meta, params, grace, logger):  # pylint: disable=t
             row["signal"],
             time_type=row["time_type"],
             geo_type=row["geo_type"],
-            time_values=Epidata.range(_date_to_api_string(start_date), _date_to_api_string(end_date)),
+            time_values=Epidata.range(date_to_api_string(start_date), date_to_api_string(end_date)),
             geo_value="*",
         )
 
         current_lag_in_days = (now - row["max_time"]).days
         lag_calculated_from_api = False
-        latest_data = None
 
-        if response["result"] == 1 and response["message"] == "success":
-            latest_data = pd.DataFrame.from_dict(response["epidata"])
-            latest_data["time_value"] = _parse_datetimes(latest_data, "time_value")
-            latest_data["issue"] = _parse_datetimes(latest_data, "issue")
+        latest_data = pd.DataFrame.from_dict(Epidata.check(response))
+        if len(latest_data) > 0:
+            latest_data["time_value"] = convert_apitime_column_to_datetimes(latest_data, "time_value")
+            latest_data["issue"] = convert_apitime_column_to_datetimes(latest_data, "issue")
             latest_data.drop("direction", axis=1, inplace=True)
 
-            unique_dates = list(latest_data["time_value"].dt.date.unique())
-            current_lag_in_days = (datetime.now().date() - max(unique_dates)).days
+            unique_dates = list(latest_data["time_value"].unique().dt.date)
+            current_lag_in_days = (end_date.date() - max(unique_dates)).days
             lag_calculated_from_api = True
-
-        else:
-            # Something failed in the API and we did not get real signal data
-            raise RuntimeError("Error when fetching signal data from the API", message=response["message"])
 
         logger.info("Signal lag",
                     current_lag_in_days = current_lag_in_days,
@@ -169,7 +163,7 @@ def check_source(data_source, meta, params, grace, logger):  # pylint: disable=t
                     data_source,
                     row["signal"],
                     [row["geo_type"]],
-                    datetime.now(),
+                    end_date,
                     source_config["maintainers"])
             else:
                 gap_complaints[row["signal"]].geo_types.append(row["geo_type"])

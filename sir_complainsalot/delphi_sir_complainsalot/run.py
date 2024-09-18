@@ -11,9 +11,9 @@ from itertools import groupby
 import pandas as pd
 from delphi_epidata import Epidata
 from delphi_utils import SlackNotifier, get_structured_logger, read_params
+from delphi_utils.date_utils import convert_apitime_column_to_datetimes
 
 from .check_source import check_source
-from .date_utils import _parse_datetimes
 
 
 def get_logger():
@@ -32,14 +32,9 @@ def run_module():
     Epidata.auth = ("epidata", params["api_credentials"])
     response = Epidata.covidcast_meta()
 
-    meta = None
-    if response["result"] == 1:
-        meta = pd.DataFrame.from_dict(response["epidata"])
-    else:
-        # Something failed in the API and we did not get real metadata
-        raise RuntimeError("Error when fetching signal data from the API", response["message"])
+    meta = pd.DataFrame.from_dict(Epidata.check(response))
 
-    meta["max_time"] = _parse_datetimes(meta, "max_time")
+    meta["max_time"] = convert_apitime_column_to_datetimes(meta, "max_time")
     slack_notifier = None
     if "channel" in params and "slack_token" in params:
         slack_notifier = SlackNotifier(params["channel"], params["slack_token"])

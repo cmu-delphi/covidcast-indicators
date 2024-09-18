@@ -7,6 +7,7 @@ from pathlib import Path
 import re
 import shutil
 from typing import List, Tuple
+import json
 
 from delphi_google_symptoms.patch import patch
 from delphi_utils.validator.utils import lag_converter
@@ -14,7 +15,7 @@ from delphi_utils.validator.utils import lag_converter
 from delphi_google_symptoms.constants import SMOOTHERS_MAP, FULL_BKFILL_START_DATE
 from delphi_google_symptoms.date_utils import generate_query_dates
 
-from conftest import state_data_gap, covidcast_metadata, TEST_DIR
+from conftest import state_data_gap, TEST_DIR
 
 
 class TestPatchModule:
@@ -53,7 +54,7 @@ class TestPatchModule:
         with mock_patch("delphi_google_symptoms.patch.read_params", return_value=params_), \
              mock_patch("delphi_google_symptoms.pull.pandas_gbq.read_gbq") as mock_read_gbq, \
              mock_patch("delphi_google_symptoms.pull.initialize_credentials", return_value=None), \
-             mock_patch("delphi_google_symptoms.date_utils.Epidata.covidcast_meta", return_value=covidcast_metadata), \
+             mock_patch("delphi_google_symptoms.date_utils.Epidata.covidcast_meta") as mock_covidcast_meta, \
              mock_patch("delphi_google_symptoms.run.GEO_RESOLUTIONS", new=["state"]):
             def side_effect(*args, **kwargs):
                 if "symptom_search_sub_region_1_daily" in args[0]:
@@ -64,26 +65,29 @@ class TestPatchModule:
                 else:
                     return pd.DataFrame()
 
-            mock_read_gbq.side_effect = side_effect
-            start_date = datetime.strptime(params_["patch"]["start_issue"], "%Y-%m-%d")
+            with open(f"{TEST_DIR}/test_data/covid_metadata.json", "r") as f:
+                covidcast_meta = json.load(f)
+                mock_covidcast_meta = covidcast_meta
+                mock_read_gbq.side_effect = side_effect
+                start_date = datetime.strptime(params_["patch"]["start_issue"], "%Y-%m-%d")
 
-            patch(params_)
+                patch(params_)
 
-            patch_path = Path(f"{TEST_DIR}/{params_['patch']['patch_dir']}")
+                patch_path = Path(f"{TEST_DIR}/{params_['patch']['patch_dir']}")
 
-            for issue_dir in sorted(list(patch_path.iterdir())):
-                assert f'issue_{datetime.strftime(start_date, "%Y%m%d")}' == issue_dir.name
+                for issue_dir in sorted(list(patch_path.iterdir())):
+                    assert f'issue_{datetime.strftime(start_date, "%Y%m%d")}' == issue_dir.name
 
-                smoothed_dates, raw_dates = self.parse_csv_file(list(Path(issue_dir, "google-symptoms").glob("*.csv")))
-                expected_smoothed_dates = self.generate_expected_dates(params_, "smoothed", start_date)
-                expected_raw_dates = self.generate_expected_dates(params_, "raw", start_date)
+                    smoothed_dates, raw_dates = self.parse_csv_file(list(Path(issue_dir, "google-symptoms").glob("*.csv")))
+                    expected_smoothed_dates = self.generate_expected_dates(params_, "smoothed", start_date)
+                    expected_raw_dates = self.generate_expected_dates(params_, "raw", start_date)
 
-                assert smoothed_dates == expected_smoothed_dates
-                assert raw_dates == expected_raw_dates
+                    assert smoothed_dates == expected_smoothed_dates
+                    assert raw_dates == expected_raw_dates
 
-                shutil.rmtree(issue_dir)
+                    shutil.rmtree(issue_dir)
 
-                start_date += timedelta(days=1)
+                    start_date += timedelta(days=1)
 
     def test_patch_default(self, params_w_patch):
         params_w_patch["indicator"]["num_export_days"] = None

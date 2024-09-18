@@ -4,9 +4,9 @@ from datetime import date, datetime, timedelta
 from itertools import product
 from typing import Dict, List, Union
 
+import pandas as pd
 from delphi_epidata import Epidata
 from delphi_utils.validator.utils import lag_converter
-from pandas import to_datetime
 
 from .constants import COMBINED_METRIC, FULL_BKFILL_START_DATE, PAD_DAYS, SMOOTHERS
 
@@ -68,11 +68,6 @@ def generate_num_export_days(params: Dict, logger) -> [int]:
         params["indicator"].get("export_end_date", datetime.strftime(date.today(), "%Y-%m-%d")), "%Y-%m-%d"
     )
 
-    # Generate a list of signals we expect to produce
-    sensor_names = set(
-        "_".join([metric, smoother, "search"]) for metric, smoother in product(COMBINED_METRIC, SMOOTHERS)
-    )
-
     num_export_days = params["indicator"]["num_export_days"]
     custom_run = False if not params["common"].get("custom_run") else params["common"].get("custom_run", False)
 
@@ -83,7 +78,8 @@ def generate_num_export_days(params: Dict, logger) -> [int]:
         )
         Epidata.auth = ("epidata", params["indicator"]["api_credentials"])
         # Fetch metadata to check how recent each signal is
-        metadata = Epidata.covidcast_meta()
+        response = Epidata.covidcast_meta()
+        metadata = pd.DataFrame.from_dict(Epidata.check(response))
         # Filter to only those we currently want to produce, ignore any old or deprecated signals
         gs_metadata = metadata[(metadata.data_source == "google-symptoms") & (metadata.signal.isin(sensor_names))]
 
@@ -92,7 +88,7 @@ def generate_num_export_days(params: Dict, logger) -> [int]:
             logger.warning("Signals missing in the epidata; backfilling full history")
             num_export_days = (export_end_date - FULL_BKFILL_START_DATE).days + 1
         else:
-            latest_date_diff = (datetime.today() - to_datetime(min(gs_metadata.max_time))).days + 1
+            latest_date_diff = (datetime.today() - pd.to_datetime(min(gs_metadata.max_time))).days + 1
 
             expected_date_diff = params["validation"]["common"].get("span_length", 14)
 
@@ -102,7 +98,7 @@ def generate_num_export_days(params: Dict, logger) -> [int]:
                 expected_date_diff += global_max_expected_lag
 
             if latest_date_diff > expected_date_diff:
-                logger.info(f"Missing dates from: {to_datetime(min(gs_metadata.max_time)).date()}")
+                logger.info(f"Missing dates from: {pd.to_datetime(min(gs_metadata.max_time)).date()}")
 
             num_export_days = expected_date_diff
 

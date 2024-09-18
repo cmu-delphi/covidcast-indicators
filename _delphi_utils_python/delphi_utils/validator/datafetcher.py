@@ -120,18 +120,9 @@ def get_geo_signal_combos(data_source, api_key):
 
     response = Epidata.covidcast_meta()
 
-    # pylint: disable=R1720
-    if response["result"] != 1:
-        # Something failed in the API and we did not get real metadata
-        raise RuntimeError(
-            "Error when fetching metadata from the API", response["message"]
-        )
-
-    # pylint: disable=I0021
-    else:
-        meta = pd.DataFrame.from_dict(response["epidata"])
-        # note: this will fail for signals with weekly data, but currently not supported for validation
-        meta = meta[meta["time_type"] == "day"]
+    meta = pd.DataFrame.from_dict(Epidata.check(response))
+    # note: this will fail for signals with weekly data, but currently not supported for validation
+    meta = meta[meta["time_type"] == "day"]
 
     source_meta = meta[meta['data_source'] == data_source]
     # Need to convert np.records to tuples so they are hashable and can be used in sets and dicts.
@@ -177,52 +168,20 @@ def fetch_api_reference(data_source, start_date, end_date, geo_type, signal_type
     """
     if start_date > end_date:
         raise ValueError(
-            "end_day must be on or after start_day, but "
-            f"start_day = '{start_date}', end_day = '{end_date}'"
+            "end_date must be on or after start_date, but " f"start_date = '{start_date}', end_date = '{end_date}'"
         )
     response = Epidata.covidcast(
         data_source,
         signal_type,
         time_type="day",
         geo_type=geo_type,
-        time_values=Epidata.range(
-            start_date.strftime("%Y%m%d"), end_date.strftime("%Y%m%d")
-        ),
+        time_values=Epidata.range(start_date.strftime("%Y%m%d"), end_date.strftime("%Y%m%d")),
         geo_value="*",
     )
-    if response["result"] != 1:
-        # Something failed in the API and we did not get real signal data
-        raise RuntimeError(
-            "Error when fetching signal data from the API", response["message"]
-        )
 
-    # pylint: disable=E1124
-    if response["message"] not in {"success", "no results"}:
-        # pylint: disable=E1123
-        warnings.warn(
-            "Problem obtaining data",
-            # pylint: disable=E0602
-            RuntimeWarning,
-            message=response["message"],
-            data_source=data_source,
-            signal=signal,
-            time_value=params["time_values"],
-            geo_type=geo_type,
-        )
-        response = Epidata.covidcast(
-            data_source,
-            signal_type,
-            time_type="day",
-            geo_type=geo_type,
-            time_values=Epidata.range(
-                start_date.strftime("%Y%m%d"), end_date.strftime("%Y%m%d")
-            ),
-            geo_value="*",
-        )
+    api_df = pd.DataFrame.from_dict(Epidata.check(response))
 
-    api_df = None
-    if len(response["epidata"]) > 0:
-        api_df = pd.DataFrame.from_dict(response["epidata"])
+    if isinstance(api_df, pd.DataFrame) and len(api_df) > 0:
         # note: this will fail for signals with weekly data, but currently not supported for validation
         api_df["issue"] = pd.to_datetime(api_df["issue"], format="%Y%m%d")
         api_df["time_value"] = pd.to_datetime(api_df["time_value"], format="%Y%m%d")

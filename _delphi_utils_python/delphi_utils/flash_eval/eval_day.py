@@ -153,8 +153,7 @@ def output(evd_ranking, day, lag, signal, logger):
             p_text += f"\t{start_link}|*{index}*, {'{:.2f}'.format(value)}>\n"
         else:
             break
-    name = f"Signal: {signal} Lag: {lag}"
-    logger.info(name, payload=p_text)
+    logger.info("FLaSH: worth inspecting", signal=signal, lag=lag, payload=p_text)
 
 
 def evd_ranking_fn(ts_streams, EVD_max, EVD_min):

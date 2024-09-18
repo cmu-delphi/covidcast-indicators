@@ -214,9 +214,10 @@ class ClaimsHospIndicatorUpdater:
         filtered_df = filtered_df.reset_index()
         filtered_df.rename(columns={"rate": "val"}, inplace=True)
         filtered_df["timestamp"] = filtered_df["timestamp"].astype(str)
-        df_list = []
-        if self.write_se:
-            logging.info("WARNING: WRITING SEs")
+        filtered_df["sample_size"] = np.NaN
+        filtered_df.drop(columns=["incl"], inplace=True)
+
+        # sanity check for data
         for geo_id, group in filtered_df.groupby("geo_id"):
             assert not group.val.isnull().any()
             assert not group.se.isnull().any()
@@ -224,14 +225,13 @@ class ClaimsHospIndicatorUpdater:
             if np.any(group.val > 90):
                 for sus_val in np.where(group.val > 90):
                     logging.warning("value suspicious, %s: %d", geo_id, sus_val)
-            df_list.append(group)
             if self.write_se:
                 assert np.all(group.val > 0) and np.all(group.se > 0), "p=0, std_err=0 invalid"
 
-        output_df = pd.concat(df_list)
-        output_df.drop(columns=["incl"], inplace=True)
-        if not self.write_se:
-            output_df["se"] = np.NaN
-        output_df["sample_size"] = np.NaN
-        assert sorted(list(output_df.columns)) == ["geo_id", "sample_size", "se", "timestamp", "val"]
-        return output_df
+        if self.write_se:
+            logging.info("WARNING: WRITING SEs")
+        else:
+            filtered_df["se"] = np.NaN
+
+        assert sorted(list(filtered_df.columns)) == ["geo_id", "sample_size", "se", "timestamp", "val"]
+        return filtered_df

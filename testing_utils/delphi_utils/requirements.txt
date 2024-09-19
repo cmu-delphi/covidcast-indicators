@@ -1,7 +1,0 @@
-covidcast
-delphi-epidata
-epiweeks
-numpy
-pandas==1.5.3
-pyarrow
-tqdm

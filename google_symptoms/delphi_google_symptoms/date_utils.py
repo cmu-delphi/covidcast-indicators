@@ -97,7 +97,7 @@ def generate_num_export_days(params: Dict, logger) -> [int]:
             metadata = pd.DataFrame.from_dict(Epidata.check(response))
             # Filter to only those we currently want to produce, ignore any old or deprecated signals
             gs_metadata = metadata[(metadata.data_source == "google-symptoms") & (metadata.signal.isin(sensor_names))]
-            latest_metadata_dt = min(gs_metadata.max_time)
+            latest_metadata_dt = pd.to_datetime(min(gs_metadata.max_time))
             if sensor_names.difference(set(gs_metadata.signal)):
                 # If any signal not in metadata yet, we need to backfill its full history.
                 logger.warning("Signals missing in the epidata; backfilling full history")

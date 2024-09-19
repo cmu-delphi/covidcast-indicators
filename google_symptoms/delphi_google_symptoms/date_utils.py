@@ -1,5 +1,4 @@
 """utility functions for date parsing."""
-import logging
 from datetime import date, datetime, timedelta
 from itertools import product
 from typing import Dict, List, Union
@@ -49,9 +48,10 @@ def get_max_lag(params: Dict) -> int:
     max_expected_lag = lag_converter(params["validation"]["common"].get("max_expected_lag", {"all": 4}))
     return max(list(max_expected_lag.values()))
 
-def _generate_base_num_days(params: Dict, logger) -> int:
+
+def _generate_base_num_days(params: Dict, latest_metadata_dt: datetime, export_end_date: datetime, logger) -> int:
     """Generates export dates for base case"""
-    latest_date_diff = (datetime.today() - pd.to_datetime(min(gs_metadata.max_time))).days + 1
+    latest_date_diff = (datetime.today() - latest_metadata_dt).days + 1
 
     expected_date_diff = params["validation"]["common"].get("span_length", 14)
 
@@ -61,7 +61,7 @@ def _generate_base_num_days(params: Dict, logger) -> int:
         expected_date_diff += global_max_expected_lag
 
     if latest_date_diff > expected_date_diff:
-        logger.info(f"Missing dates from: {pd.to_datetime(min(gs_metadata.max_time)).date()}")
+        logger.info(f"Missing dates from: {pd.to_datetime(latest_metadata_dt).date()}")
 
     return expected_date_diff
 def generate_num_export_days(params: Dict, logger) -> [int]:
@@ -97,17 +97,18 @@ def generate_num_export_days(params: Dict, logger) -> [int]:
             metadata = pd.DataFrame.from_dict(Epidata.check(response))
             # Filter to only those we currently want to produce, ignore any old or deprecated signals
             gs_metadata = metadata[(metadata.data_source == "google-symptoms") & (metadata.signal.isin(sensor_names))]
-
+            latest_metadata_dt = min(gs_metadata.max_time)
             if sensor_names.difference(set(gs_metadata.signal)):
                 # If any signal not in metadata yet, we need to backfill its full history.
                 logger.warning("Signals missing in the epidata; backfilling full history")
                 num_export_days = (export_end_date - FULL_BKFILL_START_DATE).days + 1
             else:
-                num_export_days = _generate_base_num_days(params, logger)
+                num_export_days = _generate_base_num_days(params, latest_metadata_dt, export_end_date, logger)
 
+        # pylint: disable=W0703
         except Exception as e:
             logger.info("Metadata failed running as usual", error_context=str(e))
-            num_export_days = _generate_base_num_days(params, logger)
+            num_export_days = _generate_base_num_days(params, datetime.today(), export_end_date, logger)
 
     return num_export_days
 

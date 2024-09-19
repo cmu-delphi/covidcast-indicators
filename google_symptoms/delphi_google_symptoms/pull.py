@@ -7,7 +7,7 @@ from datetime import date, datetime  # pylint: disable=unused-import
 import numpy as np
 import pandas as pd
 import pandas_gbq
-from google.api_core.exceptions import BadRequest, ServerError, InternalServerError
+from google.api_core.exceptions import BadRequest, InternalServerError, ServerError
 from google.oauth2 import service_account
 
 from .constants import COMBINED_METRIC, DC_FIPS, DTYPE_CONVERSIONS, METRICS, SYMPTOM_SETS
@@ -195,9 +195,12 @@ def pull_gs_data_one_geolevel(level, date_range):
         except Exception as e:
             # sometimes google throws out 400 error when it's 500
             # https://github.com/googleapis/python-bigquery/issues/23
-            if (isinstance(e, BadRequest) and e.reason == "backendError") or isinstance(e, ServerError) or \
-                    isinstance(e, InternalServerError):
-                time.sleep((2 ** num_try) + random.random(0, 1000)/ 1000.0)
+            if (
+                (isinstance(e, BadRequest) and e.reason == "backendError")
+                or isinstance(e, ServerError)
+                or isinstance(e, InternalServerError)
+            ):
+                time.sleep((2**num_try) + random.random(0, 1000) / 1000.0)
                 num_try = NUM_RETRIES - 1
                 continue
             else:

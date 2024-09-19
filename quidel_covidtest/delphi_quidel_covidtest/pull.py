@@ -295,21 +295,25 @@ def pull_quidel_covidtest(params, logger):
     else:
         pull_end_date = datetime.strptime(params["pull_end_date"], '%Y-%m-%d')
 
-    # Pull data from the file at 5 digit zipcode level
-    # Use _end_date to check the most recent date that we received data
-    df, _end_date = preprocess_new_data(
-            pull_start_date, pull_end_date, params, test_mode, logger)
+    if not params.get("custom_run", False):
+        # Pull data from the file at 5 digit zipcode level
+        # Use _end_date to check the most recent date that we received data
+        df, _end_date = preprocess_new_data(
+                pull_start_date, pull_end_date, params, test_mode, logger)
 
-    # Utilize previously stored data
-    if previous_df is not None:
-        df = pd.concat(
-            [previous_df, df]
-        ).groupby(
-            ["timestamp", "zip"]
-        ).sum(
-            numeric_only=True
-        ).reset_index(
-        )
+        # Utilize previously stored data
+        if previous_df is not None:
+            df = pd.concat(
+                [previous_df, df]
+            ).groupby(
+                ["timestamp", "zip"]
+            ).sum(
+                numeric_only=True
+            ).reset_index(
+            )
+    else:
+        df = previous_df[previous_df["timestamp"] == params["pull_start_date"]]
+        _end_date = datetime.strptime(params["params"]["end_issue"], '%Y-%m-%d')
     return df, _end_date
 
 def check_export_end_date(input_export_end_date, _end_date,

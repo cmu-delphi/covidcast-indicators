@@ -7,10 +7,10 @@ from datetime import date, datetime  # pylint: disable=unused-import
 import numpy as np
 import pandas as pd
 import pandas_gbq
-from google.api_core.exceptions import BadRequest, ServerError
+from google.api_core.exceptions import BadRequest, ServerError, InternalServerError
 from google.oauth2 import service_account
 
-from .constants import COMBINED_METRIC, DC_FIPS, DTYPE_CONVERSIONS, METRICS, NUM_RETRIES, SYMPTOM_SETS
+from .constants import COMBINED_METRIC, DC_FIPS, DTYPE_CONVERSIONS, METRICS, SYMPTOM_SETS
 from .date_utils import generate_query_dates
 
 # Create map of BigQuery symptom column names to desired column names.
@@ -187,16 +187,18 @@ def pull_gs_data_one_geolevel(level, date_range):
     """
     query = produce_query(level, date_range)
     df = pd.DataFrame()
-    for num_try in range(NUM_RETRIES):
+    num_try = 0
+    # recommends to only try once for 500/503 error
+    while num_try < 1:
         try:
             df = pandas_gbq.read_gbq(query, progress_bar_type=None, dtypes=DTYPE_CONVERSIONS)
         except Exception as e:
             # sometimes google throws out 400 error when it's 500
             # https://github.com/googleapis/python-bigquery/issues/23
-            if num_try < NUM_RETRIES - 1 and (
-                (isinstance(e, BadRequest) and e.reason == "backendError") or isinstance(e, ServerError)
-            ):
-                # time.sleep(5)
+            if (isinstance(e, BadRequest) and e.reason == "backendError") or isinstance(e, ServerError) or \
+                    isinstance(e, InternalServerError):
+                time.sleep((2 ** num_try) + random.random(0, 1000)/ 1000.0)
+                num_try = NUM_RETRIES - 1
                 continue
             else:
                 raise e

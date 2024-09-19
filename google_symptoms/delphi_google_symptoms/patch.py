@@ -58,16 +58,19 @@ def patch(params):
     issue_date = datetime.strptime(params["patch"]["start_issue"], "%Y-%m-%d")
     end_issue = datetime.strptime(params["patch"]["end_issue"], "%Y-%m-%d")
 
-    logger.info(f"""Start patching {params["patch"]["patch_dir"]}""")
-    logger.info(f"""Start issue: {issue_date.strftime("%Y-%m-%d")}""")
-    logger.info(f"""End issue: {end_issue.strftime("%Y-%m-%d")}""")
+    logger.info(
+        "Starting patching",
+        patch_directory=params["patch"]["patch_dir"],
+        start_issue=issue_date.strftime("%Y-%m-%d"),
+        end_issue=end_issue.strftime("%Y-%m-%d"),
+    )
 
     makedirs(params["patch"]["patch_dir"], exist_ok=True)
 
     patch_dates = generate_patch_dates(params)
 
     while issue_date <= end_issue:
-        logger.info(f"""Running issue {issue_date.strftime("%Y-%m-%d")}""")
+        logger.info("Running issue", issue_date=issue_date.strftime("%Y-%m-%d"))
 
         # Output dir setup
         current_issue_yyyymmdd = issue_date.strftime("%Y%m%d")

@@ -90,7 +90,7 @@ def run_module(params):
         for geo in GEOS:
             df = df_pull.copy()
             df["val"] = df[signal]
-            logger.info("Generating signal and exporting to CSV", metric=signal)
+            logger.info("Generating signal and exporting to CSV", geo_type=geo, signal=signal)
             if geo == "nation":
                 df = df[df["geography"] == "United States"]
                 df["geo_id"] = "us"

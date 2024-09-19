@@ -1,5 +1,6 @@
 """Retrieve data and wrangle into appropriate format."""
 # -*- coding: utf-8 -*-
+import random
 import re
 import time
 from datetime import date, datetime  # pylint: disable=unused-import
@@ -186,25 +187,24 @@ def pull_gs_data_one_geolevel(level, date_range):
     pd.DataFrame
     """
     query = produce_query(level, date_range)
-    df = pd.DataFrame()
-    num_try = 0
+    df = None
+
     # recommends to only try once for 500/503 error
-    while num_try < 1:
-        try:
-            df = pandas_gbq.read_gbq(query, progress_bar_type=None, dtypes=DTYPE_CONVERSIONS)
-        except Exception as e:
-            # sometimes google throws out 400 error when it's 500
-            # https://github.com/googleapis/python-bigquery/issues/23
-            if (
-                (isinstance(e, BadRequest) and e.reason == "backendError")
-                or isinstance(e, ServerError)
-                or isinstance(e, InternalServerError)
-            ):
-                time.sleep((2**num_try) + random.random(0, 1000) / 1000.0)
-                num_try = NUM_RETRIES - 1
-                continue
-            else:
-                raise e
+    try:
+        df = pandas_gbq.read_gbq(query, progress_bar_type=None, dtypes=DTYPE_CONVERSIONS)
+    except Exception as e:
+        # sometimes google throws out 400 error when it's 500
+        # https://github.com/googleapis/python-bigquery/issues/23
+        if (
+            (isinstance(e, BadRequest) and e.reason == "backendError")
+            or isinstance(e, ServerError)
+            or isinstance(e, InternalServerError)
+        ):
+            time.sleep(2 + random.randint(0, 1000) / 1000.0)
+        else:
+            raise e
+    if df is None:
+        df = pandas_gbq.read_gbq(query, progress_bar_type=None, dtypes=DTYPE_CONVERSIONS)
 
     if len(df) == 0:
         df = pd.DataFrame(columns=["open_covid_region_code", "date"] + list(colname_map.keys()))

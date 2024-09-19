@@ -131,12 +131,12 @@ class TestPullGoogleSymptoms:
         serverErrorException = ServerError(message="message")
 
         with mock.patch("pandas_gbq.read_gbq") as mock_read_gbq:
-            mock_read_gbq.side_effect = [badRequestException, serverErrorException, pd.DataFrame()]
+            mock_read_gbq.side_effect = [badRequestException, pd.DataFrame()]
 
             output = pull_gs_data_one_geolevel("state", ["", ""])
             expected = pd.DataFrame(columns=new_keep_cols)
             assert_frame_equal(output, expected, check_dtype = False)
-            assert mock_read_gbq.call_count == 3
+            assert mock_read_gbq.call_count == 2
 
     def test_pull_one_gs_retry_too_many(self):
         info = error_details_pb2.ErrorInfo(
@@ -146,7 +146,7 @@ class TestPullGoogleSymptoms:
 
         with mock.patch("pandas_gbq.read_gbq") as mock_read_gbq:
             with pytest.raises(BadRequest):
-                mock_read_gbq.side_effect = [badRequestException, badRequestException, badRequestException, pd.DataFrame()]
+                mock_read_gbq.side_effect = [badRequestException, badRequestException, pd.DataFrame()]
                 pull_gs_data_one_geolevel("state", ["", ""])
 
 

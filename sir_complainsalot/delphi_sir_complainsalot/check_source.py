@@ -103,6 +103,7 @@ def check_source(data_source, meta, params, grace, logger):  # pylint: disable=t
                 unique_dates = list(latest_data["time_value"].unique().dt.date)
                 current_lag_in_days = (end_date.date() - max(unique_dates)).days
                 lag_calculated_from_api = True
+        # pylint: disable=W0703
         except Exception:
             continue
 

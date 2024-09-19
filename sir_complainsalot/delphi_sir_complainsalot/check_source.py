@@ -92,16 +92,19 @@ def check_source(data_source, meta, params, grace, logger):  # pylint: disable=t
 
         current_lag_in_days = (now - row["max_time"]).days
         lag_calculated_from_api = False
+        try:
+            epidata_dict = Epidata.check(response)
+            latest_data = pd.DataFrame.from_dict(epidata_dict)
+            if len(latest_data) > 0:
+                latest_data["time_value"] = convert_apitime_column_to_datetimes(latest_data, "time_value")
+                latest_data["issue"] = convert_apitime_column_to_datetimes(latest_data, "issue")
+                latest_data.drop("direction", axis=1, inplace=True)
 
-        latest_data = pd.DataFrame.from_dict(Epidata.check(response))
-        if len(latest_data) > 0:
-            latest_data["time_value"] = convert_apitime_column_to_datetimes(latest_data, "time_value")
-            latest_data["issue"] = convert_apitime_column_to_datetimes(latest_data, "issue")
-            latest_data.drop("direction", axis=1, inplace=True)
-
-            unique_dates = list(latest_data["time_value"].unique().dt.date)
-            current_lag_in_days = (end_date.date() - max(unique_dates)).days
-            lag_calculated_from_api = True
+                unique_dates = list(latest_data["time_value"].unique().dt.date)
+                current_lag_in_days = (end_date.date() - max(unique_dates)).days
+                lag_calculated_from_api = True
+        except Exception:
+            continue
 
         logger.info("Signal lag",
                     current_lag_in_days = current_lag_in_days,

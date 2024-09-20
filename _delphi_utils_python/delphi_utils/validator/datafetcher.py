@@ -5,6 +5,7 @@ import re
 import threading
 import warnings
 from os import listdir
+
 # pylint: disable=W0707
 from os.path import isfile, join
 
@@ -169,14 +170,17 @@ def fetch_api_reference(data_source, start_date, end_date, geo_type, signal_type
     """
     if start_date > end_date:
         raise ValueError(
-            "end_date must be on or after start_date, but " f"start_date = '{start_date}', end_date = '{end_date}'"
+            "end_date must be on or after start_date, but "
+            + f"start_date = '{start_date}', end_date = '{end_date}'"
         )
     response = Epidata.covidcast(
         data_source,
         signal_type,
         time_type="day",
         geo_type=geo_type,
-        time_values=Epidata.range(start_date.strftime("%Y%m%d"), end_date.strftime("%Y%m%d")),
+        time_values=Epidata.range(
+            start_date.strftime("%Y%m%d"), end_date.strftime("%Y%m%d")
+        ),
         geo_value="*",
     )
 

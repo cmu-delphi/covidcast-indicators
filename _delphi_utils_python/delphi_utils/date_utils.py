@@ -15,7 +15,9 @@ def date_to_api_string(d: datetime, time_type: str = "day") -> str:
     raise ValueError(f"Unknown time_type: {time_type}")
 
 
-def convert_apitime_column_to_datetimes(df: pd.DataFrame, col: str, date_format: str = "%Y%m%d") -> pd.Series:
+def convert_apitime_column_to_datetimes(
+    df: pd.DataFrame, col: str, date_format: str = "%Y%m%d"
+) -> pd.Series:
     """Convert a DataFrame date or epiweek column into datetimes.
 
     Dates are assumed to be in the YYYYMMDD format by default.
@@ -28,7 +30,9 @@ def convert_apitime_column_to_datetimes(df: pd.DataFrame, col: str, date_format:
         if row["time_type"] == "day":
             return pd.to_datetime(row[col], format=date_format)
         if row["time_type"] == "week":
-            return pd.to_datetime(Week(int(row[col][:4]), int(row[col][-2:])).startdate())
+            return pd.to_datetime(
+                Week(int(row[col][:4]), int(row[col][-2:])).startdate()
+            )
         return row[col]
 
     return df.apply(parse_row, axis=1)

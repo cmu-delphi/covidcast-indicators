@@ -50,7 +50,7 @@ def get_max_lag(params: Dict) -> int:
 
 
 def _generate_base_num_days(params: Dict, latest_metadata_dt: datetime, export_end_date: datetime, logger) -> int:
-    """Generates export dates for base case."""
+    """Generate export dates for base case."""
     latest_date_diff = (datetime.today() - latest_metadata_dt).days + 1
 
     expected_date_diff = params["validation"]["common"].get("span_length", 14)

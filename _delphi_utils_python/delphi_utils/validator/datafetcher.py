@@ -5,6 +5,7 @@ import re
 import threading
 import warnings
 from os import listdir
+# pylint: disable=W0707
 from os.path import isfile, join
 
 import numpy as np

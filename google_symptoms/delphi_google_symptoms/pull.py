@@ -192,13 +192,14 @@ def pull_gs_data_one_geolevel(level, date_range):
     # recommends to only try once for 500/503 error
     try:
         df = pandas_gbq.read_gbq(query, progress_bar_type=None, dtypes=DTYPE_CONVERSIONS)
+    # pylint: disable=W0703
     except Exception as e:
         # sometimes google throws out 400 error when it's 500
         # https://github.com/googleapis/python-bigquery/issues/23
         if (
+            # pylint: disable=E1101
             (isinstance(e, BadRequest) and e.reason == "backendError")
-            or isinstance(e, ServerError)
-            or isinstance(e, InternalServerError)
+            or isinstance(e, (ServerError, InternalServerError))
         ):
             time.sleep(2 + random.randint(0, 1000) / 1000.0)
         else:

@@ -118,10 +118,7 @@ class TestDataFetcher:
             ("state", "b"): ValidationFailure("api_data_fetch_error",
                                               geo_type="state",
                                               signal="b",
-                                             message="Error: no API data was returned when "
-                                             "fetching reference data from 2020-03-10 "
-                                             "to 2020-06-10 for data source: "
-                                             "source, signal type: b, geo type: state")
+                                             message="Error fetching epidata: failed. (result=0)")
         }
         actual = threaded_api_calls("source", date(2020, 3, 10), date(2020, 6, 10), expected.keys())
 

@@ -313,7 +313,7 @@ def pull_quidel_covidtest(params, logger):
             )
     else:
         df = previous_df[previous_df["timestamp"] == params["pull_start_date"]]
-        _end_date = datetime.strptime(params["params"]["end_issue"], '%Y-%m-%d')
+        _end_date = pull_start_date
     return df, _end_date
 
 def check_export_end_date(input_export_end_date, _end_date,
@@ -347,7 +347,7 @@ def check_export_end_date(input_export_end_date, _end_date,
 def check_export_start_date(export_start_date, export_end_date,
                             export_day_range):
     """
-    Ensure that the starte date, end date, and day range are mutually consistent.
+    Ensure that the start date, end date, and day range are mutually consistent.
 
     Parameters:
         export_start_date: str

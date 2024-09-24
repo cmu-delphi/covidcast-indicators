@@ -11,7 +11,7 @@ import pandas as pd
 
 from .nancodes import Nans
 
-def filter_contradicting_missing_codes(df, sensor, metric, date, logger=None):
+def filter_contradicting_missing_codes(df, sensor, metric, logger=None):
     """Find values with contradictory missingness codes, filter them, and log."""
     columns = ["val", "se", "sample_size"]
     # Get indicies where the XNOR is true (i.e. both are true or both are false).
@@ -21,10 +21,8 @@ def filter_contradicting_missing_codes(df, sensor, metric, date, logger=None):
     ]
     for mask in masks:
         if not logger is None and df.loc[mask].size > 0:
-            logger.info(
-                "Filtering contradictory missing code in " +
-                "{0}_{1}_{2}.".format(sensor, metric, date.strftime(format="%Y-%m-%d"))
-            )
+            date = df.loc[mask]["timestamp"][0].strftime("%Y%m%d")
+            logger.info("Filtering contradictory missing code", sensor=sensor, metric=metric, date=date)
             df = df.loc[~mask]
         elif logger is None and df.loc[mask].size > 0:
             df = df.loc[~mask]
@@ -98,6 +96,28 @@ def create_export_csv(
     else:
         dates = pd.date_range(start_date, end_date)
 
+    if remove_null_samples:
+        df = df[df["sample_size"].notnull()]
+    if sort_geos:
+        df = df.sort_values(by="geo_id")
+    if "missing_val" in df.columns:
+        df = filter_contradicting_missing_codes(
+            df, sensor, metric, logger=logger
+        )
+
+    expected_columns = [
+        "geo_id",
+        "val",
+        "se",
+        "sample_size",
+        "timestamp",
+        "missing_val",
+        "missing_se",
+        "missing_sample_size",
+    ]
+    df = df.filter(items=expected_columns)
+    df = df.round({"val": 7, "se": 7})
+
     for date in dates:
         if weekly_dates:
             t = Week.fromdate(pd.to_datetime(str(date)))
@@ -109,25 +129,8 @@ def create_export_csv(
         else:
             export_filename = f"{date_str}_{geo_res}_{metric}_{sensor}.csv"
         export_file = join(export_dir, export_filename)
-        expected_columns = [
-            "geo_id",
-            "val",
-            "se",
-            "sample_size",
-            "missing_val",
-            "missing_se",
-            "missing_sample_size",
-        ]
-        export_df = df[df["timestamp"] == date].filter(items=expected_columns)
-        if "missing_val" in export_df.columns:
-            export_df = filter_contradicting_missing_codes(
-                export_df, sensor, metric, date, logger=logger
-            )
-        if remove_null_samples:
-            export_df = export_df[export_df["sample_size"].notnull()]
-        export_df = export_df.round({"val": 7, "se": 7})
-        if sort_geos:
-            export_df = export_df.sort_values(by="geo_id")
+        export_df = df[df["timestamp"] == date]
+        export_df = export_df.drop("timestamp", axis=1)
         export_df.to_csv(export_file, index=False, na_rep="NA")
 
         logger.debug(

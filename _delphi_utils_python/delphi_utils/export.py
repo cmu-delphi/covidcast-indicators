@@ -11,6 +11,7 @@ import pandas as pd
 
 from .nancodes import Nans
 
+
 def filter_contradicting_missing_codes(df, sensor, metric, logger=None):
     """Find values with contradictory missingness codes, filter them, and log."""
     columns = ["val", "se", "sample_size"]
@@ -101,9 +102,7 @@ def create_export_csv(
     if sort_geos:
         df = df.sort_values(by="geo_id")
     if "missing_val" in df.columns:
-        df = filter_contradicting_missing_codes(
-            df, sensor, metric, logger=logger
-        )
+        df = filter_contradicting_missing_codes(df, sensor, metric, logger=logger)
 
     expected_columns = [
         "geo_id",

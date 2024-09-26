@@ -5,22 +5,20 @@ This module should contain a function called `run_module`, that is executed
 when the module is run with `python -m delphi_claims_hosp`.
 """
 
-# standard packages
-import time
 import os
+import time
 from datetime import datetime, timedelta
 from pathlib import Path
 
-# third party
 from delphi_utils import get_structured_logger
+from delphi_utils.export import create_export_csv
 
-# first party
+from .backfill import merge_backfill_file, store_backfill_file
 from .config import Config
 from .download_claims_ftp_files import download
-from .modify_claims_drops import modify_and_write
 from .get_latest_claims_name import get_latest_filename
+from .modify_claims_drops import modify_and_write
 from .update_indicator import ClaimsHospIndicatorUpdater
-from .backfill import (store_backfill_file, merge_backfill_file)
 
 
 def run_module(params):
@@ -138,10 +136,19 @@ def run_module(params):
                 signal_name,
                 logger,
             )
-            updater.update_indicator(
+            output = updater.update_indicator(
                 claims_file,
-                params["common"]["export_dir"],
             )
+            filtered_output_df = updater.preprocess_output(output)
+            create_export_csv(
+                filtered_output_df,
+                export_dir=params["common"]["export_dir"],
+                start_date=startdate,
+                geo_res=geo,
+                sensor=signal_name,
+                logger=logger,
+            )
+
             max_dates.append(updater.output_dates[-1])
             n_csv_export.append(len(updater.output_dates))
         logger.info("Finished updating", geo_type=geo)

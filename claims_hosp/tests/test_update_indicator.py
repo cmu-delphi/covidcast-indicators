@@ -13,6 +13,7 @@ import pytest
 # first party
 from delphi_claims_hosp.config import Config, GeoConstants
 from delphi_claims_hosp.update_indicator import ClaimsHospIndicatorUpdater
+from delphi_utils.export import create_export_csv
 
 CONFIG = Config()
 CONSTANTS = GeoConstants()
@@ -35,6 +36,9 @@ class TestClaimsHospIndicatorUpdater:
     weekday = False
     write_se = False
     prefix = "foo"
+    start_date = "02-01-2020"
+    end_date = "06-01-2020"
+    drop_date = "06-12-2020"
     small_test_data = pd.DataFrame({
         "num": [0, 100, 200, 300, 400, 500, 600, 100, 200, 300, 400, 500, 600],
         "hrr": [1.0] * 7 + [2.0] * 6,
@@ -44,9 +48,9 @@ class TestClaimsHospIndicatorUpdater:
 
     def test_shift_dates(self):
         updater = ClaimsHospIndicatorUpdater(
-            "02-01-2020",
-            "06-01-2020",
-            "06-12-2020",
+            self.start_date,
+            self.end_date,
+            self.drop_date,
             self.geo,
             self.parallel,
             self.weekday,
@@ -66,9 +70,9 @@ class TestClaimsHospIndicatorUpdater:
 
     def test_geo_reindex(self):
         updater = ClaimsHospIndicatorUpdater(
-            "02-01-2020",
-            "06-01-2020",
-            "06-12-2020",
+            self.start_date,
+            self.end_date,
+            self.drop_date,
             self.geo,
             self.parallel,
             self.weekday,
@@ -85,9 +89,9 @@ class TestClaimsHospIndicatorUpdater:
         for geo in ["state", "hrr", "hhs", "nation"]:
             td = TemporaryDirectory()
             updater = ClaimsHospIndicatorUpdater(
-                "02-01-2020",
-                "06-01-2020",
-                "06-12-2020",
+                self.start_date,
+                self.end_date,
+                self.drop_date,
                 geo,
                 self.parallel,
                 self.weekday,
@@ -96,20 +100,44 @@ class TestClaimsHospIndicatorUpdater:
                 TEST_LOGGER
             )
 
-            updater.update_indicator(
+            output = updater.update_indicator(
                 DATA_FILEPATH,
-                td.name
+                TEST_LOGGER
             )
 
+            filtered_output = updater.preprocess_output(output)
+            create_export_csv(filtered_output,
+                              td.name,
+                              start_date=self.start_date,
+                              end_date=self.end_date,
+                              geo_res=geo,
+                              write_empty_days=True,
+                              sensor=Config.signal_name,
+                              logger=TEST_LOGGER
+                              )
+            # output date range is half exclusive [2020-02-01 to 2020-06-01)
+            # while the export function considers fully inclusive [2020-02-01. 2020-06-01]
             assert len(os.listdir(td.name)) == len(
-                updater.output_dates), f"failed {geo} update_indicator test"
+                updater.output_dates) + 1, f"failed {geo} update_indicator test"
             td.cleanup()
 
+    def prepare_df(self, d):
+        df_list = []
+        for geo in d.get("geo_ids"):
+           df_list.append(pd.DataFrame({"geo_id": geo,"rate": d["rates"][geo], "se": d["se"][geo],
+                                       "incl": d["include"][geo], "timestamp": d["dates"],
+                                        "sample_size": [np.nan, np.nan, np.nan]
+                                        }))
+
+        output_df = pd.concat(df_list)
+        output_df.index = output_df.timestamp
+        output_df.drop(columns=["timestamp"], inplace=True)
+        return output_df
     def test_write_to_csv_results(self):
         updater = ClaimsHospIndicatorUpdater(
-            "02-01-2020",
-            "06-01-2020",
-            "06-12-2020",
+            self.start_date,
+            self.end_date,
+            self.drop_date,
             self.geo,
             self.parallel,
             self.weekday,
@@ -140,46 +168,51 @@ class TestClaimsHospIndicatorUpdater:
             "geo_level": "geography",
         }
 
-        td = TemporaryDirectory()
-        updater.write_to_csv(res0, td.name)
+        output_df = self.prepare_df(res0)
+        filtered_output_df = updater.preprocess_output(output_df)
 
+        td = TemporaryDirectory()
+
+        create_export_csv(filtered_output_df, td.name,
+                          start_date=self.start_date,
+                          end_date=self.end_date,
+                          geo_res=res0["geo_level"],
+                          sensor=Config.signal_name,
+                          logger=TEST_LOGGER)
         # check outputs
         expected_name = f"20200501_geography_{Config.signal_name}.csv"
         assert exists(join(td.name, expected_name))
         output_data = pd.read_csv(join(td.name, expected_name))
         assert (
-                output_data.columns == ["geo_id", "val", "se", "direction", "sample_size"]
+                output_data.columns == ["geo_id", "val", "se", "sample_size"]
         ).all()
         assert (output_data.geo_id == ["a", "b"]).all()
         assert np.array_equal(output_data.val.values, np.array([0.1, 1]))
 
         # for privacy we do not usually report SEs
         assert np.isnan(output_data.se.values).all()
-        assert np.isnan(output_data.direction.values).all()
         assert np.isnan(output_data.sample_size.values).all()
 
         expected_name = f"20200502_geography_{Config.signal_name}.csv"
         assert exists(join(td.name, expected_name))
         output_data = pd.read_csv(join(td.name, expected_name))
         assert (
-                output_data.columns == ["geo_id", "val", "se", "direction", "sample_size"]
+                output_data.columns == ["geo_id", "val", "se", "sample_size"]
         ).all()
         assert (output_data.geo_id == ["a"]).all()
         assert np.array_equal(output_data.val.values, np.array([0.5]))
         assert np.isnan(output_data.se.values).all()
-        assert np.isnan(output_data.direction.values).all()
         assert np.isnan(output_data.sample_size.values).all()
 
         expected_name = f"20200504_geography_{Config.signal_name}.csv"
         assert exists(join(td.name, expected_name))
         output_data = pd.read_csv(join(td.name, expected_name))
         assert (
-                output_data.columns == ["geo_id", "val", "se", "direction", "sample_size"]
+                output_data.columns == ["geo_id", "val", "se", "sample_size"]
         ).all()
         assert (output_data.geo_id == ["a", "b"]).all()
         assert np.array_equal(output_data.val.values, np.array([1.5, 3]))
         assert np.isnan(output_data.se.values).all()
-        assert np.isnan(output_data.direction.values).all()
         assert np.isnan(output_data.sample_size.values).all()
 
         td.cleanup()
@@ -188,9 +221,9 @@ class TestClaimsHospIndicatorUpdater:
         obfuscated_name = PARAMS["indicator"]["obfuscated_prefix"]
         signal_name = obfuscated_name + "_" + Config.signal_weekday_name
         updater = ClaimsHospIndicatorUpdater(
-            "02-01-2020",
-            "06-01-2020",
-            "06-12-2020",
+            self.start_date,
+            self.end_date,
+            self.drop_date,
             self.geo,
             self.parallel,
             True,
@@ -221,28 +254,36 @@ class TestClaimsHospIndicatorUpdater:
             "geo_level": "geography",
         }
 
+        output_df = self.prepare_df(res0)
+        filtered_output_df = updater.preprocess_output(output_df)
+
         td = TemporaryDirectory()
-        updater.write_to_csv(res0, td.name)
+
+        create_export_csv(filtered_output_df, td.name,
+                          start_date=self.start_date,
+                          end_date=self.end_date,
+                          geo_res=res0["geo_level"],
+                          sensor=signal_name,
+                          logger=TEST_LOGGER)
 
         # check outputs
         expected_name = f"20200501_geography_{signal_name}.csv"
         assert exists(join(td.name, expected_name))
         output_data = pd.read_csv(join(td.name, expected_name))
         assert (
-                output_data.columns == ["geo_id", "val", "se", "direction", "sample_size"]
+                output_data.columns == ["geo_id", "val", "se", "sample_size"]
         ).all()
         assert (output_data.geo_id == ["a", "b"]).all()
         assert np.array_equal(output_data.val.values, np.array([0.1, 1]))
         assert np.array_equal(output_data.se.values, np.array([0.1, 0.5]))
-        assert np.isnan(output_data.direction.values).all()
         assert np.isnan(output_data.sample_size.values).all()
         td.cleanup()
 
-    def test_write_to_csv_wrong_results(self):
+    def test_preprocess_wrong_results(self):
         updater = ClaimsHospIndicatorUpdater(
-            "02-01-2020",
-            "06-01-2020",
-            "06-12-2020",
+            self.start_date,
+            self.end_date,
+            self.drop_date,
             self.geo,
             self.parallel,
             self.weekday,
@@ -273,24 +314,23 @@ class TestClaimsHospIndicatorUpdater:
             "geo_level": "geography",
         }
 
-        td = TemporaryDirectory()
-
         # nan value for included loc-date
         res1 = deepcopy(res0)
         res1["rates"]["a"][1] = np.nan
+        output_df = self.prepare_df(res1)
         with pytest.raises(AssertionError):
-            updater.write_to_csv(res1, td.name)
+            updater.preprocess_output(output_df)
 
         # nan se for included loc-date
         res2 = deepcopy(res0)
         res2["se"]["a"][1] = np.nan
+        output_df = self.prepare_df(res2)
         with pytest.raises(AssertionError):
-            updater.write_to_csv(res2, td.name)
+            updater.preprocess_output(output_df)
 
         # large se value
         res3 = deepcopy(res0)
         res3["se"]["a"][0] = 10
+        output_df = self.prepare_df(res3)
         with pytest.raises(AssertionError):
-            updater.write_to_csv(res3, td.name)
-
-        td.cleanup()
+            updater.preprocess_output(output_df)

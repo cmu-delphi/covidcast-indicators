@@ -51,7 +51,8 @@ class TestClaimsHospIndicatorUpdater:
             self.parallel,
             self.weekday,
             self.write_se,
-            Config.signal_name
+            Config.signal_name,
+            TEST_LOGGER
         )
         ## Test init
         assert updater.startdate.month == 2
@@ -72,7 +73,8 @@ class TestClaimsHospIndicatorUpdater:
             self.parallel,
             self.weekday,
             self.write_se,
-            Config.signal_name
+            Config.signal_name,
+            TEST_LOGGER
         )
         updater.shift_dates()
         data_frame = updater.geo_reindex(self.small_test_data.reset_index())
@@ -90,13 +92,13 @@ class TestClaimsHospIndicatorUpdater:
                 self.parallel,
                 self.weekday,
                 self.write_se,
-                Config.signal_name
+                Config.signal_name,
+                TEST_LOGGER
             )
 
             updater.update_indicator(
                 DATA_FILEPATH,
-                td.name,
-                TEST_LOGGER
+                td.name
             )
 
             assert len(os.listdir(td.name)) == len(
@@ -112,7 +114,8 @@ class TestClaimsHospIndicatorUpdater:
             self.parallel,
             self.weekday,
             self.write_se,
-            Config.signal_name
+            Config.signal_name,
+            TEST_LOGGER
         )
 
         res0 = {
@@ -192,7 +195,8 @@ class TestClaimsHospIndicatorUpdater:
             self.parallel,
             True,
             True,
-            signal_name
+            signal_name,
+            TEST_LOGGER
         )
 
         res0 = {
@@ -243,7 +247,8 @@ class TestClaimsHospIndicatorUpdater:
             self.parallel,
             self.weekday,
             self.write_se,
-            Config.signal_name
+            Config.signal_name,
+            TEST_LOGGER
         )
 
         res0 = {

@@ -1,9 +1,11 @@
 """Structured logger utility for creating JSON logs.
 
-The Delphi group uses two ~identical versions of this file.
-Try to keep them in sync with edits, for sanity.
-  https://github.com/cmu-delphi/covidcast-indicators/blob/main/_delphi_utils_python/delphi_utils/logger.py
-  https://github.com/cmu-delphi/delphi-epidata/blob/dev/src/common/logger.py
+To make our structured logging as useful as it can be, particularly within the context of how we use logs in Elastic,
+the `event` argument (typically the first unnamed arg) should be a static string (to make filtering easier),
+and each dynamic/varying value should be specified in an individual meaningfully- and consistently-named argument
+to the logger call (for use in filtering, thresholding, grouping, visualization, etc)
+
+See the delphi_utils README.md for usage examples.
 """
 
 import contextlib
@@ -133,19 +135,17 @@ class LoggerThread():
     """
     A construct to use a logger from multiprocessing workers/jobs.
 
-    the bare structlog loggers are thread-safe but not multiprocessing-safe.
-    a `LoggerThread` will spawn a thread that listens to a mp.Queue
-    and logs messages from it with the provided logger,
-    so other processes can send logging messages to it
-    via the logger-like `SubLogger` interface.
-    the SubLogger even logs the pid of the caller.
+    The bare structlog loggers are thread-safe but not multiprocessing-safe. A
+    `LoggerThread` will spawn a thread that listens to a mp.Queue and logs
+    messages from it with the provided logger, so other processes can send
+    logging messages to it via the logger-like `SubLogger` interface. The
+    SubLogger even logs the pid of the caller.
 
-    this is good to use with a set of jobs that are part of a mp.Pool,
-    but isnt recommended for general use
-    because of overhead from threading and multiprocessing,
-    and because it might introduce lag to log messages.
+    This is good to use with a set of jobs that are part of a mp.Pool, but isnt
+    recommended for general use because of overhead from threading and
+    multiprocessing, and because it might introduce lag to log messages.
 
-    somewhat inspired by:
+    Somewhat inspired by:
     docs.python.org/3/howto/logging-cookbook.html#logging-to-a-single-file-from-multiple-processes
     """
 
@@ -236,13 +236,11 @@ def pool_and_threadedlogger(logger, *poolargs):
     """
     Provide (to a context) a multiprocessing Pool and a proxy to the supplied logger.
 
-    Emulates the multiprocessing.Pool() context manager,
-    but also provides (via a LoggerThread) a SubLogger proxy to logger
-    that can be safely used by pool workers.
-    The SubLogger proxy interface supports these methods: debug, info, warning, error,
-    and critical.
-    Also "cleans up" the pool by waiting for workers to complete
-    as it exits the context.
+    Emulates the multiprocessing.Pool() context manager, but also provides (via
+    a LoggerThread) a SubLogger proxy to logger that can be safely used by pool
+    workers. The SubLogger proxy interface supports these methods: debug, info,
+    warning, error, and critical. Also "cleans up" the pool by waiting for
+    workers to complete as it exits the context.
     """
     with multiprocessing.Manager() as manager:
         logger_thread = LoggerThread(logger, manager.Queue())

@@ -41,7 +41,7 @@ def write_to_csv(df, geo_level, write_se, day_shift, out_name, logger, output_pa
     assert df[suspicious_se_mask].empty, " se contains suspiciously large values"
     assert not df["se"].isna().any(), " se contains nan values"
     if write_se:
-        logger.info("========= WARNING: WRITING SEs TO {0} =========".format(out_name))
+        logger.info("WARNING: WRITING SEs", filename=out_name)
     else:
         df["se"] = np.nan
 
@@ -49,9 +49,7 @@ def write_to_csv(df, geo_level, write_se, day_shift, out_name, logger, output_pa
     suspicious_val_mask = df["val"].gt(90)
     if not df[suspicious_val_mask].empty:
         for geo in df.loc[suspicious_val_mask, "geo_id"]:
-            logger.warning("value suspiciously high, {0}: {1}".format(
-                geo, out_name
-            ))
+            logger.warning("Value suspiciously high", geo_value=geo, filename=out_name)
 
     dates = create_export_csv(
         df,
@@ -62,10 +60,8 @@ def write_to_csv(df, geo_level, write_se, day_shift, out_name, logger, output_pa
         sensor=out_name,
         write_empty_days=True
     )
-    logger.debug("wrote {0} rows for {1} {2}".format(
-        df.size, df["geo_id"].unique().size, geo_level
-    ))
-    logger.debug("wrote files to {0}".format(output_path))
+    logger.debug("Wrote rows", num_rows=df.size, geo_type=geo_level, num_geo_ids=df["geo_id"].unique().size)
+    logger.debug("Wrote files", export_dir=output_path)
     return dates
 
 
@@ -148,8 +144,9 @@ class CHCSensorUpdater:  # pylint: disable=too-many-instance-attributes
         geo = self.geo
         gmpr = GeoMapper()
         if geo not in {"county", "state", "msa", "hrr", "nation", "hhs"}:
-            self.logger.error("{0} is invalid, pick one of 'county', "
-                          "'state', 'msa', 'hrr', 'hss','nation'".format(geo))
+            self.logger.error(
+                "Geo is invalid, pick one of 'county', " "'state', 'msa', 'hrr', 'hss','nation'", geo_type=geo
+            )
             return False
         if geo == "county":
             data_frame = gmpr.fips_to_megacounty(data,
@@ -200,14 +197,17 @@ class CHCSensorUpdater:  # pylint: disable=too-many-instance-attributes
         data.reset_index(inplace=True)
         data_frame = self.geo_reindex(data)
         # handle if we need to adjust by weekday
-        wd_params = Weekday.get_params(
-            data_frame,
-            "den",
-            ["num"],
-            Config.DATE_COL,
-            [1, 1e5],
-            self.logger,
-        ) if self.weekday else None
+        if self.weekday:
+            wd_params = Weekday.get_params_legacy(
+                data_frame,
+                "den",
+                ["num"],
+                Config.DATE_COL,
+                [1, 1e5],
+                self.logger,
+            )
+        else:
+            wd_params = None
         # run sensor fitting code (maybe in parallel)
         if not self.parallel:
             dfs = []
@@ -221,7 +221,7 @@ class CHCSensorUpdater:  # pylint: disable=too-many-instance-attributes
                 dfs.append(res)
         else:
             n_cpu = min(10, cpu_count())
-            self.logger.debug("starting pool with {0} workers".format(n_cpu))
+            self.logger.debug("Starting pool", n_workers=n_cpu)
             with Pool(n_cpu) as pool:
                 pool_results = []
                 for geo_id, sub_data in data_frame.groupby(level=0,as_index=False):

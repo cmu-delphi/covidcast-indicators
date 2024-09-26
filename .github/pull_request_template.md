@@ -6,5 +6,5 @@ Itemize code/test/documentation changes and files added/removed.
 - change1
 - change2
 
-### Fixes 
-- Fixes #(issue)
+### Associated Issue(s) 
+- Addresses #(issue)

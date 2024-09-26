@@ -19,12 +19,13 @@ class AllowAnythingPolicy(paramiko.MissingHostKeyPolicy):
         return
 
 
-def print_callback(filename, logger, bytes_so_far, bytes_total):
+def print_callback(filename, logger, bytes_so_far, bytes_total, progress_chunks):
     """Print the callback information."""
     rough_percent_transferred = int(100 * (bytes_so_far / bytes_total))
-    if (rough_percent_transferred % 25) == 0:
+    if rough_percent_transferred in progress_chunks:
         logger.info("Transfer in progress", filename=filename, percent=rough_percent_transferred)
-
+        # Remove progress chunk, so it is not logged again
+        progress_chunks.remove(rough_percent_transferred)
 
 OLD_FILENAME_TIMESTAMP = re.compile(
     r".*EDI_AGG_OUTPATIENT_[0-9]_(?P<ymd>[0-9]*)_(?P<hm>[0-9]*)[^0-9]*")
@@ -51,10 +52,14 @@ def change_date_format(name):
     name = '_'.join(split_name)
     return name
 
-def download(ftp_credentials, out_path, logger):
+def download(ftp_credentials, out_path, logger, issue_date=None):
     """Pull the latest raw files."""
-    current_time = datetime.datetime.now()
-    logger.info("starting download", time=current_time)
+    if not issue_date:
+        current_time = datetime.datetime.now()
+    else:
+        current_time = datetime.datetime.strptime(issue_date, "%Y-%m-%d").replace(hour=23, minute=59, second=59)
+
+    logger.info("Starting download")
     seconds_in_day = 24 * 60 * 60
 
     # open client
@@ -96,7 +101,8 @@ def download(ftp_credentials, out_path, logger):
 
     # download!
     for infile, outfile in filepaths_to_download.items():
-        callback_for_filename = functools.partial(print_callback, infile, logger)
+        callback_for_filename = functools.partial(print_callback, infile, logger, progress_chunks=[0, 25, 50, 75])
         sftp.get(infile, outfile, callback=callback_for_filename)
+        logger.info("Transfer finished", filename=infile, percent=100)
 
     client.close()

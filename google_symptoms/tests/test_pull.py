@@ -1,23 +1,23 @@
 import pytest
 import mock
-import db_dtypes
 from freezegun import freeze_time
 from datetime import date, datetime
 import pandas as pd
 from pandas.testing import assert_frame_equal
 
 from delphi_google_symptoms.pull import (
-    pull_gs_data, preprocess, format_dates_for_query, pull_gs_data_one_geolevel, get_date_range)
+    pull_gs_data, preprocess, format_dates_for_query, pull_gs_data_one_geolevel)
 from delphi_google_symptoms.constants import METRICS, COMBINED_METRIC
+from conftest import TEST_DIR
 
 good_input = {
-    "state": "test_data/small_states_daily.csv",
-    "county": "test_data/small_counties_daily.csv"
+    "state": f"{TEST_DIR}/test_data/small_states_daily.csv",
+    "county": f"{TEST_DIR}/test_data/small_counties_daily.csv"
 }
 
 bad_input = {
-    "missing_cols": "test_data/bad_state_missing_cols.csv",
-    "invalid_fips": "test_data/bad_county_invalid_fips.csv"
+    "missing_cols": f"{TEST_DIR}/test_data/bad_state_missing_cols.csv",
+    "invalid_fips": f"{TEST_DIR}/test_data/bad_county_invalid_fips.csv"
 }
 
 symptom_names = ["symptom_" +
@@ -41,8 +41,12 @@ class TestPullGoogleSymptoms:
         mock_read_gbq.side_effect = [state_data, county_data]
         mock_credentials.return_value = None
 
+        start_date = datetime.strptime(
+            "20201230", "%Y%m%d")
+        end_date = datetime.combine(date.today(), datetime.min.time())
+
         dfs = pull_gs_data("", datetime.strptime(
-            "20201230", "%Y%m%d"), datetime.combine(date.today(), datetime.min.time()), 0)
+            "20201230", "%Y%m%d"), datetime.combine(date.today(), datetime.min.time()), 0, False)
 
         for level in ["county", "state"]:
             df = dfs[level]
@@ -101,32 +105,6 @@ class TestPullGoogleSymptoms:
         df = pd.read_csv(good_input["state"]).astype({"date": "dbdate"})
         out = preprocess(df, "state")
         assert df.shape[0] == out[~out.Cough.isna()].shape[0]
-
-
-class TestPullHelperFuncs:
-    @freeze_time("2021-01-05")
-    def test_get_date_range_recent_export_start_date(self):
-        output = get_date_range(
-            datetime.strptime("20201230", "%Y%m%d"),
-            datetime.combine(date.today(), datetime.min.time()),
-            14
-        )
-
-        expected = [datetime(2020, 12, 24),
-                    datetime(2021, 1, 5)]
-        assert set(output) == set(expected)
-
-    @freeze_time("2021-01-05")
-    def test_get_date_range(self):
-        output = get_date_range(
-            datetime.strptime("20200201", "%Y%m%d"),
-            datetime.combine(date.today(), datetime.min.time()),
-            14
-        )
-
-        expected = [datetime(2020, 12, 16),
-                    datetime(2021, 1, 5)]
-        assert set(output) == set(expected)
 
     def test_format_dates_for_query(self):
         date_list = [datetime(2016, 12, 30), datetime(2021, 1, 5)]

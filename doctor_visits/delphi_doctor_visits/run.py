@@ -21,7 +21,7 @@ from .process_data import csv_to_df, write_to_csv
 from .update_sensor import update_sensor
 
 
-def run_module(params):  # pylint: disable=too-many-statements
+def run_module(params, logger=None):  # pylint: disable=too-many-statements
     """
     Run doctor visits indicator.
 
@@ -43,18 +43,26 @@ def run_module(params):  # pylint: disable=too-many-statements
             - "se": bool, whether to write out standard errors
             - "obfuscated_prefix": str, prefix for signal name if write_se is True.
             - "parallel": bool, whether to update sensor in parallel.
+        - "patch": Only used for patching data, remove if not patching.
+                   Check out patch.py and README for more details on how to run patches.
+            - "start_date": str, YYYY-MM-DD format, first issue date
+            - "end_date": str, YYYY-MM-DD format, last issue date
+            - "patch_dir": str, directory to write all issues output
     """
     start_time = time.time()
-    logger = get_structured_logger(
-        __name__, filename=params["common"].get("log_filename"),
-        log_exceptions=params["common"].get("log_exceptions", True))
+    issue_date = params.get("patch", {}).get("current_issue", None)
+    if not logger:
+        logger = get_structured_logger(
+            __name__,
+            filename=params["common"].get("log_filename"),
+            log_exceptions=params["common"].get("log_exceptions", True),
+        )
 
     # pull latest data
-    download(params["indicator"]["ftp_credentials"],
-             params["indicator"]["input_dir"], logger)
+    download(params["indicator"]["ftp_credentials"], params["indicator"]["input_dir"], logger, issue_date=issue_date)
 
     # find the latest files (these have timestamps)
-    claims_file = get_latest_filename(params["indicator"]["input_dir"], logger)
+    claims_file = get_latest_filename(params["indicator"]["input_dir"], logger, issue_date=issue_date)
 
     ## get end date from input file
     # the filename is expected to be in the format:
@@ -78,11 +86,20 @@ def run_module(params):  # pylint: disable=too-many-statements
     startdate_dt = enddate_dt - timedelta(days=n_backfill_days)
     enddate = str(enddate_dt.date())
     startdate = str(startdate_dt.date())
-    logger.info("drop date:\t\t%s", dropdate)
-    logger.info("first sensor date:\t%s", startdate)
-    logger.info("last sensor date:\t%s", enddate)
-    logger.info("n_backfill_days:\t%s", n_backfill_days)
-    logger.info("n_waiting_days:\t%s", n_waiting_days)
+
+    logger.info(
+        "Using params",
+        startdate=startdate,
+        enddate=enddate,
+        dropdate=dropdate,
+        n_backfill_days=n_backfill_days,
+        n_waiting_days=n_waiting_days,
+        export_dir=export_dir,
+        parallel=params["indicator"]["parallel"],
+        weekday=params["indicator"]["weekday"],
+        write_se=se,
+        prefix=prefix,
+    )
 
     ## geographies
     geos = ["state", "msa", "hrr", "county", "hhs", "nation"]
@@ -102,9 +119,9 @@ def run_module(params):  # pylint: disable=too-many-statements
     for geo in geos:
         for weekday in params["indicator"]["weekday"]:
             if weekday:
-                logger.info("starting %s, weekday adj", geo)
+                logger.info("Starting with weekday adj", geo_type=geo)
             else:
-                logger.info("starting %s, no adj", geo)
+                logger.info("Starting with no adj", geo_type=geo)
             sensor = update_sensor(
                 data=claims_df,
                 startdate=startdate_dt,
@@ -123,8 +140,8 @@ def run_module(params):  # pylint: disable=too-many-statements
             write_to_csv(sensor, prefix, geo, weekday, se, logger, export_dir)
             max_dates.append(sensor.date.max())
             n_csv_export.append(sensor.date.unique().shape[0])
-            logger.debug(f"wrote files to {export_dir}")
-        logger.info("finished updating", geo = geo)
+            logger.debug("Wrote files", export_dir=export_dir)
+        logger.info("Finished updating", geo_type=geo)
 
     # Remove all the raw files
     for fn in os.listdir(params["indicator"]["input_dir"]):

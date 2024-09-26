@@ -6,6 +6,7 @@ required = [
     "covidcast",
     "darker[isort]~=2.1.1",
     "delphi-utils",
+    "mock",
     "moto~=4.2.14",
     "numpy",
     "pandas",
@@ -15,6 +16,7 @@ required = [
     "pylint==2.8.3",
     "pytest-cov",
     "pytest",
+    "cvxpy<1.6",
 ]
 
 setup(

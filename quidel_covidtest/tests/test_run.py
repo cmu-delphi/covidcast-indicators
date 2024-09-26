@@ -1,49 +1,25 @@
 """Tests for running the quidel covidtest indicator."""
+from itertools import product
+import os
 from os import listdir
 from os.path import join
+from pathlib import Path
 
 import pandas as pd
 import numpy as np
 
 from delphi_utils import add_prefix
 from delphi_quidel_covidtest.constants import PARENT_GEO_RESOLUTIONS, NONPARENT_GEO_RESOLUTIONS, \
-    SENSORS
-from delphi_quidel_covidtest.run import run_module
-
+    SENSORS, AGE_GROUPS
 
 class TestRun:
     """Tests for run_module()."""
 
-    PARAMS = {
-        "common": {
-            "export_dir": "./receiving"
-        },
-        "indicator": {
-            "static_file_dir": "../static",
-            "input_cache_dir": "./cache",
-            "backfill_dir": "./backfill",
-            "backfill_merge_day": 0,
-            "export_start_date": "2020-06-30",
-            "export_end_date": "",
-            "pull_start_date": "2020-07-09",
-            "pull_end_date":"",
-            "export_day_range":40,
-            "aws_credentials": {
-                "aws_access_key_id": "",
-                "aws_secret_access_key": ""
-            },
-            "bucket_name": "",
-            "wip_signal": "",
-            "test_mode": True
-        }
-    }
-
-    def test_output_files(self, clean_receiving_dir):
+    def test_output_files(self, run_as_module, params):
         """Tests that the proper files are output."""
 
         # Test output exists
-        run_module(self.PARAMS)
-        csv_files = [i for i in listdir("receiving") if i.endswith(".csv")]
+        csv_files = [i for i in listdir(params["common"]["export_dir"]) if i.endswith(".csv")]
 
         dates = [
             "20200718",
@@ -52,16 +28,20 @@ class TestRun:
         ]
         geos = PARENT_GEO_RESOLUTIONS + NONPARENT_GEO_RESOLUTIONS
         sensors = add_prefix(SENSORS,
-                             wip_signal=self.PARAMS["indicator"]["wip_signal"],
+                             wip_signal=params["indicator"]["wip_signal"],
                              prefix="wip_")
+        full_sensor = [f"{sensor}_{age}" for sensor, age in product(sensors, AGE_GROUPS)]
 
         expected_files = []
         for date in dates:
-            for geo in geos:
+            for geo in PARENT_GEO_RESOLUTIONS:
                 for sensor in sensors:
                     expected_files += [date + "_" + geo + "_" + sensor + ".csv"]
+            for geo in NONPARENT_GEO_RESOLUTIONS:
+                for sensor in full_sensor:
+                    expected_files += [date + "_" + geo + "_" + sensor + ".csv"]
 
-        assert set(expected_files).issubset(set(csv_files))
+        assert set(expected_files) == (set(csv_files))
         assert '20200721_state_covid_ag_raw_pct_positive.csv' not in csv_files
         assert '20200722_state_covid_ag_raw_pct_positive.csv' not in csv_files
 
@@ -105,3 +85,8 @@ class TestRun:
             if ".csv" in fname:
                 flag = 1
         assert flag is not None
+
+        for files in Path(params["common"]["export_dir"]).glob("*.csv"):
+            os.remove(files)
+        for files in Path(params["indicator"]["input_cache_dir"]).glob("*.csv"):
+            os.remove(files)

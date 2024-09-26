@@ -1,4 +1,6 @@
 """Registry for constants."""
+from datetime import datetime
+
 # global constants
 MIN_OBS = 50  # minimum number of observations in order to compute a proportion.
 POOL_DAYS = 7  # number of days in the past (including today) to pool over
@@ -49,3 +51,6 @@ AGE_GROUPS = [
     "age_65plus",
     "age_0_17",
 ]
+
+FULL_BKFILL_START_DATE = datetime(2020, 5, 26)
+

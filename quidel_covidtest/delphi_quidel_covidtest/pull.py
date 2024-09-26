@@ -9,15 +9,17 @@ import boto3
 import pandas as pd
 import numpy as np
 
-from .constants import AGE_GROUPS
+from .constants import AGE_GROUPS, FULL_BKFILL_START_DATE
 
 
 
-def get_from_s3(start_date, end_date, bucket, logger):
+def get_from_s3(params, start_date, end_date, logger):
     """
     Get raw data from aws s3 bucket.
 
     Args:
+        params: dict
+            read from params.json
         start_date: datetime.datetime
             pull data from file tagged with date on/after the start date
         end_date: datetime.datetime
@@ -30,6 +32,15 @@ def get_from_s3(start_date, end_date, bucket, logger):
         df: pd.DataFrame
         time_flag: datetime.datetime
     """
+    # connect aws s3 bucket
+    aws_access_key_id = params["aws_credentials"]["aws_access_key_id"]
+    aws_secret_access_key = params["aws_credentials"]["aws_secret_access_key"]
+    bucket_name = params["bucket_name"]
+
+    s3 = boto3.resource('s3', aws_access_key_id=aws_access_key_id,
+                        aws_secret_access_key=aws_secret_access_key)
+    bucket = s3.Bucket(bucket_name)
+
     time_flag = None
     selected_columns = ['SofiaSerNum', 'TestDate', 'Facility', 'City',
                                'State', 'Zip', 'PatientAge', 'Result1',
@@ -118,7 +129,7 @@ def fix_date(df, logger):
     df["timestamp"].values[mask] = df["StorageDate"].values[mask]
     return df
 
-def preprocess_new_data(start_date, end_date, params, test_mode, logger):
+def preprocess_new_data(start_date, end_date, params, logger):
     """
     Pull and pre-process Quidel Covid Test data.
 
@@ -133,8 +144,6 @@ def preprocess_new_data(start_date, end_date, params, test_mode, logger):
             pull data from file tagged with date on/before the end date
         params: dict
             read from params.json
-        test_mode: bool
-            pull raw data from s3 or not
         logger: logging.Logger
             The structured logger.
     output:
@@ -142,23 +151,8 @@ def preprocess_new_data(start_date, end_date, params, test_mode, logger):
         time_flag: datetime.date:
             the actual pull end date on which we successfully pull the data
     """
-    if test_mode:
-        test_data_dir = "./test_data/test_data.csv"
-        df, time_flag = pd.read_csv(
-            test_data_dir,
-            parse_dates=["StorageDate", "TestDate"]
-            ), datetime(2020, 8, 17)
-    else:
-        # connect aws s3 bucket
-        aws_access_key_id = params["aws_credentials"]["aws_access_key_id"]
-        aws_secret_access_key = params["aws_credentials"]["aws_secret_access_key"]
-        bucket_name = params["bucket_name"]
-
-        s3 = boto3.resource('s3', aws_access_key_id=aws_access_key_id,
-                            aws_secret_access_key=aws_secret_access_key)
-        bucket = s3.Bucket(bucket_name)
-        # Get new data from s3
-        df, time_flag = get_from_s3(start_date, end_date, bucket, logger)
+    # Get new data from s3
+    df, time_flag = get_from_s3(params, start_date, end_date, logger)
 
     # No new data can be pulled
     if time_flag is None:
@@ -283,37 +277,34 @@ def pull_quidel_covidtest(params, logger):
     """
     cache_dir = params["input_cache_dir"]
 
-    test_mode = params["test_mode"]
-
     # pull new data only that has not been ingested
     previous_df, pull_start_date = check_intermediate_file(
         cache_dir,
         datetime.strptime(params["pull_start_date"], '%Y-%m-%d'))
+
+    if params["pull_start_date"] != "":
+        pull_start_date = datetime.strptime(params["pull_start_date"], '%Y-%m-%d')
 
     if params["pull_end_date"] == "":
         pull_end_date = datetime.today()
     else:
         pull_end_date = datetime.strptime(params["pull_end_date"], '%Y-%m-%d')
 
-    if not params.get("custom_run", False):
-        # Pull data from the file at 5 digit zipcode level
-        # Use _end_date to check the most recent date that we received data
-        df, _end_date = preprocess_new_data(
-                pull_start_date, pull_end_date, params, test_mode, logger)
+    # Pull data from the file at 5 digit zipcode level
+    # Use _end_date to check the most recent date that we received data
+    df, _end_date = preprocess_new_data(
+            pull_start_date, pull_end_date, params, logger)
 
-        # Utilize previously stored data
-        if previous_df is not None:
-            df = pd.concat(
-                [previous_df, df]
-            ).groupby(
-                ["timestamp", "zip"]
-            ).sum(
-                numeric_only=True
-            ).reset_index(
-            )
-    else:
-        df = previous_df[previous_df["timestamp"] == params["pull_start_date"]]
-        _end_date = pull_start_date
+    # Utilize previously stored data
+    if previous_df is not None:
+        df = pd.concat(
+            [previous_df, df]
+        ).groupby(
+            ["timestamp", "zip"]
+        ).sum(
+            numeric_only=True
+        ).reset_index(
+        )
     return df, _end_date
 
 def check_export_end_date(input_export_end_date, _end_date,
@@ -363,7 +354,7 @@ def check_export_start_date(export_start_date, export_end_date,
 
     """
     if export_start_date == "":
-        export_start_date = datetime(2020, 5, 26)
+        export_start_date = FULL_BKFILL_START_DATE
     else:
         export_start_date = datetime.strptime(export_start_date, '%Y-%m-%d')
      # Only export data from -50 days to -5 days

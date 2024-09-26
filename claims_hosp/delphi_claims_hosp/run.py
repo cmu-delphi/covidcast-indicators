@@ -138,7 +138,6 @@ def run_module(params):
             )
             output = updater.update_indicator(
                 claims_file,
-                logger,
             )
             filtered_output_df = updater.preprocess_output(output)
             create_export_csv(

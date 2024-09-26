@@ -132,7 +132,7 @@ class ClaimsHospIndicatorUpdater:
         data_frame.fillna(0, inplace=True)
         return data_frame
 
-    def update_indicator(self, input_filepath, outpath):
+    def update_indicator(self, input_filepath):
         """
         Generate and output indicator values.
 

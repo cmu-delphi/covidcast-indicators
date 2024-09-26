@@ -170,7 +170,7 @@ def run_module(params: Dict[str, Any]):
     n_cpu = min(8, cpu_count()) # for parallelization
     with pool_and_threadedlogger(logger, n_cpu) as (pool, threaded_logger):
         # for using loggers in multiple threads
-        logger.info("Parallelizing sensor generation", n_cpu=n_cpu)
+        logger.info("Parallelizing sensor generation", n_workers=n_cpu)
         pool_results = []
         for geo_res in NONPARENT_GEO_RESOLUTIONS:
             geo_data, res_key = geo_map(geo_res, data)

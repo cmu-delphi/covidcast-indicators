@@ -90,7 +90,7 @@ def run_module(params):
         for geo in GEOS:
             df = df_pull.copy()
             df["val"] = df[signal]
-            logger.info("Generating signal and exporting to CSV", metric=signal)
+            logger.info("Generating signal and exporting to CSV", geo_type=geo, signal=signal)
             if geo == "nation":
                 df = df[df["geography"] == "United States"]
                 df["geo_id"] = "us"
@@ -109,6 +109,14 @@ def run_module(params):
                 # fips -> msa doesn't have a weighted version, so we need to add columns and sum ourselves
                 df = geo_mapper.add_population_column(df, geocode_type="fips", geocode_col="fips")
                 df = geo_mapper.add_geocode(df, "fips", "msa", from_col="fips", new_col="geo_id")
+                df = geo_mapper.aggregate_by_weighted_sum(df, "geo_id", "val", "timestamp", "population")
+                df = df.rename(columns={"weighted_val": "val"})
+            elif geo == "hhs":
+                df = df[(df["county"] == "All") & (df["geography"] != "United States")]
+                df = df[["geography", "val", "timestamp"]]
+                df = geo_mapper.add_population_column(df, geocode_type="state_name", geocode_col="geography")
+                df = geo_mapper.add_geocode(df, "state_name", "state_code", from_col="state_name")
+                df = geo_mapper.add_geocode(df, "state_code", "hhs", from_col="state_code", new_col="geo_id")
                 df = geo_mapper.aggregate_by_weighted_sum(df, "geo_id", "val", "timestamp", "population")
                 df = df.rename(columns={"weighted_val": "val"})
             else:

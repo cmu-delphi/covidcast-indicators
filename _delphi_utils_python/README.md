@@ -22,13 +22,22 @@ Source code can be found here:
 
 ## Logger Usage
 
+To make our structured logging as useful as it can be, particularly within the context of how we use logs in Elastic, the `event` argument (typically the first unnamed arg) should be a static string (to make filtering easier), and each dynamic/varying value should be specified in an individual meaningfully- and consistently-named argument to the logger call (for use in filtering, thresholding, grouping, visualization, etc).
+
+### Commonly used argument names:
+- data_source
+- geo_type
+- signal
+- issue_date
+- filename
+
 Single-thread usage.
 
 ```py
 from delphi_utils.logger import get_structured_logger
 
 logger = get_structured_logger('my_logger')
-logger.info('Hello, world!')
+logger.info('Hello', name='World')
 ```
 
 Multi-thread usage.

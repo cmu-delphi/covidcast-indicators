@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Jenkins build 
+# Jenkins build
 #
 
 set -eo pipefail
@@ -17,4 +17,6 @@ source env/bin/activate
 pip install pip==23.0.1 --retries 10 --timeout 20
 pip install numpy --retries 10 --timeout 20
 pip install ../_delphi_utils_python/. --retries 10 --timeout 20
-[ ! -f setup.py ] || pip install . --retries 10 --timeout 20
+if [ -f setup.py ] || [ -f pyproject.toml ]; then
+    pip install . --retries 10 --timeout 20
+fi

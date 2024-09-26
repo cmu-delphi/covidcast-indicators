@@ -351,9 +351,9 @@ class TestExport:
             ]
         )
         assert pd.read_csv(join(tmp_path, "20200315_state_test.csv")).size > 0
+        date_str = datetime.strftime(self.TIMES[0], "%Y-%m-%d")
         mock_logger.info.assert_called_once_with(
-            "Filtering contradictory missing code",
-            sensor=sensor, metric=None, date="20200215"
+            "Filtering contradictory missing code", sensor=sensor, metric=None, date=date_str
         )
 
     def test_export_sort(self, tmp_path):

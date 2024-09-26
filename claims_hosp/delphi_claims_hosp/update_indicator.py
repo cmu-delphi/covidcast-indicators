@@ -7,7 +7,6 @@ Created: 2020-09-27
 """
 
 # standard packages
-import logging
 from multiprocessing import Pool, cpu_count
 
 # third party
@@ -28,8 +27,7 @@ class ClaimsHospIndicatorUpdater:
     # pylint: disable=too-many-instance-attributes, too-many-arguments
     # all variables are used
 
-    def __init__(self, startdate, enddate, dropdate, geo, parallel, weekday,
-                 write_se, signal_name):
+    def __init__(self, startdate, enddate, dropdate, geo, parallel, weekday, write_se, signal_name, logger):
         """
         Initialize updater for the claims-based hospitalization indicator.
 
@@ -53,6 +51,7 @@ class ClaimsHospIndicatorUpdater:
         # init in shift_dates, declared here for pylint
         self.burnindate, self.fit_dates, self.burn_in_dates, self.output_dates = \
             [None] * 4
+        self.logger = logger
 
         assert (
                 self.startdate > (Config.FIRST_DATA_DATE + Config.BURN_IN_PERIOD)
@@ -114,9 +113,9 @@ class ClaimsHospIndicatorUpdater:
         elif self.geo == "hrr":
             data_frame = data  # data is already adjusted in aggregation step above
         else:
-            logging.error(
-                "%s is invalid, pick one of 'county', 'state', 'msa', 'hrr', 'hhs', nation'",
-                self.geo)
+            self.logger.error(
+                "Geo is invalid, pick one of 'county', 'state', 'msa', 'hrr', 'hhs', nation'", geo_type=self.geo
+            )
             return False
 
         unique_geo_ids = pd.unique(data_frame[self.geo])
@@ -133,7 +132,7 @@ class ClaimsHospIndicatorUpdater:
         data_frame.fillna(0, inplace=True)
         return data_frame
 
-    def update_indicator(self, input_filepath, logger):
+    def update_indicator(self, input_filepath, outpath):
         """
         Generate and output indicator values.
 
@@ -156,7 +155,7 @@ class ClaimsHospIndicatorUpdater:
                 ["num"],
                 Config.DATE_COL,
                 [1, 1e5],
-                logger,
+                self.logger,
             )
             if self.weekday
             else None
@@ -175,7 +174,7 @@ class ClaimsHospIndicatorUpdater:
             output_df = pd.concat(df_lst)
         else:
             n_cpu = min(Config.MAX_CPU_POOL, cpu_count())
-            logging.debug("starting pool with %d workers", n_cpu)
+            self.logger.debug("Starting pool", n_workers=n_cpu)
             with Pool(n_cpu) as pool:
                 pool_results = []
                 for geo_id, sub_data in data_frame.groupby(level=0, as_index=False):
@@ -224,12 +223,12 @@ class ClaimsHospIndicatorUpdater:
             assert np.all(group.se < 5), f"se suspicious, {geo_id}: {np.where(group.se >= 5)[0]}"
             if np.any(group.val > 90):
                 for sus_val in np.where(group.val > 90):
-                    logging.warning("value suspicious, %s: %d", geo_id, sus_val)
+                    self.logger.warning("value suspicious, %s: %d", geo_id, sus_val)
             if self.write_se:
                 assert np.all(group.val > 0) and np.all(group.se > 0), "p=0, std_err=0 invalid"
 
         if self.write_se:
-            logging.info("WARNING: WRITING SEs")
+            self.logger.info("WARNING: WRITING SEs")
         else:
             filtered_df["se"] = np.NaN
 

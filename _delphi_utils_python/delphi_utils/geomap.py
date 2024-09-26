@@ -443,7 +443,7 @@ class GeoMapper:
         ---------
         data: pd.DataFrame
             The dataframe with a FIPS code column.
-        geocode_type: {"fips", "zip"}
+        geocode_type:
             The type of the geocode contained in geocode_col.
         geocode_col: str, default None
             The name of the column containing the geocodes. If None, uses the geocode_type
@@ -671,8 +671,10 @@ class GeoMapper:
             to a from_geo, e.g. "wastewater collection site").
         to_geo: str
             The column name of the geocode to aggregate to.
-        sensor: str
+        sensor_col: str
             The column name of the sensor to aggregate.
+        time_col: str
+            The column name of the timestamp to aggregate over.
         population_column: str
             The column name of the population to weight the sensor by.
 

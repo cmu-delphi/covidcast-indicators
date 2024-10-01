@@ -276,13 +276,15 @@ def pull_quidel_covidtest(params, logger):
 
     """
     cache_dir = params["input_cache_dir"]
+    if params["pull_start_date"] == "":
+        params["pull_start_date"] = FULL_BKFILL_START_DATE
 
     # pull new data only that has not been ingested
     previous_df, pull_start_date = check_intermediate_file(
         cache_dir,
-        datetime.strptime(params["pull_start_date"], '%Y-%m-%d'))
+        params["pull_start_date"])
 
-    if params["pull_start_date"] != "":
+    if params["pull_start_date"] != FULL_BKFILL_START_DATE:
         pull_start_date = datetime.strptime(params["pull_start_date"], '%Y-%m-%d')
 
     if params["pull_end_date"] == "":

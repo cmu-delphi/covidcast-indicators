@@ -8,6 +8,7 @@ import pandas as pd
 from sodapy import Socrata
 
 from delphi_utils.geomap import GeoMapper
+from delphi_utils import create_backup_csv
 
 from .constants import METRICS, RENAME, NEWLINE
 

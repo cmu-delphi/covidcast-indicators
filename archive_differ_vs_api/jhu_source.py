@@ -92,7 +92,7 @@ for signal in signals:
         df_source['se'] = np.nan
         df_source['sample_size'] = np.nan
         df_source.dropna(subset=['val'], inplace=True) # drop rows with NA values
-        df_source = df_source.loc[df_source['val'] != '0.0000'] # drop rows with 0 values
+        df_source = df_source.loc[df_source['val'] != 0] # drop rows with 0 values
         # print("df_source", df_source)
 
         #API
@@ -106,7 +106,7 @@ for signal in signals:
         df_api.rename(columns={'geo_value': 'geo_id', 'value': 'val', 'stderr': 'se', 'sample_size': 'sample_size'}, inplace=True)
         df_api.dropna(subset=['val'], inplace=True)
         df_api.fillna(value=np.nan, inplace=True)
-        df_api = df_api.loc[df_api['val'] != '0.0000']
+        df_api = df_api.loc[df_api['val'] != 0]
         df_api = df_api[~df_api['geo_id'].str.endswith('000')]
         # print("df_api", df_api)
 
@@ -125,7 +125,7 @@ for signal in signals:
             df_s3['geo_id'] = df_s3['geo_id'].astype(int).astype(str).apply(lambda x: x.zfill(5))
             # print("df_s3", df_s3)
             df_s3.dropna(subset=['val'], inplace=True)
-            df_s3 = df_source.loc[df_source['val'] != '0.0000']
+            df_s3 = df_source.loc[df_source['val'] != 0]
             df_s3 = df_s3[~df_s3['geo_id'].str.endswith('000')]
 
 

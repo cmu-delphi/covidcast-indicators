@@ -73,7 +73,7 @@ def run_module(params: Dict[str, Any]):
 
     stats = []
     df_pull = pull_nchs_mortality_data(socrata_token, backup_dir,
-        is_patch = custom_run, test_file)
+        custom_run = custom_run, test_file = test_file)
     for metric in METRICS:
         for geo in ["state", "nation"]:
             if metric == 'percent_of_expected_deaths':

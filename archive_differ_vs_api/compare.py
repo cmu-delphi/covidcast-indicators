@@ -18,7 +18,7 @@ The resulting comparisons has taken into account:
 - floating point precision differences.
 - order of rows.
 - weekly/daily time types.
-- missingness (NA, 0 values).
+- missingness (NA values).
 
 '''
 import boto3
@@ -156,8 +156,8 @@ for obj in bucket.objects.filter(Prefix=S3_SOURCE):
         full_file_dif_potential = True
     df_latest = df_latest[['geo_value', 'value', 'stderr', 'sample_size']]
     df_latest.rename(columns={'geo_value': 'geo_id', 'value': 'val', 'stderr': 'se', 'sample_size': 'sample_size'}, inplace=True)
-    df_latest.dropna(subset=['val'], inplace=True)
-    df_latest.fillna(value=np.nan, inplace=True)
+    df_latest.dropna(subset=['val'], inplace=True) #drop rows with NA values in val column
+    df_latest.fillna(value=np.nan, inplace=True) #fill NA values in se and sample_size with np.nan
     if not geo_is_str:
         df_latest['geo_id'] = df_latest['geo_id'].astype(str).astype(int)
     df_latest['sample_size'] = df_latest['sample_size'].map('{:,.6f}'.format)
@@ -166,7 +166,6 @@ for obj in bucket.objects.filter(Prefix=S3_SOURCE):
 
     diff = pd.concat([df_s3,df_latest]).drop_duplicates(keep=False)
     diff.dropna(subset=['val'], inplace=True)
-    diff = diff.loc[diff['val'] != '0.0000']
 
     num_df_latest = len(df_latest.index)
     num_df_s3 = len(df_s3.index)

@@ -59,6 +59,8 @@ def run_module(params: Dict[str, Any]):
                 days=date.today().weekday() + 2)
         export_start_date = export_start_date.strftime('%Y-%m-%d')
     daily_export_dir = params["common"]["daily_export_dir"]
+    backup_dir = params["common"]["backup_dir"]
+    custom_run = params["common"].get("custom_run", False)
     socrata_token = params["indicator"]["socrata_token"]
     test_file = params["indicator"].get("test_file", None)
 
@@ -70,7 +72,8 @@ def run_module(params: Dict[str, Any]):
         daily_arch_diff.update_cache()
 
     stats = []
-    df_pull = pull_nchs_mortality_data(socrata_token, test_file)
+    df_pull = pull_nchs_mortality_data(socrata_token, backup_dir,
+        is_patch = custom_run, test_file)
     for metric in METRICS:
         for geo in ["state", "nation"]:
             if metric == 'percent_of_expected_deaths':

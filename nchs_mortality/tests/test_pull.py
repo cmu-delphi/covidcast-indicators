@@ -34,7 +34,7 @@ class TestPullNCHS:
         pd.testing.assert_frame_equal(expected, df)
 
     def test_good_file(self):
-        df = pull_nchs_mortality_data(SOCRATA_TOKEN, "test_data.csv")
+        df = pull_nchs_mortality_data(SOCRATA_TOKEN, backup_dir = "", custom_run = True, "test_data.csv")
 
         # Test columns
         assert (
@@ -90,9 +90,9 @@ class TestPullNCHS:
     def test_bad_file_with_inconsistent_time_col(self):
         with pytest.raises(ValueError):
             pull_nchs_mortality_data(
-                SOCRATA_TOKEN, "bad_data_with_inconsistent_time_col.csv"
+                SOCRATA_TOKEN, backup_dir = "", custom_run = True, "bad_data_with_inconsistent_time_col.csv"
             )
 
     def test_bad_file_with_missing_cols(self):
         with pytest.raises(ValueError):
-            pull_nchs_mortality_data(SOCRATA_TOKEN, "bad_data_with_missing_cols.csv")
+            pull_nchs_mortality_data(SOCRATA_TOKEN, backup_dir = "", custom_run = True, "bad_data_with_missing_cols.csv")

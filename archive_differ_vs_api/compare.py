@@ -61,6 +61,8 @@ SOURCES = {
 
 WEEKLY_SOURCES = {'nchs_mortality': 'nchs-mortality'}
 
+DROP_COLS = ["se", "sample_size",  "missing_val", "missing_se", "missing_sample_size"]
+
 def dump_json(data):
     f = open(f'{S3_SOURCE}.json', 'a')
     json.dump(data, f)
@@ -133,15 +135,14 @@ for obj in bucket.objects.filter(Prefix=S3_SOURCE):
     if status == 200:
         df_s3 = pd.read_csv(response.get("Body"))
         # print(df_s3)
-        df_s3['sample_size'] = df_s3['sample_size'].map('{:,.6f}'.format)
-        df_s3['se'] = df_s3['se'].map('{:,.4f}'.format)
+        df_s3.dropna(subset=['val'], inplace=True)
+        df_s3 = df_s3[['geo_id', 'val']]
         df_s3['val'] = df_s3['val'].map('{:,.4f}'.format)
     else:
         # print(f"Unsuccessful S3 get_object response. Status - {status}")
         row = {"file_name":obj.key, "source":source_api, "skip":True, "reason": f"Unsuccessful S3 get_object response. Status - {status}"}
         dump_json(row)
         continue
-    df_s3.dropna(subset=['val'], inplace=True)
 
 
     #epidata api
@@ -154,14 +155,11 @@ for obj in bucket.objects.filter(Prefix=S3_SOURCE):
     if df_latest.empty:
         df_latest = pd.DataFrame(columns=['geo_value', 'value', 'stderr', 'sample_size'])
         full_file_dif_potential = True
-    df_latest = df_latest[['geo_value', 'value', 'stderr', 'sample_size']]
-    df_latest.rename(columns={'geo_value': 'geo_id', 'value': 'val', 'stderr': 'se', 'sample_size': 'sample_size'}, inplace=True)
-    df_latest.dropna(subset=['val'], inplace=True) #drop rows with NA values in val column
-    df_latest.fillna(value=np.nan, inplace=True) #fill NA values in se and sample_size with np.nan
+    df_latest = df_latest[['geo_value', 'value']]
+    df_latest.rename(columns={'geo_value': 'geo_id', 'value': 'val'}, inplace=True)
+    df_latest.dropna(subset=['val'], inplace=True)
     if not geo_is_str:
         df_latest['geo_id'] = df_latest['geo_id'].astype(str).astype(int)
-    df_latest['sample_size'] = df_latest['sample_size'].map('{:,.6f}'.format)
-    df_latest['se'] = df_latest['se'].astype(float).map('{:,.4f}'.format)
     df_latest['val'] = df_latest['val'].astype(float).map('{:,.4f}'.format)
 
     diff = pd.concat([df_s3,df_latest]).drop_duplicates(keep=False)

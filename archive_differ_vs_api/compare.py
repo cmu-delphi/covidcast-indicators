@@ -70,8 +70,8 @@ DROP_COLS = ["se", "sample_size",  "missing_val", "missing_se", "missing_sample_
 
 CSV_PATH = Path(__file__).parent / 'diff_csv_joined'
 
-def dump_json(data):
-    f = open(f'{S3_SOURCE}.json', 'a')
+def dump_json(data, source):
+    f = open(f'{source}.json', 'a')
     json.dump(data, f)
     f.write(",\n")
     f.close()
@@ -88,7 +88,7 @@ def parse_bucket_info(obj) -> Dict:
     csvname_s3 = prefixes[1]
     if len(csvname_s3) == 0:
         row = {"file_name": obj.key, "source": source_api, "skip": True, "reason": "file has no name"}
-        dump_json(row)
+        dump_json(row, source_api)
         return dict()
 
     # time_value
@@ -100,7 +100,7 @@ def parse_bucket_info(obj) -> Dict:
     if time_value_s3[:2] != "20":
         # print("file has non-standardized naming")
         row = {"file_name": obj.key, "source": source_api, "skip": True, "reason": "file has non-standardized naming"}
-        dump_json(row)
+        dump_json(row, source_api)
         return dict()
 
     # geo
@@ -118,7 +118,7 @@ def parse_bucket_info(obj) -> Dict:
     # remove work in progress
     if 'wip' in signal_s3:
         row = {"file_name": obj.key, "source": source_api, "skip": True, "reason": f"wip in signal name"}
-        dump_json(row)
+        dump_json(row, source_api)
         return dict()
     else:
         signal_api = signal_s3
@@ -180,7 +180,7 @@ if __name__ == '__main__':
             else:
                 # print(f"Unsuccessful S3 get_object response. Status - {status}")
                 row = {"file_name":obj.key, "source":source_api, "skip":True, "reason": f"Unsuccessful S3 get_object response. Status - {status}"}
-                dump_json(row)
+                dump_json(row, source_api)
                 continue
 
 
@@ -219,25 +219,28 @@ if __name__ == '__main__':
                         "api_row_count": num_df_latest,
                         "skip":False
                         }
-                dump_json(row)
+                dump_json(row, source_api)
             else:
                 csv_file_split = str(obj.key).split("/")
                 Path(f'{CSV_PATH}/{csv_file_split[0]}').mkdir(parents=True, exist_ok=True)
-                diff.to_csv(f'{CSV_PATH}/{str(obj.key)}', index=False)
                 diff_w_merge = check_diff_with_merge(df_s3=df_s3, df_api=df_latest)
-                if not diff_w_merge.empty:
-                    diff_w_merge.to_csv(f'{CSV_PATH}/{csv_file_split[0]}/joined_{csv_file_split[1]}', index=False)
+                diff_w_merge.to_csv(f'{CSV_PATH}/{csv_file_split[0]}/joined_{csv_file_split[1]}', index=False)
+                diff = {
+                    "num_rows":number_of_dif,
+                    "s3_nan_row_count": int(diff_w_merge["val_s3"].isna().sum()),
+                    "api_nan_row_count": int(diff_w_merge["val_api"].isna().sum()),
+                }
                 row = {
                     "file_name":obj.key,
                     "source":source_api,
                     "signal":signal_api,
                     "time_value":time_value_s3,
                     "geo_type":geo_s3,
-                    "dif_row_count":number_of_dif,
                     "s3_row_count": num_df_s3,
                     "api_row_count": num_df_latest,
-                    "full_dif":full_file_dif_potential,
+                    "full_diff":full_file_dif_potential,
+                    "diff": diff,
                     "skip":False,
                     }
-                dump_json(row)
+                dump_json(row, source_api)
             full_file_dif_potential = False

@@ -155,7 +155,8 @@ if __name__ == '__main__':
         api_time_type = "day"
 
     full_file_dif_potential = None
-    for source in sorted(SOURCES.keys()):
+    sorted_sources = sorted(SOURCES.keys())
+    for source in sorted_sources[1:2]:
         for obj in bucket.objects.filter(Prefix=source):
             metadata = parse_bucket_info(obj)
 
@@ -176,7 +177,7 @@ if __name__ == '__main__':
                 df_s3.dropna(subset=['val'], inplace=True)
                 df_s3 = df_s3[['geo_id', 'val']]
                 # round values for float precision
-                df_s3['val'] = df_s3['val'].map('{:,.4f}'.format)
+                df_s3 = df_s3.round({"val": 4})
             else:
                 # print(f"Unsuccessful S3 get_object response. Status - {status}")
                 row = {"file_name":obj.key, "source":source_api, "skip":True, "reason": f"Unsuccessful S3 get_object response. Status - {status}"}
@@ -197,7 +198,7 @@ if __name__ == '__main__':
             df_latest.dropna(subset=['val'], inplace=True)
             if geo_s3 not in ["state", "nation"]:
                 df_latest['geo_id'] = df_latest['geo_id'].astype(str).astype(int)
-            df_latest['val'] = df_latest['val'].astype(float).map('{:,.4f}'.format)
+            df_latest = df_latest.round({"val": 4})
 
             # get difference with drop dup
             diff = pd.concat([df_s3,df_latest]).drop_duplicates(keep=False)

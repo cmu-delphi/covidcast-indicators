@@ -41,7 +41,6 @@ AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
 BUCKET_NAME = os.getenv("BUCKET_NAME")
 API_KEY = os.getenv("API_KEY")
-S3_SOURCE = "jhu"
 
 covidcast.use_api_key(API_KEY)
 Epidata.debug = True
@@ -87,10 +86,8 @@ for signal in signals:
                 })
         df_source = df_source.dropna(subset=['geo_id'])
         df_source['geo_id'] = df_source['geo_id'].astype(int).astype(str).apply(lambda x: x.zfill(5))
+        df_source = df_source[['geo_id', 'val']]
         df_source['val'] = df_source['val'].astype(float)
-        df_source.drop(columns='Country_Region', inplace=True)
-        df_source['se'] = np.nan
-        df_source['sample_size'] = np.nan
         df_source.dropna(subset=['val'], inplace=True) # drop rows with NA values
         df_source = df_source.loc[df_source['val'] != 0] # drop rows with 0 values
         # print("df_source", df_source)
@@ -104,6 +101,7 @@ for signal in signals:
             df_api = pd.DataFrame(columns=['geo_value', 'value', 'stderr', 'sample_size'])
         df_api = df_api[['geo_value', 'value', 'stderr', 'sample_size']]
         df_api.rename(columns={'geo_value': 'geo_id', 'value': 'val', 'stderr': 'se', 'sample_size': 'sample_size'}, inplace=True)
+        df_api = df_api[['geo_id', 'val']]
         df_api.dropna(subset=['val'], inplace=True)
         df_api.fillna(value=np.nan, inplace=True)
         df_api = df_api.loc[df_api['val'] != 0]
@@ -123,6 +121,7 @@ for signal in signals:
         if status == 200:
             df_s3 = pd.read_csv(response_s3.get("Body"))
             df_s3['geo_id'] = df_s3['geo_id'].astype(int).astype(str).apply(lambda x: x.zfill(5))
+            df_s3 = df_s3[['geo_id', 'val']]
             # print("df_s3", df_s3)
             df_s3.dropna(subset=['val'], inplace=True)
             df_s3 = df_source.loc[df_source['val'] != 0]
@@ -152,12 +151,12 @@ for signal in signals:
                 f.write(f'{str(diff_source_api)}\n')
 
         if row['source_s3_diff_count'] !=0:
-            with open(f'diff_content_jhu_source_api.txt', 'a') as f:
+            with open(f'diff_content_jhu_source_s3.txt', 'a') as f:
                 f.write(f'{str(source_date)}\n')
                 f.write(f'{str(diff_source_s3)}\n')
 
         if row['api_s3_diff_count'] !=0:
-            with open(f'diff_content_jhu_source_api.txt', 'a') as f:
+            with open(f'diff_content_jhu_api_s3.txt', 'a') as f:
                 f.write(f'{str(source_date)}\n')
                 f.write(f'{str(diff_api_s3)}\n')
         continue

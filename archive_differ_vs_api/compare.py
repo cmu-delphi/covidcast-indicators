@@ -220,6 +220,7 @@ if __name__ == '__main__':
                     }
             dump_json(row)
         else:
+            Path(f'{CSV_PATH}/{csv_file_split[0]}').mkdir(parents=True, exist_ok=True)
             diff.to_csv(f'{CSV_PATH}/{str(obj.key)}', index=False)
             if not diff_w_merge.empty:
                 csv_file_split = str(obj.key).split("/")

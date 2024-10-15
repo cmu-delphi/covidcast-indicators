@@ -109,7 +109,7 @@ def run_module(params, logger=None):
             merge_existing_backfill_files(backfill_dir, backfilled_filepath, issue_date, logger)
 
         else:
-            merge_backfill_file(backfill_dir, backfill_merge_day, datetime.today())
+            merge_backfill_file(backfill_dir, datetime.today())
             store_backfill_file(claims_file, dropdate_dt, backfill_dir)
 
     # print out information

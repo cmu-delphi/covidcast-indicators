@@ -3,7 +3,6 @@ import os
 import glob
 from datetime import datetime
 from pathlib import Path
-import shutil
 
 # third party
 import pandas as pd
@@ -49,16 +48,13 @@ class TestBackfill:
         assert fn not in os.listdir(backfill_dir)
         
     def test_merge_backfill_file(self):
-        
-        today = datetime.today()
-        
-        fn = "claims_hosp_from_20200611_to_20200614.parquet"
+        fn = "claims_hosp_202006.parquet"
         assert fn not in os.listdir(backfill_dir)
         
         # Check when there is no daily file to merge.
         today = datetime(2020, 6, 14)
-        merge_backfill_file(backfill_dir, today.weekday(), today, 
-                            test_mode=True, check_nd=8)
+        merge_backfill_file(backfill_dir, today, TEST_LOGGER,
+                            test_mode=True)
         assert fn not in os.listdir(backfill_dir)
         
         # Generate backfill daily files     
@@ -66,15 +62,10 @@ class TestBackfill:
             dropdate = datetime(2020, 6, d)        
             store_backfill_file(DATA_FILEPATH, dropdate, backfill_dir)
         
-        # Check the when the merged file is not generated
-        today = datetime(2020, 6, 14)
-        merge_backfill_file(backfill_dir, today.weekday(), today, 
-                            test_mode=True, check_nd=8)
-        assert fn not in os.listdir(backfill_dir)
-        
-         # Generate the merged file, but not delete it
-        merge_backfill_file(backfill_dir, today.weekday(), today, 
-                            test_mode=True, check_nd=2)         
+        # Check when the merged file is not generated
+        today = datetime(2020, 7, 1)
+        merge_backfill_file(backfill_dir, today, TEST_LOGGER,
+                            test_mode=True)
         assert fn in os.listdir(backfill_dir)
 
         # Read daily file
@@ -112,15 +103,15 @@ class TestBackfill:
 
             today = datetime(2020, 6, 14)
             # creating expected file
-            merge_backfill_file(backfill_dir, today.weekday(), today,
-                                test_mode=True, check_nd=2)
+            merge_backfill_file(backfill_dir, today, TEST_LOGGER,
+                                test_mode=True)
             original = f"{backfill_dir}/claims_hosp_from_20200611_to_20200614.parquet"
             os.rename(original, f"{backfill_dir}/expected.parquet")
 
             # creating backfill without issue date
             os.remove(f"{backfill_dir}/claims_hosp_as_of_{issue_date_str}.parquet")
             today = datetime(2020, 6, 14)
-            merge_backfill_file(backfill_dir, today.weekday(), today,
+            merge_backfill_file(backfill_dir, today,
                                 test_mode=True, check_nd=2)
 
             old_files = glob.glob(backfill_dir + "/claims_hosp_as_of_*")
@@ -141,7 +132,7 @@ class TestBackfill:
 
 
     def test_merge_existing_backfill_files_no_call(self):
-        issue_date = datetime(year=2020, month=6, day=20)
+        issue_date = datetime(year=2020, month=5, day=20)
         issue_date_str = issue_date.strftime("%Y%m%d")
         def prep_backfill_data():
             # Generate backfill daily files
@@ -151,8 +142,8 @@ class TestBackfill:
 
             today = datetime(2020, 6, 14)
             # creating expected file
-            merge_backfill_file(backfill_dir, today.weekday(), today,
-                                test_mode=True, check_nd=8)
+            merge_backfill_file(backfill_dir, today, TEST_LOGGER,
+                                test_mode=True)
 
         prep_backfill_data()
         file_to_add = store_backfill_file(DATA_FILEPATH, issue_date, backfill_dir)

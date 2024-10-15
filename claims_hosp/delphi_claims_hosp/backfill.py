@@ -10,11 +10,12 @@ import glob
 import os
 import re
 import shutil
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Union
 
 # third party
 import pandas as pd
+import pytz
 from delphi_utils import GeoMapper
 
 from .config import Config
@@ -94,11 +95,12 @@ def merge_existing_backfill_files(backfill_dir, backfill_file, issue_date, logge
 
     def get_file_with_date(files) -> Union[str, None]:
         for filename in files:
-            pattern = re.findall(r"\d{8}", filename)
-            if len(pattern) == 2:
-                start_date = datetime.strptime(pattern[0], "%Y%m%d")
-                end_date = datetime.strptime(pattern[1], "%Y%m%d")
-                if start_date <= issue_date or end_date <= issue_date:
+            pattern = re.findall(r"\d{6}", filename)
+            if len(pattern) == 1:
+                file_month = datetime.strptime(pattern[0], "%Y%m")
+                start_date = file_month.replace(day=1)
+                end_date = (start_date + timedelta(days=32)).replace(day=1)
+                if issue_date >= start_date and issue_date < end_date:
                     return filename
         return ""
 
@@ -125,27 +127,17 @@ def merge_existing_backfill_files(backfill_dir, backfill_file, issue_date, logge
     return
 
 
-def merge_backfill_file(backfill_dir, backfill_merge_day, most_recent, test_mode=False, check_nd=25):
+def merge_backfill_file(backfill_dir, most_recent, logger, test_mode=False):
     """
-    Merge ~4 weeks' backfill data into one file.
+    Merge a month's source data into one file.
 
-    Usually this function should merge 28 days' data into a new file so as to
-    save the reading time when running the backfill pipelines. We set a softer
-    threshold to allow flexibility in data delivery.
     Parameters
     ----------
     most_recent : datetime
         The most recent date when the raw data is received
     backfill_dir : str
         specified path to store backfill files.
-    backfill_merge_day: int
-        The day of a week that we used to merge the backfill files. e.g. 0
-        is Monday.
     test_mode: bool
-    check_nd: int
-        The criteria of the number of unmerged files. Ideally, we want the
-        number to be 28, but we use a looser criteria from practical
-        considerations
     """
     new_files = glob.glob(backfill_dir + "/claims_hosp_as_of_*")
     if len(new_files) == 0: # if no any daily file is stored
@@ -158,13 +150,11 @@ def merge_backfill_file(backfill_dir, backfill_merge_day, most_recent, test_mode
         return datetime.strptime(fn, "%Y%m%d")
 
     date_list = list(map(get_date, new_files))
-    earliest_date = min(date_list)
     latest_date = max(date_list)
-
-    # Check whether to merge
-    # Check the number of files that are not merged
-    if most_recent.weekday() != backfill_merge_day or (most_recent - earliest_date).days <= check_nd:
+    if latest_date.month == most_recent.month:
+        logger.info("Not a new month; skipping merging")
         return
+
 
     # Start to merge files
     pdList = []
@@ -172,9 +162,7 @@ def merge_backfill_file(backfill_dir, backfill_merge_day, most_recent, test_mode
         df = pd.read_parquet(fn, engine='pyarrow')
         pdList.append(df)
     merged_file = pd.concat(pdList).sort_values(["time_value", "fips"])
-    path = backfill_dir + "/claims_hosp_from_%s_to_%s.parquet"%(
-        datetime.strftime(earliest_date, "%Y%m%d"),
-        datetime.strftime(latest_date, "%Y%m%d"))
+    path = f"{backfill_dir}/claims_hosp_{datetime.strftime(latest_date, '%Y%m')}.parquet"
     merged_file.to_parquet(path, index=False)
 
     # Delete daily files once we have the merged one.

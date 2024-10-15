@@ -34,6 +34,8 @@ from delphi_epidata import Epidata
 import warnings
 import json
 import os
+from dotenv import load_dotenv
+load_dotenv()
 warnings.simplefilter(action='ignore', category=FutureWarning)
 warnings.simplefilter(action='ignore', category=RuntimeWarning)
 
@@ -129,7 +131,6 @@ def check_diff_with_merge(df_s3, df_api):
     ----------
     df_s3
     df_api
-
     Returns
     -------
     """
@@ -142,8 +143,8 @@ def check_diff_with_merge(df_s3, df_api):
         a, b = (df_s3, df_api)
         suffix = ("_s3", "_api")
 
-    joined_diff = pd.merge(a, b, on=['geo_id'], how='left', suffixes=suffix, indicator=True)
-    filtered_join_diff = joined_diff[joined_diff['_merge'] != 'both']
+    joined_diff = pd.merge(a, b, on=['geo_id'], how='left', suffixes=suffix)
+    filtered_join_diff = joined_diff[joined_diff['val_api'] != joined_diff['val_s3']]
     return filtered_join_diff
 
 
@@ -153,89 +154,90 @@ if __name__ == '__main__':
     else:
         api_time_type = "day"
 
-    for obj in bucket.objects.filter(Prefix=S3_SOURCE):
-        metadata = parse_bucket_info(obj)
+    full_file_dif_potential = None
+    for source in sorted(SOURCES.keys()):
+        for obj in bucket.objects.filter(Prefix=source):
+            metadata = parse_bucket_info(obj)
 
-        if len(metadata) == 0:
-            continue
+            if len(metadata) == 0:
+                continue
 
-        source_api = metadata["source_api"]
-        signal_api = metadata["signal_api"]
-        geo_s3 = metadata["geo_s3"]
-        signal_s3 = metadata["signal_s3"]
-        time_value_s3 = metadata["time_value_s3"]
+            source_api = metadata["source_api"]
+            signal_api = metadata["signal_api"]
+            geo_s3 = metadata["geo_s3"]
+            signal_s3 = metadata["signal_s3"]
+            time_value_s3 = metadata["time_value_s3"]
 
-        response = client.get_object(Bucket=BUCKET_NAME, Key=obj.key)
+            response = client.get_object(Bucket=BUCKET_NAME, Key=obj.key)
 
-        status = response.get("ResponseMetadata", {}).get("HTTPStatusCode")
-        if status == 200:
-            df_s3 = pd.read_csv(response.get("Body"))
-            df_s3.dropna(subset=['val'], inplace=True)
-            df_s3 = df_s3[['geo_id', 'val']]
-            # round values for float precision
-            df_s3['val'] = df_s3['val'].map('{:,.4f}'.format)
-        else:
-            # print(f"Unsuccessful S3 get_object response. Status - {status}")
-            row = {"file_name":obj.key, "source":source_api, "skip":True, "reason": f"Unsuccessful S3 get_object response. Status - {status}"}
-            dump_json(row)
-            continue
+            status = response.get("ResponseMetadata", {}).get("HTTPStatusCode")
+            if status == 200:
+                df_s3 = pd.read_csv(response.get("Body"))
+                df_s3.dropna(subset=['val'], inplace=True)
+                df_s3 = df_s3[['geo_id', 'val']]
+                # round values for float precision
+                df_s3['val'] = df_s3['val'].map('{:,.4f}'.format)
+            else:
+                # print(f"Unsuccessful S3 get_object response. Status - {status}")
+                row = {"file_name":obj.key, "source":source_api, "skip":True, "reason": f"Unsuccessful S3 get_object response. Status - {status}"}
+                dump_json(row)
+                continue
 
 
-        #epidata api
-        response_api = Epidata.covidcast(source_api, signal_api, time_type=api_time_type,
-                                      geo_type=geo_s3, time_values=time_value_s3,
-                                      geo_value="*", as_of=None, lag=None)
-        df_latest = pd.DataFrame.from_dict(response_api["epidata"])
-        if df_latest.empty:
-            df_latest = pd.DataFrame(columns=['geo_value', 'value', 'stderr', 'sample_size'])
-            full_file_dif_potential = True
-        df_latest = df_latest[['geo_value', 'value']]
-        df_latest.rename(columns={'geo_value': 'geo_id', 'value': 'val'}, inplace=True)
-        df_latest.dropna(subset=['val'], inplace=True)
-        if geo_s3 not in ["state", "nation"]:
-            df_latest['geo_id'] = df_latest['geo_id'].astype(str).astype(int)
-        df_latest['val'] = df_latest['val'].astype(float).map('{:,.4f}'.format)
+            #epidata api
+            response_api = Epidata.covidcast(source_api, signal_api, time_type=api_time_type,
+                                          geo_type=geo_s3, time_values=time_value_s3,
+                                          geo_value="*", as_of=None, lag=None)
+            df_latest = pd.DataFrame.from_dict(response_api["epidata"])
+            if df_latest.empty:
+                df_latest = pd.DataFrame(columns=['geo_value', 'value', 'stderr', 'sample_size'])
+                full_file_dif_potential = True
+            df_latest = df_latest[['geo_value', 'value']]
+            df_latest.rename(columns={'geo_value': 'geo_id', 'value': 'val'}, inplace=True)
+            df_latest.dropna(subset=['val'], inplace=True)
+            if geo_s3 not in ["state", "nation"]:
+                df_latest['geo_id'] = df_latest['geo_id'].astype(str).astype(int)
+            df_latest['val'] = df_latest['val'].astype(float).map('{:,.4f}'.format)
 
-        # get difference with drop dup
-        diff = pd.concat([df_s3,df_latest]).drop_duplicates(keep=False)
-        diff.dropna(subset=['val'], inplace=True)
+            # get difference with drop dup
+            diff = pd.concat([df_s3,df_latest]).drop_duplicates(keep=False)
+            diff.dropna(subset=['val'], inplace=True)
 
-        diff_w_merge = check_diff_with_merge(df_s3=df_s3, df_api=df_latest)
+            num_df_latest = len(df_latest.index)
+            num_df_s3 = len(df_s3.index)
+            number_of_dif = len(diff.index)
 
-        num_df_latest = len(df_latest.index)
-        num_df_s3 = len(df_s3.index)
-        number_of_dif = len(diff.index)
-
-        if diff.empty:
-            row = {
+            if diff.empty:
+                row = {
+                        "file_name":obj.key,
+                        "source":source_api,
+                        "signal":signal_api,
+                        "time_value":time_value_s3,
+                        "geo_type":geo_s3,
+                        "dif_row_count":0,
+                        "s3_row_count": num_df_s3,
+                        "api_row_count": num_df_latest,
+                        "skip":False
+                        }
+                dump_json(row)
+            else:
+                csv_file_split = str(obj.key).split("/")
+                Path(f'{CSV_PATH}/{csv_file_split[0]}').mkdir(parents=True, exist_ok=True)
+                diff.to_csv(f'{CSV_PATH}/{str(obj.key)}', index=False)
+                diff_w_merge = check_diff_with_merge(df_s3=df_s3, df_api=df_latest)
+                if not diff_w_merge.empty:
+                    diff_w_merge.to_csv(f'{CSV_PATH}/{csv_file_split[0]}/joined_{csv_file_split[1]}', index=False)
+                row = {
                     "file_name":obj.key,
                     "source":source_api,
                     "signal":signal_api,
                     "time_value":time_value_s3,
                     "geo_type":geo_s3,
-                    "dif_row_count":0,
+                    "dif_row_count":number_of_dif,
                     "s3_row_count": num_df_s3,
                     "api_row_count": num_df_latest,
-                    "skip":False
+                    "full_dif":full_file_dif_potential,
+                    "skip":False,
                     }
-            dump_json(row)
-        else:
-            Path(f'{CSV_PATH}/{csv_file_split[0]}').mkdir(parents=True, exist_ok=True)
-            diff.to_csv(f'{CSV_PATH}/{str(obj.key)}', index=False)
-            if not diff_w_merge.empty:
-                csv_file_split = str(obj.key).split("/")
-                diff_w_merge.to_csv(f'{CSV_PATH}/{csv_file_split[0]}/joined_{csv_file_split[1]}', index=False)
-            row = {
-                "file_name":obj.key,
-                "source":source_api,
-                "signal":signal_api,
-                "time_value":time_value_s3,
-                "geo_type":geo_s3,
-                "dif_row_count":number_of_dif,
-                "s3_row_count": num_df_s3,
-                "api_row_count": num_df_latest,
-                "full_dif":full_file_dif_potential,
-                "skip":False,
-                }
-            dump_json(row)
-        full_file_dif_potential = False
+                dump_json(row)
+            full_file_dif_potential = False

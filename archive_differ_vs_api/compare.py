@@ -157,7 +157,7 @@ if __name__ == '__main__':
     full_file_dif_potential = None
     sorted_sources = sorted(SOURCES.keys())
     for source in sorted_sources[0:1]:
-        obj_list = list(bucket.objects.filter(Prefix=source))
+        obj_list = sorted(bucket.objects.filter(Prefix=source), key=lambda x: x.key)
         for idx, obj in enumerate(obj_list):
             metadata = parse_bucket_info(obj)
 

@@ -68,7 +68,7 @@ WEEKLY_SOURCES = {'nchs_mortality': 'nchs-mortality'}
 
 DROP_COLS = ["se", "sample_size",  "missing_val", "missing_se", "missing_sample_size"]
 
-CSV_PATH = Path(__file__).parent / 'diff_csv_joined'
+CSV_PATH = Path(__file__).parent / 'diff_csv_joined_test'
 
 def dump_json(data, source):
     f = open(f'{source}.json', 'a')
@@ -156,8 +156,9 @@ if __name__ == '__main__':
 
     full_file_dif_potential = None
     sorted_sources = sorted(SOURCES.keys())
-    for source in sorted_sources[1:2]:
-        for obj in bucket.objects.filter(Prefix=source):
+    for source in sorted_sources[0:1]:
+        obj_list = list(bucket.objects.filter(Prefix=source))
+        for idx, obj in enumerate(obj_list):
             metadata = parse_bucket_info(obj)
 
             if len(metadata) == 0:
@@ -176,6 +177,7 @@ if __name__ == '__main__':
                 df_s3 = pd.read_csv(response.get("Body"))
                 df_s3.dropna(subset=['val'], inplace=True)
                 df_s3 = df_s3[['geo_id', 'val']]
+                df_s3["val"] = df_s3["val"].astype(float)
                 # round values for float precision
                 df_s3 = df_s3.round({"val": 4})
             else:
@@ -198,6 +200,7 @@ if __name__ == '__main__':
             df_latest.dropna(subset=['val'], inplace=True)
             if geo_s3 not in ["state", "nation"]:
                 df_latest['geo_id'] = df_latest['geo_id'].astype(str).astype(int)
+            df_latest["val"] = df_latest["val"].astype(float)
             df_latest = df_latest.round({"val": 4})
 
             # get difference with drop dup
@@ -224,13 +227,20 @@ if __name__ == '__main__':
             else:
                 csv_file_split = str(obj.key).split("/")
                 Path(f'{CSV_PATH}/{csv_file_split[0]}').mkdir(parents=True, exist_ok=True)
-                diff_w_merge = check_diff_with_merge(df_s3=df_s3, df_api=df_latest)
-                diff_w_merge.to_csv(f'{CSV_PATH}/{csv_file_split[0]}/joined_{csv_file_split[1]}', index=False)
-                diff = {
-                    "num_rows":number_of_dif,
-                    "s3_nan_row_count": int(diff_w_merge["val_s3"].isna().sum()),
-                    "api_nan_row_count": int(diff_w_merge["val_api"].isna().sum()),
-                }
+                try:
+                    diff_w_merge = check_diff_with_merge(df_s3=df_s3, df_api=df_latest)
+                    diff_w_merge.to_csv(f'{CSV_PATH}/{csv_file_split[0]}/joined_{csv_file_split[1]}', index=False)
+                    diff = {
+                        "num_rows":number_of_dif,
+                        "s3_nan_row_count": int(diff_w_merge["val_s3"].isna().sum()),
+                        "api_nan_row_count": int(diff_w_merge["val_api"].isna().sum()),
+                    }
+                except:
+                    diff.to_csv(f'{CSV_PATH}/{csv_file_split[0]}/dedup_{csv_file_split[1]}', index=False)
+                    diff = {
+                        "num_rows": number_of_dif,
+                    }
+
                 row = {
                     "file_name":obj.key,
                     "source":source_api,

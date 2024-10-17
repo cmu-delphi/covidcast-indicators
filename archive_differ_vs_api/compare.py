@@ -227,6 +227,9 @@ if __name__ == '__main__':
             else:
                 csv_file_split = str(obj.key).split("/")
                 Path(f'{CSV_PATH}/{csv_file_split[0]}').mkdir(parents=True, exist_ok=True)
+                diff = {
+                    "num_rows": number_of_dif,
+                }
                 try:
                     diff_w_merge = check_diff_with_merge(df_s3=df_s3, df_api=df_latest)
                     diff_w_merge.to_csv(f'{CSV_PATH}/{csv_file_split[0]}/joined_{csv_file_split[1]}', index=False)
@@ -237,9 +240,6 @@ if __name__ == '__main__':
                     }
                 except:
                     diff.to_csv(f'{CSV_PATH}/{csv_file_split[0]}/dedup_{csv_file_split[1]}', index=False)
-                    diff = {
-                        "num_rows": number_of_dif,
-                    }
 
                 row = {
                     "file_name":obj.key,
@@ -250,8 +250,8 @@ if __name__ == '__main__':
                     "s3_row_count": num_df_s3,
                     "api_row_count": num_df_latest,
                     "full_diff":full_file_dif_potential,
-                    "diff": diff,
                     "skip":False,
                     }
+                row.update(diff)
                 dump_json(row, source_api)
             full_file_dif_potential = False

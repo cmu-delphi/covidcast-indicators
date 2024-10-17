@@ -69,7 +69,7 @@ class TestBackfill:
         assert fn in os.listdir(backfill_dir)
 
         # Read daily file
-        new_files = glob.glob(backfill_dir + "/claims_hosp*.parquet")
+        new_files = glob.glob(backfill_dir + "/claims_hosp_as_of_*.parquet")
         pdList = []        
         for file in new_files:
             if "from" in file:

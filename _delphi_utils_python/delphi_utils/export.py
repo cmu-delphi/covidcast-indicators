@@ -1,6 +1,7 @@
 """Export data in the format expected by the Delphi API."""
 # -*- coding: utf-8 -*-
 from datetime import datetime
+import gzip
 from os.path import join
 from typing import Optional
 import logging
@@ -138,7 +139,6 @@ def create_backup_csv(
     backup_dir: str,
     custom_run: bool,
     issue: Optional[str] = None,
-    table_name: Optional[str] = None,
     geo_res: Optional[str] = None,
     sensor: Optional[str] = None,
     metric: Optional[str] = None
@@ -184,10 +184,10 @@ def create_backup_csv(
         # Label the file with today's date (the date the data was fetched).
         if not issue:
             issue = datetime.today().strftime('%Y%m%d')
-        backup_filename = [issue, geo_res, table_name, metric, sensor]
+        backup_filename = [issue, geo_res, metric, sensor]
 
-        # Drop empty elements
-        backup_filename = "_".join(filter(None, backup_filename)) + ".csv"
 
+        backup_filename = "_".join(filter(None, backup_filename)) + ".csv.gz"
         backup_file = join(backup_dir, backup_filename)
-        backup_df.to_csv(backup_file, index=False, na_rep="NA")
+        with gzip.open(backup_file, 'wt', newline='') as f:
+            df.to_csv(f, index=False, na_rep="NA")

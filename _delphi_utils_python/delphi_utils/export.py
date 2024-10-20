@@ -184,10 +184,10 @@ def create_backup_csv(
         # Label the file with today's date (the date the data was fetched).
         if not issue:
             issue = datetime.today().strftime('%Y%m%d')
+
         backup_filename = [issue, geo_res, metric, sensor]
-
-
         backup_filename = "_".join(filter(None, backup_filename)) + ".csv.gz"
         backup_file = join(backup_dir, backup_filename)
+
         with gzip.open(backup_file, 'wt', newline='') as f:
             df.to_csv(f, index=False, na_rep="NA")

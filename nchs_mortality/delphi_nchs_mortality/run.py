@@ -72,8 +72,9 @@ def run_module(params: Dict[str, Any]):
         daily_arch_diff.update_cache()
 
     stats = []
-    df_pull = pull_nchs_mortality_data(socrata_token, backup_dir,
-        custom_run = custom_run, test_file = test_file, logger = logger)
+    df_pull = pull_nchs_mortality_data(
+        socrata_token, backup_dir, custom_run=custom_run, test_file=test_file, logger=logger
+    )
     for metric in METRICS:
         for geo in ["state", "nation"]:
             if metric == 'percent_of_expected_deaths':

@@ -1,17 +1,17 @@
 # -*- coding: utf-8 -*-
 """Functions for pulling NCHS mortality data API."""
 
-from typing import Optional
 import logging
+from typing import Optional
 
 import numpy as np
 import pandas as pd
+from delphi_utils import create_backup_csv
+from delphi_utils.geomap import GeoMapper
 from sodapy import Socrata
 
-from delphi_utils.geomap import GeoMapper
-from delphi_utils import create_backup_csv
+from .constants import METRICS, NEWLINE, RENAME
 
-from .constants import METRICS, RENAME, NEWLINE
 
 def standardize_columns(df):
     """Rename columns to comply with a standard set.
@@ -29,7 +29,7 @@ def pull_nchs_mortality_data(
     backup_dir: str,
     custom_run: bool,
     logger: Optional[logging.Logger] = None,
-    test_file: Optional[str] = None
+    test_file: Optional[str] = None,
 ):
     """Pull the latest NCHS Mortality data, and conforms it into a dataset.
 
@@ -73,7 +73,7 @@ def pull_nchs_mortality_data(
         results = client.get("r8kw-7aab", limit=10**10)
         df = pd.DataFrame.from_records(results)
 
-        create_backup_csv(df, backup_dir, custom_run = custom_run, logger = logger)
+        create_backup_csv(df, backup_dir, custom_run=custom_run, logger=logger)
 
         # drop "By Total" rows
         df = df[df["group"].transform(str.lower) == "by week"]

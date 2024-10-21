@@ -144,7 +144,7 @@ def create_backup_csv(
     metric: Optional[str] = None,
     logger: Optional[logging.Logger] = None
 ):
-    """Save data for use as a backup
+    """Save data for use as a backup.
 
     This function is meant to save raw data fetched from data sources.
     Therefore, it avoids manipulating the data as much as possible to

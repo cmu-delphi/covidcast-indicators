@@ -22,7 +22,7 @@ from .config import Config
 
 gmpr = GeoMapper()
 
-def store_backfill_file(claims_filepath, _end_date, backfill_dir):
+def store_backfill_file(claims_filepath, _end_date, backfill_dir, logger):
     """
     Store county level backfill data into backfill_dir.
 
@@ -57,6 +57,7 @@ def store_backfill_file(claims_filepath, _end_date, backfill_dir):
     backfilldata = backfilldata.loc[(backfilldata["time_value"] >= _start_date)
                                     & (~backfilldata["fips"].isnull()),
                                     selected_columns]
+    logger.info("Filtering backfill data", startdate=_start_date, enddate=_end_date)
 
     backfilldata["lag"] = [(_end_date - x).days for x in backfilldata["time_value"]]
     backfilldata["time_value"] = backfilldata.time_value.dt.strftime("%Y-%m-%d")
@@ -69,10 +70,15 @@ def store_backfill_file(claims_filepath, _end_date, backfill_dir):
         "state_id": "string"
     })
 
-    path = backfill_dir + \
-        "/claims_hosp_as_of_%s.parquet"%datetime.strftime(_end_date, "%Y%m%d")
+    filename = "claims_hosp_as_of_%s.parquet"%datetime.strftime(_end_date, "%Y%m%d")
+    path = f"{backfill_dir}/{filename}"
+
     # Store intermediate file into the backfill folder
-    backfilldata.to_parquet(path, index=False)
+    try:
+        backfilldata.to_parquet(path, index=False)
+        logger.info("Stored backfill data in parquet", filename=filename)
+    except:
+        logger.info("Failed to store backfill data in parquet", )
     return path
 
 
@@ -90,25 +96,28 @@ def merge_existing_backfill_files(backfill_dir, backfill_file, issue_date, logge
     backfill_dir : str
         specified path to store backfill files.
     backfill_file : str
+        specific file add to merged backfill file.
     """
     new_files = glob.glob(backfill_dir + "/claims_hosp_*")
 
     def get_file_with_date(files) -> Union[str, None]:
         for filename in files:
-            pattern = re.findall(r"\d{6}", filename)
-            if len(pattern) == 1:
-                file_month = datetime.strptime(pattern[0], "%Y%m")
-                start_date = file_month.replace(day=1)
-                end_date = (start_date + timedelta(days=32)).replace(day=1)
-                if issue_date >= start_date and issue_date < end_date:
+            # need to only match files with 6 digits for merged files
+            pattern = re.findall(r"_(\d{6,6})\.parquet", filename)
+            if pattern:
+                file_month = datetime.strptime(pattern[0], "%Y%m").replace(day=1)
+                end_date = (file_month + timedelta(days=32)).replace(day=1)
+                if issue_date >= file_month and issue_date < end_date:
                     return filename
         return ""
 
     file_name = get_file_with_date(new_files)
 
     if len(file_name) == 0:
-        logger.info("patch file is too recent to merge", issue_date=issue_date.strftime("%Y-%m-%d"))
+        logger.info("Issue date has no matching merged files", issue_date=issue_date.strftime("%Y-%m-%d"))
         return
+
+    logger.info("Adding missing date to merged file", issue_date=issue_date, filename=backfill_file, merged_filename=file_name)
 
     # Start to merge files
     merge_file = f"{file_name.split('.')[0]}_after_merge.parquet"
@@ -139,8 +148,10 @@ def merge_backfill_file(backfill_dir, most_recent, logger, test_mode=False):
         specified path to store backfill files.
     test_mode: bool
     """
-    new_files = glob.glob(backfill_dir + "/claims_hosp_as_of_*")
+    previous_month = (most_recent.replace(day=1) - timedelta(days=1)).strftime("%Y%m")
+    new_files = glob.glob(backfill_dir + f"/claims_hosp_as_of_{previous_month}*")
     if len(new_files) == 0: # if no any daily file is stored
+        logger.info("No new files to merge; skipping merging")
         return
 
     def get_date(file_link):
@@ -155,7 +166,7 @@ def merge_backfill_file(backfill_dir, most_recent, logger, test_mode=False):
         logger.info("Not a new month; skipping merging")
         return
 
-
+    logger.info(f"Merging files", start_date=date_list[0], end_date=date_list[-1])
     # Start to merge files
     pdList = []
     for fn in new_files:

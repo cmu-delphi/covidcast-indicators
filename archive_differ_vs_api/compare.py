@@ -31,6 +31,7 @@ import pandas as pd
 import numpy as np
 import covidcast
 from delphi_epidata import Epidata
+from sqlalchemy import create_engine, text
 import warnings
 import json
 import os
@@ -45,6 +46,9 @@ AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
 BUCKET_NAME = os.getenv("BUCKET_NAME")
 API_KEY = os.getenv("API_KEY")
 S3_SOURCE = os.getenv("S3_SOURCE")
+SQL_HOST = os.getenv("SQL_HOST")
+SQL_USER = os.getenv("SQL_USER")
+SQL_PASS = os.getenv("SQL_PASS")
 
 covidcast.use_api_key(API_KEY)
 Epidata.debug = True
@@ -53,6 +57,8 @@ Epidata.auth = ("epidata", API_KEY)
 client = boto3.client('s3', aws_access_key_id=AWS_ACCESS_KEY_ID, aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
 s3 = boto3.resource('s3', aws_access_key_id=AWS_ACCESS_KEY_ID, aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
 bucket = s3.Bucket(BUCKET_NAME)
+
+engine = create_engine(f'mysql+pymysql://{SQL_USER}:{SQL_PASS}@{SQL_HOST}/covid').connect()
 
 SOURCES = {
     'delphi_hhs_hosp': 'hhs',
@@ -156,8 +162,31 @@ if __name__ == '__main__':
 
     full_file_dif_potential = None
     sorted_sources = sorted(SOURCES.keys())
+    sorted_sources = ['quidel']
+
     for source in sorted_sources[0:1]:
         obj_list = sorted(bucket.objects.filter(Prefix=source), key=lambda x: x.key)
+        obj_df = pd.DataFrame([parse_bucket_info(obj) for idx, obj in enumerate(obj_list)])
+        
+        time_range = (obj_df.time_value_s3.min(), obj_df.time_value_s3.max())
+        geos = obj_df.geo_s3.unique()
+        signals = obj_df.signal_api.unique()
+
+        query = f"""
+            SELECT
+                *
+            FROM covid.epimetric_latest_v el
+            WHERE 1=1
+            AND el.`source` = "{source}"
+            AND el.`signal` in ({' '.join('"' + x + '",' for x in signals)[:-1]})
+            AND el.time_type = "{api_time_type}"
+            AND el.geo_type in ({' '.join('"' + x + '",' for x in geos)[:-1]})
+            AND el.time_value >= "{time_range[0]}"
+            AND el.time_value <= "{time_range[1]}"
+        """
+
+        df = pd.read_sql(text(query), engine)
+        
         for idx, obj in enumerate(obj_list):
             metadata = parse_bucket_info(obj)
 
@@ -186,12 +215,13 @@ if __name__ == '__main__':
                 dump_json(row, source_api)
                 continue
 
-
-            #epidata api
-            response_api = Epidata.covidcast(source_api, signal_api, time_type=api_time_type,
-                                          geo_type=geo_s3, time_values=time_value_s3,
-                                          geo_value="*", as_of=None, lag=None)
-            df_latest = pd.DataFrame.from_dict(response_api["epidata"])
+            df_latest = df[
+                (df['source'] == source_api) &
+                (df['signal'] == signal_api) &
+                (df['time_type'] == api_time_type) &
+                (df['geo_type'] == geo_s3) &
+                (df['time_value'] == time_value_s3)].copy()
+            
             if df_latest.empty:
                 df_latest = pd.DataFrame(columns=['geo_value', 'value', 'stderr', 'sample_size'])
                 full_file_dif_potential = True
@@ -254,4 +284,5 @@ if __name__ == '__main__':
                     }
                 row.update(diff)
                 dump_json(row, source_api)
+                break
             full_file_dif_potential = False

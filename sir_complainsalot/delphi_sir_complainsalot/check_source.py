@@ -4,10 +4,10 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import List
 
-import covidcast
 import pandas as pd
+from delphi_epidata import Epidata
+from delphi_utils.date_utils import convert_apitime_column_to_datetimes, date_to_api_string
 
-covidcast.covidcast._ASYNC_CALL = True  # pylint: disable=protected-access
 
 @dataclass
 class Complaint:
@@ -29,8 +29,12 @@ class Complaint:
     def to_md(self):
         """Markdown formatted form of complaint."""
         return "*{source}* `{signal}` ({geos}) {message}; last updated {updated}.".format(
-            source=self.data_source, signal=self.signal, geos=", ".join(self.geo_types),
-            message=self.message, updated=self.last_updated.strftime("%Y-%m-%d"))
+            source=self.data_source,
+            signal=self.signal,
+            geos=", ".join(self.geo_types),
+            message=self.message,
+            updated=self.last_updated.strftime("%Y-%m-%d"),
+        )
 
 
 def check_source(data_source, meta, params, grace, logger):  # pylint: disable=too-many-locals
@@ -64,29 +68,44 @@ def check_source(data_source, meta, params, grace, logger):  # pylint: disable=t
     age_complaints = {}
     gap_complaints = {}
 
+    end_date = datetime.now()
+    start_date = end_date - timedelta(days=14)
+
     for _, row in signals.iterrows():
         logger.info("Retrieving signal",
             data_source=data_source,
             signal=row["signal"],
-            start_day=(datetime.now() - timedelta(days = 14)).strftime("%Y-%m-%d"),
-            end_day=datetime.now().strftime("%Y-%m-%d"),
-            geo_type=row["geo_type"])
+            start_day=start_date.strftime("%Y-%m-%d"),
+            end_day=end_date.strftime("%Y-%m-%d"),
+            geo_type=row["geo_type"],
+            time_type=row["time_type"],
+        )
 
-        latest_data = covidcast.signal(
-            data_source, row["signal"],
-            start_day=datetime.now() - timedelta(days = 14),
-            end_day=datetime.now(),
-            geo_type=row["geo_type"]
+        response = Epidata.covidcast(
+            data_source,
+            row["signal"],
+            time_type=row["time_type"],
+            geo_type=row["geo_type"],
+            time_values=Epidata.range(date_to_api_string(start_date), date_to_api_string(end_date)),
+            geo_value="*",
         )
 
         current_lag_in_days = (now - row["max_time"]).days
         lag_calculated_from_api = False
+        try:
+            epidata_dict = Epidata.check(response)
+            latest_data = pd.DataFrame.from_dict(epidata_dict)
+            if len(latest_data) > 0:
+                latest_data["time_value"] = convert_apitime_column_to_datetimes(latest_data, "time_value")
+                latest_data["issue"] = convert_apitime_column_to_datetimes(latest_data, "issue")
+                latest_data.drop("direction", axis=1, inplace=True)
 
-        if latest_data is not None:
-            unique_dates = [pd.to_datetime(val).date()
-                            for val in latest_data["time_value"].unique()]
-            current_lag_in_days = (datetime.now().date() - max(unique_dates)).days
-            lag_calculated_from_api = True
+                unique_dates = list(latest_data["time_value"].unique().dt.date)
+                current_lag_in_days = (end_date.date() - max(unique_dates)).days
+                lag_calculated_from_api = True
+        # pylint: disable=W0703
+        except Exception:
+            continue
 
         logger.info("Signal lag",
                     current_lag_in_days = current_lag_in_days,
@@ -148,7 +167,7 @@ def check_source(data_source, meta, params, grace, logger):  # pylint: disable=t
                     data_source,
                     row["signal"],
                     [row["geo_type"]],
-                    datetime.now(),
+                    end_date,
                     source_config["maintainers"])
             else:
                 gap_complaints[row["signal"]].geo_types.append(row["geo_type"])

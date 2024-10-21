@@ -1,14 +1,16 @@
 """Dynamic file checks."""
+
+import re
 from dataclasses import dataclass
 from datetime import date, timedelta
 from typing import Dict, Set
-import re
-import pandas as pd
+
 import numpy as np
-import covidcast
-from .errors import ValidationFailure
+import pandas as pd
+
 from .datafetcher import get_geo_signal_combos, threaded_api_calls
-from .utils import relative_difference_by_min, TimeWindow, lag_converter
+from .errors import ValidationFailure
+from .utils import TimeWindow, lag_converter, relative_difference_by_min
 
 
 class DynamicValidator:
@@ -78,8 +80,6 @@ class DynamicValidator:
         # Get 14 days prior to the earliest list date
         outlier_lookbehind = timedelta(days=14)
 
-        # Authenticate API
-        covidcast.use_api_key(self.params.api_key)
 
         # Get all expected combinations of geo_type and signal.
         geo_signal_combos = get_geo_signal_combos(self.params.data_source,

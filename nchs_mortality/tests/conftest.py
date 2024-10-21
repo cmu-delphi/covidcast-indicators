@@ -14,6 +14,7 @@ from delphi_nchs_mortality.run import run_module
 
 PARAMS = {
   "common": {
+    "custom_run": True,
     "daily_export_dir": "./daily_receiving",
     "weekly_export_dir": "./receiving",
     "backup_dir": "./raw_data_backups"

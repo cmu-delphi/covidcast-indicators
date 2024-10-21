@@ -73,8 +73,9 @@ def pull_nchs_mortality_data(
         results = client.get("r8kw-7aab", limit=10**10)
         df = pd.DataFrame.from_records(results)
 
-        create_backup_csv(df, backup_dir, custom_run=custom_run, logger=logger)
+    create_backup_csv(df, backup_dir, custom_run=custom_run, logger=logger)
 
+    if not test_file:
         # drop "By Total" rows
         df = df[df["group"].transform(str.lower) == "by week"]
 

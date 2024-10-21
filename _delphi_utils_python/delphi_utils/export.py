@@ -141,7 +141,8 @@ def create_backup_csv(
     issue: Optional[str] = None,
     geo_res: Optional[str] = None,
     sensor: Optional[str] = None,
-    metric: Optional[str] = None
+    metric: Optional[str] = None,
+    logger: Optional[logging.Logger] = None
 ):
     """Save data for use as a backup
 
@@ -172,6 +173,8 @@ def create_backup_csv(
         Sensor that has been calculated (cumulative_counts vs new_counts)
     metric: Optional[str]
         Metric we are considering, if any.
+    logger: Optional[logging.Logger]
+        Pass a logger object here to log information about name and size of the backup file.
 
     Returns
     ---------
@@ -191,3 +194,10 @@ def create_backup_csv(
 
         with gzip.open(backup_file, 'wt', newline='') as f:
             df.to_csv(f, index=False, na_rep="NA")
+
+        if logger:
+            logger.info(
+                "Backup file created",
+                backup_file=backup_file,
+                backup_size=path.getsize(backup_file)
+            )

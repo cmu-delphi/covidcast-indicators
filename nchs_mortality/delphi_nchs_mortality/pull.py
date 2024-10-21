@@ -2,6 +2,7 @@
 """Functions for pulling NCHS mortality data API."""
 
 from typing import Optional
+import logging
 
 import numpy as np
 import pandas as pd
@@ -23,7 +24,13 @@ def standardize_columns(df):
     return df.rename(columns=dict(rename_pairs))
 
 
-def pull_nchs_mortality_data(socrata_token: str, backup_dir: str, custom_run: bool, test_file: Optional[str] = None):
+def pull_nchs_mortality_data(
+    socrata_token: str,
+    backup_dir: str,
+    custom_run: bool,
+    logger: Optional[logging.Logger] = None,
+    test_file: Optional[str] = None
+):
     """Pull the latest NCHS Mortality data, and conforms it into a dataset.
 
     The output dataset has:
@@ -66,7 +73,7 @@ def pull_nchs_mortality_data(socrata_token: str, backup_dir: str, custom_run: bo
         results = client.get("r8kw-7aab", limit=10**10)
         df = pd.DataFrame.from_records(results)
 
-        create_backup_csv(df, backup_dir, custom_run = custom_run)
+        create_backup_csv(df, backup_dir, custom_run = custom_run, logger = logger)
 
         # drop "By Total" rows
         df = df[df["group"].transform(str.lower) == "by week"]

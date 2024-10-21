@@ -18,6 +18,10 @@ def deploy_production = [:]
 
 pipeline {
     agent any
+    environment {
+        // Set the PATH variable to include the pyenv shims directory.
+        PATH = "/var/lib/jenkins/.pyenv/shims:${env.PATH}"
+    }
     stages {
         stage('Build dev/feature branch') {
             when  {

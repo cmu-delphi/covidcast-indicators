@@ -1,16 +1,17 @@
 """Export data in the format expected by the Delphi API."""
 # -*- coding: utf-8 -*-
-from datetime import datetime
 import gzip
-from os.path import join, getsize
-from typing import Optional
 import logging
+from datetime import datetime
+from os.path import getsize, join
+from typing import Optional
 
-from epiweeks import Week
 import numpy as np
 import pandas as pd
+from epiweeks import Week
 
 from .nancodes import Nans
+
 
 def filter_contradicting_missing_codes(df, sensor, metric, date, logger=None):
     """Find values with contradictory missingness codes, filter them, and log."""
@@ -142,7 +143,7 @@ def create_backup_csv(
     geo_res: Optional[str] = None,
     sensor: Optional[str] = None,
     metric: Optional[str] = None,
-    logger: Optional[logging.Logger] = None
+    logger: Optional[logging.Logger] = None,
 ):
     """Save data for use as a backup.
 
@@ -186,18 +187,18 @@ def create_backup_csv(
 
         # Label the file with today's date (the date the data was fetched).
         if not issue:
-            issue = datetime.today().strftime('%Y%m%d')
+            issue = datetime.today().strftime("%Y%m%d")
 
         backup_filename = [issue, geo_res, metric, sensor]
         backup_filename = "_".join(filter(None, backup_filename)) + ".csv.gz"
         backup_file = join(backup_dir, backup_filename)
 
-        with gzip.open(backup_file, 'wt', newline='') as f:
+        with gzip.open(backup_file, "wt", newline="") as f:
             df.to_csv(f, index=False, na_rep="NA")
 
         if logger:
             logger.info(
                 "Backup file created",
                 backup_file=backup_file,
-                backup_size=getsize(backup_file)
+                backup_size=getsize(backup_file),
             )

@@ -135,6 +135,7 @@ def create_export_csv(
         export_df.to_csv(export_file, index=False, na_rep="NA")
     return dates
 
+
 def create_backup_csv(
     df: pd.DataFrame,
     backup_dir: str,

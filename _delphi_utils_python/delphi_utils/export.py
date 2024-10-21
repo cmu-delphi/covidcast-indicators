@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from datetime import datetime
 import gzip
-from os.path import join
+from os.path import join, getsize
 from typing import Optional
 import logging
 
@@ -199,5 +199,5 @@ def create_backup_csv(
             logger.info(
                 "Backup file created",
                 backup_file=backup_file,
-                backup_size=path.getsize(backup_file)
+                backup_size=getsize(backup_file)
             )

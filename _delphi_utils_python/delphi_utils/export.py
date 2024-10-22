@@ -184,8 +184,6 @@ def create_backup_csv(
         Series of dates for which CSV files were exported.
     """
     if not custom_run:
-        df = df.copy()
-
         # Label the file with today's date (the date the data was fetched).
         if not issue:
             issue = datetime.today().strftime("%Y%m%d")

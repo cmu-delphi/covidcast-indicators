@@ -3,3 +3,5 @@ boto3==1.34.131
 delphi-epidata==4.1.23
 delphi-utils==0.3.23
 python-dotenv==1.0.1
+PyMySQL==1.1.1
+SQLAlchemy==2.0.36

@@ -1,3 +1,4 @@
+import os
 import pytest
 
 import pandas as pd
@@ -34,7 +35,7 @@ class TestPullNCHS:
         pd.testing.assert_frame_equal(expected, df)
 
     def test_good_file(self):
-        df = pull_nchs_mortality_data(SOCRATA_TOKEN, "test_data.csv")
+        df = pull_nchs_mortality_data(SOCRATA_TOKEN, backup_dir = "", custom_run = True, test_file = "test_data.csv")
 
         # Test columns
         assert (
@@ -90,9 +91,20 @@ class TestPullNCHS:
     def test_bad_file_with_inconsistent_time_col(self):
         with pytest.raises(ValueError):
             pull_nchs_mortality_data(
-                SOCRATA_TOKEN, "bad_data_with_inconsistent_time_col.csv"
+                SOCRATA_TOKEN, backup_dir = "", custom_run = True, test_file = "bad_data_with_inconsistent_time_col.csv"
             )
 
     def test_bad_file_with_missing_cols(self):
         with pytest.raises(ValueError):
-            pull_nchs_mortality_data(SOCRATA_TOKEN, "bad_data_with_missing_cols.csv")
+            pull_nchs_mortality_data(SOCRATA_TOKEN, backup_dir = "", custom_run = True, test_file = "bad_data_with_missing_cols.csv")
+
+    def test_backup_today_data(self):
+        today = pd.Timestamp.today().strftime("%Y%m%d")
+        backup_dir = "./raw_data_backups"
+        pull_nchs_mortality_data(SOCRATA_TOKEN, backup_dir = backup_dir, custom_run = False, test_file = "test_data.csv")
+        backup_file = f"{backup_dir}/{today}.csv.gz"
+        backup_df = pd.read_csv(backup_file)
+        source_df = pd.read_csv("test_data/test_data.csv")
+        pd.testing.assert_frame_equal(source_df, backup_df)
+        if os.path.exists(backup_file):
+            os.remove(backup_file)

@@ -74,10 +74,11 @@ WEEKLY_SOURCES = {'nchs_mortality': 'nchs-mortality'}
 
 DROP_COLS = ["se", "sample_size",  "missing_val", "missing_se", "missing_sample_size"]
 
-CSV_PATH = Path(__file__).parent / 'diff_csv_joined_test'
+CSV_PATH = Path(__file__).parent / 'diff_csv_joined'
+JSON_PATH = Path(__file__).parent / 'json_files'
 
 def dump_json(data, source):
-    f = open(f'{source}.json', 'a')
+    f = open(f'{JSON_PATH}/{source}.json', 'a')
     json.dump(data, f)
     f.write(",\n")
     f.close()
@@ -155,19 +156,16 @@ def check_diff_with_merge(df_s3, df_api):
 
 
 if __name__ == '__main__':
-    if S3_SOURCE in WEEKLY_SOURCES:
-        api_time_type = "week"
-    else:
-        api_time_type = "day"
-
     full_file_dif_potential = None
     sorted_sources = sorted(SOURCES.keys())
-    sorted_sources = ['quidel']
+    for source in sorted_sources:
+        if source in WEEKLY_SOURCES:
+            api_time_type = "week"
+        else:
+            api_time_type = "day"
 
-    for source in sorted_sources[0:1]:
-        obj_list = sorted(bucket.objects.filter(Prefix=source), key=lambda x: x.key)
-        obj_df = pd.DataFrame([parse_bucket_info(obj) for idx, obj in enumerate(obj_list)])
-        
+        obj_list = bucket.objects.filter(Prefix=source)
+        obj_df = pd.DataFrame([parse_bucket_info(obj) for idx, obj in enumerate(obj_list) if len(parse_bucket_info(obj)) > 0])
         time_range = (obj_df.time_value_s3.min(), obj_df.time_value_s3.max())
         geos = obj_df.geo_s3.unique()
         signals = obj_df.signal_api.unique()
@@ -177,16 +175,17 @@ if __name__ == '__main__':
                 *
             FROM covid.epimetric_latest_v el
             WHERE 1=1
-            AND el.`source` = "{source}"
+            AND el.`source` = "{SOURCES[source]}"
             AND el.`signal` in ({' '.join('"' + x + '",' for x in signals)[:-1]})
             AND el.time_type = "{api_time_type}"
             AND el.geo_type in ({' '.join('"' + x + '",' for x in geos)[:-1]})
-            AND el.time_value >= "{time_range[0]}"
-            AND el.time_value <= "{time_range[1]}"
+            AND el.time_value >= {time_range[0]}
+            AND el.time_value <= {time_range[1]}
         """
 
         df = pd.read_sql(text(query), engine)
-        
+        df = df[["source", "signal", "value", "geo_value", "geo_type", "time_value"]]
+
         for idx, obj in enumerate(obj_list):
             metadata = parse_bucket_info(obj)
 
@@ -197,7 +196,7 @@ if __name__ == '__main__':
             signal_api = metadata["signal_api"]
             geo_s3 = metadata["geo_s3"]
             signal_s3 = metadata["signal_s3"]
-            time_value_s3 = metadata["time_value_s3"]
+            time_value_s3 = int(metadata["time_value_s3"])
 
             response = client.get_object(Bucket=BUCKET_NAME, Key=obj.key)
 
@@ -208,7 +207,7 @@ if __name__ == '__main__':
                 df_s3 = df_s3[['geo_id', 'val']]
                 df_s3["val"] = df_s3["val"].astype(float)
                 # round values for float precision
-                df_s3 = df_s3.round({"val": 4})
+                df_s3 = df_s3.round({"val": 7})
             else:
                 # print(f"Unsuccessful S3 get_object response. Status - {status}")
                 row = {"file_name":obj.key, "source":source_api, "skip":True, "reason": f"Unsuccessful S3 get_object response. Status - {status}"}
@@ -218,7 +217,6 @@ if __name__ == '__main__':
             df_latest = df[
                 (df['source'] == source_api) &
                 (df['signal'] == signal_api) &
-                (df['time_type'] == api_time_type) &
                 (df['geo_type'] == geo_s3) &
                 (df['time_value'] == time_value_s3)].copy()
             
@@ -231,7 +229,7 @@ if __name__ == '__main__':
             if geo_s3 not in ["state", "nation"]:
                 df_latest['geo_id'] = df_latest['geo_id'].astype(str).astype(int)
             df_latest["val"] = df_latest["val"].astype(float)
-            df_latest = df_latest.round({"val": 4})
+            df_latest = df_latest.round({"val": 7})
 
             # get difference with drop dup
             diff = pd.concat([df_s3,df_latest]).drop_duplicates(keep=False)
@@ -284,5 +282,4 @@ if __name__ == '__main__':
                     }
                 row.update(diff)
                 dump_json(row, source_api)
-                break
             full_file_dif_potential = False

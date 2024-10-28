@@ -1,8 +1,12 @@
 # -*- coding: utf-8 -*-
 """Store backfill data."""
+import calendar
 import os
 import glob
-from datetime import datetime
+import re
+import shutil
+from datetime import datetime, timedelta
+from typing import Union
 
 import pandas as pd
 
@@ -11,7 +15,7 @@ from delphi_utils import GeoMapper
 
 gmpr = GeoMapper()
 
-def store_backfill_file(df, _end_date, backfill_dir):
+def store_backfill_file(df, _end_date, backfill_dir, logger):
     """
     Store county level backfill data into backfill_dir.
 
@@ -59,6 +63,7 @@ def store_backfill_file(df, _end_date, backfill_dir):
                         'num_age_0_17', 'den_age_0_17']
     backfilldata = backfilldata.loc[backfilldata["time_value"] >= _start_date,
                                     selected_columns]
+    logger.info("Filtering source data", startdate=_start_date, enddate=_end_date)
     backfilldata["lag"] = [(_end_date - x).days for x in backfilldata["time_value"]]
     backfilldata["time_value"] = backfilldata.time_value.dt.strftime("%Y-%m-%d")
     backfilldata["issue_date"] = datetime.strftime(_end_date, "%Y-%m-%d")
@@ -70,19 +75,73 @@ def store_backfill_file(df, _end_date, backfill_dir):
         "state_id": "string"
     })
 
-    path = backfill_dir + \
-        "/quidel_covidtest_as_of_%s.parquet"%datetime.strftime(_end_date, "%Y%m%d")
+    filename =  "/quidel_covidtest_as_of_%s.parquet"%datetime.strftime(_end_date, "%Y%m%d")
+    path = f"{backfill_dir}\{filename}"
     # Store intermediate file into the backfill folder
-    backfilldata.to_parquet(path, index=False)
+    try:
+        backfilldata.to_parquet(path, index=False)
+        logger.info("Stored source data in parquet", filename=filename)
+    except:
+        logger.info("Failed to store source data in parquet")
+    return path
 
-def merge_backfill_file(backfill_dir, backfill_merge_day, today,
-                        test_mode=False, check_nd=25):
+
+def merge_existing_backfill_files(backfill_dir, backfill_file, issue_date, logger):
     """
-    Merge ~4 weeks' backfill data into one file.
+    Merge existing backfill with the patch data included. This function is specifically run for patching.
 
-    Usually this function should merge 28 days' data into a new file so as to
-    save the reading time when running the backfill pipelines. We set a softer
-    threshold to allow flexibility in data delivery.
+    When the indicator fails for some reason or another, there's a gap in the backfill files.
+    The patch to fill in the missing dates happens later down the line when the backfill files are already merged.
+    This function takes the merged files with the missing date, insert the particular date, and merge back the file.
+    Parameters
+    ----------
+    issue_date : datetime
+        The most recent date when the raw data is received
+    backfill_dir : str
+        specified path to store backfill files.
+    backfill_file : str
+        specific file add to merged backfill file.
+    """
+    new_files = glob.glob(backfill_dir + "/quidel_covidtest_*")
+
+    def get_file_with_date(files) -> Union[str, None]:
+        for filename in files:
+            # need to only match files with 6 digits for merged files
+            pattern = re.findall(r"_(\d{6,6})\.parquet", filename)
+            if pattern:
+                file_month = datetime.strptime(pattern[0], "%Y%m").replace(day=1)
+                end_date = (file_month + timedelta(days=32)).replace(day=1)
+                if issue_date >= file_month and issue_date < end_date:
+                    return filename
+        return ""
+
+    file_name = get_file_with_date(new_files)
+
+    if len(file_name) == 0:
+        logger.info("Issue date has no matching merged files", issue_date=issue_date.strftime("%Y-%m-%d"))
+        return
+
+    logger.info("Adding missing date to merged file", issue_date=issue_date, filename=backfill_file, merged_filename=file_name)
+
+    # Start to merge files
+    merge_file = f"{file_name.split('.')[0]}_after_merge.parquet"
+    try:
+        shutil.copyfile(file_name, merge_file)
+        existing_df = pd.read_parquet(merge_file, engine="pyarrow")
+        df = pd.read_parquet(backfill_file, engine="pyarrow")
+        merged_df = pd.concat([existing_df, df]).sort_values(["time_value", "fips"])
+        merged_df.to_parquet(merge_file, index=False)
+        os.remove(file_name)
+        os.rename(merge_file, file_name)
+    # pylint: disable=W0703:
+    except Exception as e:
+        os.remove(merge_file)
+        logger.error(e)
+    return
+
+def merge_backfill_file(backfill_dir, today, logger, test_mode=False):
+    """
+    Merge month's backfill data into one file.
 
     Parameters
     ----------
@@ -90,17 +149,12 @@ def merge_backfill_file(backfill_dir, backfill_merge_day, today,
         The most recent date when the raw data is received
     backfill_dir : str
         specified path to store backfill files.
-    backfill_merge_day: int
-        The day of a week that we used to merge the backfill files. e.g. 0
-        is Monday.
     test_mode: bool
-    check_nd: int
-        The criteria of the number of unmerged files. Ideally, we want the
-        number to be 28, but we use a looser criteria from practical
-        considerations
     """
-    new_files = glob.glob(backfill_dir + "/quidel_covidtest_as_of_*")
+    previous_month = (today.replace(day=1) - timedelta(days=1)).strftime("%Y%m")
+    new_files = glob.glob(backfill_dir + f"/quidel_covidtest_as_of_{previous_month}*")
     if len(new_files) == 0: # if no any daily file is stored
+        logger.info("No new files to merge; skipping merging")
         return
 
     def get_date(file_link):
@@ -115,16 +169,21 @@ def merge_backfill_file(backfill_dir, backfill_merge_day, today,
 
     # Check whether to merge
     # Check the number of files that are not merged
-    if today.weekday() != backfill_merge_day or (today-earliest_date).days <= check_nd:
+    date_list = list(map(get_date, new_files))
+    latest_date = max(date_list)
+    num_of_days_in_month = calendar.monthrange(latest_date.year, latest_date.month)[1]
+    if len(date_list) < num_of_days_in_month:
+        logger.info("Not enough days, skipping merging", n_file_days=len(date_list))
         return
 
     # Start to merge files
+    logger.info(f"Merging files", start_date=date_list[0], end_date=date_list[-1])
     pdList = []
     for fn in new_files:
         df = pd.read_parquet(fn, engine='pyarrow')
         pdList.append(df)
     merged_file = pd.concat(pdList).sort_values(["time_value", "fips"])
-    path = backfill_dir + "/quidel_covidtest_from_%s_to_%s.parquet"%(
+    path = backfill_dir + f"/quidel_covidtest_{datetime.strftime(latest_date, '%Y%m')}.parquet"%(
         datetime.strftime(earliest_date, "%Y%m%d"),
         datetime.strftime(latest_date, "%Y%m%d"))
     merged_file.to_parquet(path, index=False)

@@ -139,15 +139,13 @@ def run_module(params: Dict[str, Any], logger=None):
         backfill_dir = params["indicator"]["backfill_dir"]
         backfill_merge_day = params["indicator"]["backfill_merge_day"]
 
-        # Merge 4 weeks' data into one file to save runtime
-        # Notice that here we don't check the _end_date(receive date)
-        # since we always want such merging happens on a certain day of a week
-        merge_backfill_file(backfill_dir, backfill_merge_day, datetime.today())
+        # Merge a month's data into one file to save runtime
+        merge_backfill_file(backfill_dir, datetime.today(), logger)
         if _end_date is None:
             logger.info("The data is up-to-date. Currently, no new data to be ingested.")
             return
         # Store the backfill intermediate file
-        store_backfill_file(df, _end_date, backfill_dir)
+        store_backfill_file(df, _end_date, backfill_dir, logger)
 
     export_end_date = check_export_end_date(
         export_end_date, _end_date, END_FROM_TODAY_MINUS)

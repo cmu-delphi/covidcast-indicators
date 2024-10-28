@@ -12,6 +12,7 @@ import re
 import shutil
 from datetime import datetime, timedelta
 from typing import Union
+import calendar
 
 # third party
 import pandas as pd
@@ -57,7 +58,7 @@ def store_backfill_file(claims_filepath, _end_date, backfill_dir, logger):
     backfilldata = backfilldata.loc[(backfilldata["time_value"] >= _start_date)
                                     & (~backfilldata["fips"].isnull()),
                                     selected_columns]
-    logger.info("Filtering backfill data", startdate=_start_date, enddate=_end_date)
+    logger.info("Filtering source data", startdate=_start_date, enddate=_end_date)
 
     backfilldata["lag"] = [(_end_date - x).days for x in backfilldata["time_value"]]
     backfilldata["time_value"] = backfilldata.time_value.dt.strftime("%Y-%m-%d")
@@ -76,9 +77,9 @@ def store_backfill_file(claims_filepath, _end_date, backfill_dir, logger):
     # Store intermediate file into the backfill folder
     try:
         backfilldata.to_parquet(path, index=False)
-        logger.info("Stored backfill data in parquet", filename=filename)
+        logger.info("Stored source data in parquet", filename=filename)
     except:
-        logger.info("Failed to store backfill data in parquet", )
+        logger.info("Failed to store source data in parquet")
     return path
 
 
@@ -162,8 +163,9 @@ def merge_backfill_file(backfill_dir, most_recent, logger, test_mode=False):
 
     date_list = list(map(get_date, new_files))
     latest_date = max(date_list)
-    if latest_date.month == most_recent.month:
-        logger.info("Not a new month; skipping merging")
+    num_of_days_in_month = calendar.monthrange(latest_date.year, latest_date.month)[1]
+    if len(date_list) < num_of_days_in_month:
+        logger.info("Not enough days, skipping merging", n_file_days=len(date_list))
         return
 
     logger.info(f"Merging files", start_date=date_list[0], end_date=date_list[-1])

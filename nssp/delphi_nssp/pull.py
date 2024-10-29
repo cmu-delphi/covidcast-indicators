@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 """Functions for pulling NSSP ER data."""
-from typing import Optional
 import logging
 import textwrap
+from typing import Optional
 
 import pandas as pd
-from sodapy import Socrata
 from delphi_utils import create_backup_csv
+from sodapy import Socrata
 
 from .constants import NEWLINE, SIGNALS, SIGNALS_MAP, TYPE_DICT
 

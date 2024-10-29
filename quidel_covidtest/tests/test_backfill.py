@@ -50,6 +50,7 @@ class TestBackfill:
         store_backfill_file(self.df, datetime(2020, 1, 1), backfill_dir, logger)
         fn = "quidel_covidtest_as_of_20200101.parquet"
         assert fn in os.listdir(backfill_dir)
+        assert "Stored source data in parquet" in caplog.text
         
         backfill_df = pd.read_parquet(backfill_dir + "/"+ fn, engine='pyarrow')
         selected_columns = ['time_value', 'fips', 'state_id',
@@ -61,18 +62,15 @@ class TestBackfill:
                         'num_age_65plus', 'den_age_65plus',
                         'num_age_0_17', 'den_age_0_17',
                         'lag', 'issue_date']
-        assert set(selected_columns) == set(backfill_df.columns)  
-
+        assert set(selected_columns) == set(backfill_df.columns)
         assert fn in os.listdir(backfill_dir)
-        assert "Stored backfill data in parquet" in caplog.text
 
         self.cleanup()
-    def test_merge_backfill_file(self, caplog):
+    def test_merge_backfill_file(self, caplog, monkeypatch):
         caplog.set_level(logging.INFO)
         logger = get_structured_logger()
 
-        today = datetime.today()
-        fn = "quidel_covidtest_from_20200817_to_20200820.parquet"
+        fn = "quidel_covidtest_202008.parquet"
         assert fn not in os.listdir(backfill_dir)
         
         # Check when no daily file stored
@@ -80,20 +78,20 @@ class TestBackfill:
         merge_backfill_file(backfill_dir, today, logger, test_mode=True)
         assert fn not in os.listdir(backfill_dir)
         assert "No new files to merge; skipping merging" in caplog.text
-
         
         for d in range(17, 21):
-            dropdate = datetime(2020, 8, d)        
-            store_backfill_file(self.df, dropdate, backfill_dir)
-        
+            dropdate = datetime(2020, 8, d)
+            store_backfill_file(self.df, dropdate, backfill_dir, logger)
+
          # Generate the merged file, but not delete it
-        today = datetime(2020, 7, 1)
+        today = datetime(2020, 9, 1)
         monkeypatch.setattr(calendar, 'monthrange', lambda x, y: (1, 4))
         merge_backfill_file(backfill_dir, today, logger, test_mode=True,)
         assert fn in os.listdir(backfill_dir)
+        assert "Merging files" in caplog.text
 
         # Read daily file
-        new_files = glob.glob(backfill_dir + "/quidel_covidtest*.parquet")
+        new_files = glob.glob(backfill_dir + "/quidel_covidtest_as_of*.parquet")
         pdList = []        
         for file in new_files:
             if "from" in file:
@@ -101,9 +99,6 @@ class TestBackfill:
             df = pd.read_parquet(file, engine='pyarrow')
             pdList.append(df)
             os.remove(file)
-        new_files = glob.glob(backfill_dir + "/quidel_covidtest*.parquet")
-        assert len(new_files) == 1
-        
         expected = pd.concat(pdList).sort_values(["time_value", "fips"])
         
         # Read the merged file
@@ -115,46 +110,50 @@ class TestBackfill:
         
         self.cleanup()
 
-    def test_merge_existing_backfill_files(self, caplog):
-        issue_date = datetime(year=2020, month=6, day=13)
+    def test_merge_existing_backfill_files(self, caplog, monkeypatch):
+        issue_date = datetime(year=2020, month=7, day=20)
         issue_date_str = issue_date.strftime("%Y%m%d")
         caplog.set_level(logging.INFO)
         logger = get_structured_logger()
         def prep_backfill_data():
             # Generate backfill daily files
-            for d in range(11, 15):
-                dropdate = datetime(2020, 6, d)
-                store_backfill_file(DATA_FILEPATH, dropdate, backfill_dir, logger)
+            for d in range(18, 24):
+                dropdate = datetime(2020, 7, d)
+                df_part = self.df[self.df['timestamp'] == dropdate]
+                store_backfill_file(df_part, dropdate, backfill_dir, logger)
 
-            today = datetime(2020, 7, 1)
+            today = datetime(2020, 8, 1)
             # creating expected file
+            monkeypatch.setattr(calendar, 'monthrange', lambda x, y: (1, 4))
             merge_backfill_file(backfill_dir, today, logger,
                                 test_mode=True)
-            original = f"{backfill_dir}/claims_hosp_202006.parquet"
+            original = f"{backfill_dir}/quidel_covidtest_202007.parquet"
             os.rename(original, f"{backfill_dir}/expected.parquet")
 
             # creating backfill without issue date
-            os.remove(f"{backfill_dir}/claims_hosp_as_of_{issue_date_str}.parquet")
+            issue_date_filename = f"{backfill_dir}/quidel_covidtest_as_of_{issue_date_str}.parquet"
+            os.remove(issue_date_filename)
             merge_backfill_file(backfill_dir, today, logger,
                                 test_mode=True)
 
-            old_files = glob.glob(backfill_dir + "/claims_hosp_as_of_*")
+            old_files = glob.glob(backfill_dir + "/quidel_covidtest_as_of_*")
             for file in old_files:
                 os.remove(file)
 
         prep_backfill_data()
-        file_to_add = store_backfill_file(DATA_FILEPATH, issue_date, backfill_dir, logger)
+
+        df_to_add = self.df[self.df['timestamp'] == issue_date]
+        file_to_add = store_backfill_file(df_to_add, issue_date, backfill_dir, logger)
         merge_existing_backfill_files(backfill_dir, file_to_add, issue_date, logger)
 
         assert "Adding missing date to merged file" in caplog.text
 
         expected = pd.read_parquet(f"{backfill_dir}/expected.parquet")
-        merged = pd.read_parquet(f"{backfill_dir}/claims_hosp_202006.parquet")
+        merged = pd.read_parquet(f"{backfill_dir}/quidel_covidtest_202007.parquet")
 
         check = pd.concat([merged, expected]).drop_duplicates(keep=False)
 
         assert len(check) == 0
-
         self.cleanup()
 
 
@@ -164,17 +163,18 @@ class TestBackfill:
         logger = get_structured_logger()
         def prep_backfill_data():
             # Generate backfill daily files
-            for d in range(11, 15):
-                dropdate = datetime(2020, 6, d)
-                store_backfill_file(DATA_FILEPATH, dropdate, backfill_dir, logger)
+            for d in range(18, 24):
+                dropdate = datetime(2020, 7, d)
+                df_part = self.df[self.df["timestamp"] == dropdate]
+                store_backfill_file(df_part, dropdate, backfill_dir, logger)
 
-            today = datetime(2020, 6, 14)
+            today = datetime(2020, 8, 1)
             # creating expected file
             merge_backfill_file(backfill_dir, today, logger,
                                 test_mode=True)
 
         prep_backfill_data()
-        file_to_add = store_backfill_file(DATA_FILEPATH, issue_date, backfill_dir, logger)
+        file_to_add = store_backfill_file(self.df, issue_date, backfill_dir, logger)
         merge_existing_backfill_files(backfill_dir, file_to_add, issue_date, logger)
         assert "Issue date has no matching merged files" in caplog.text
         self.cleanup()

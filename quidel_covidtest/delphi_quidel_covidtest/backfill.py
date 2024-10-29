@@ -75,13 +75,13 @@ def store_backfill_file(df, _end_date, backfill_dir, logger):
         "state_id": "string"
     })
 
-    filename =  "/quidel_covidtest_as_of_%s.parquet"%datetime.strftime(_end_date, "%Y%m%d")
-    path = f"{backfill_dir}\{filename}"
+    filename =  "quidel_covidtest_as_of_%s.parquet"%datetime.strftime(_end_date, "%Y%m%d")
+    path = f"{backfill_dir}/{filename}"
     # Store intermediate file into the backfill folder
     try:
         backfilldata.to_parquet(path, index=False)
         logger.info("Stored source data in parquet", filename=filename)
-    except:
+    except Exception as e:
         logger.info("Failed to store source data in parquet")
     return path
 
@@ -170,7 +170,6 @@ def merge_backfill_file(backfill_dir, today, logger, test_mode=False):
     # Check whether to merge
     # Check the number of files that are not merged
     date_list = list(map(get_date, new_files))
-    latest_date = max(date_list)
     num_of_days_in_month = calendar.monthrange(latest_date.year, latest_date.month)[1]
     if len(date_list) < num_of_days_in_month:
         logger.info("Not enough days, skipping merging", n_file_days=len(date_list))
@@ -183,9 +182,7 @@ def merge_backfill_file(backfill_dir, today, logger, test_mode=False):
         df = pd.read_parquet(fn, engine='pyarrow')
         pdList.append(df)
     merged_file = pd.concat(pdList).sort_values(["time_value", "fips"])
-    path = backfill_dir + f"/quidel_covidtest_{datetime.strftime(latest_date, '%Y%m')}.parquet"%(
-        datetime.strftime(earliest_date, "%Y%m%d"),
-        datetime.strftime(latest_date, "%Y%m%d"))
+    path = backfill_dir + f"/quidel_covidtest_{datetime.strftime(latest_date, '%Y%m')}.parquet"
     merged_file.to_parquet(path, index=False)
 
     # Delete daily files once we have the merged one.

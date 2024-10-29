@@ -137,7 +137,6 @@ def run_module(params: Dict[str, Any], logger=None):
     # (generate files).
     if params["indicator"].get("generate_backfill_files", True):
         backfill_dir = params["indicator"]["backfill_dir"]
-        backfill_merge_day = params["indicator"]["backfill_merge_day"]
 
         # Merge a month's data into one file to save runtime
         merge_backfill_file(backfill_dir, datetime.today(), logger)

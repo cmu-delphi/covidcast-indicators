@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """Functions for pulling NSSP ER data."""
+from typing import Optional
 import logging
 import textwrap
 

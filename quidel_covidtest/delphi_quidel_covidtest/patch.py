@@ -57,7 +57,7 @@ def patch():
 
     current_issue = start_issue
 
-    export_day_range += END_FROM_TODAY_MINUS
+    export_day_range -= END_FROM_TODAY_MINUS
 
     while current_issue <= end_issue:
         logger.info("Running issue", issue_date=current_issue.strftime("%Y-%m-%d"))

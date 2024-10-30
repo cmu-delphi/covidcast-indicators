@@ -6,22 +6,22 @@ Created: 2022-08-03
 
 """
 
+import calendar
 import glob
 import os
 import re
 import shutil
 from datetime import datetime, timedelta
 from typing import Union
-import calendar
 
 # third party
 import pandas as pd
-import pytz
 from delphi_utils import GeoMapper
 
 from .config import Config
 
 gmpr = GeoMapper()
+
 
 def store_backfill_file(claims_filepath, _end_date, backfill_dir, logger):
     """
@@ -71,14 +71,14 @@ def store_backfill_file(claims_filepath, _end_date, backfill_dir, logger):
         "state_id": "string"
     })
 
-    filename = "claims_hosp_as_of_%s.parquet"%datetime.strftime(_end_date, "%Y%m%d")
+    filename = "claims_hosp_as_of_%s.parquet" % datetime.strftime(_end_date, "%Y%m%d")
     path = f"{backfill_dir}/{filename}"
 
     # Store intermediate file into the backfill folder
     try:
         backfilldata.to_parquet(path, index=False)
         logger.info("Stored source data in parquet", filename=filename)
-    except:
+    except:  # pylint: disable=W0702
         logger.info("Failed to store source data in parquet")
     return path
 
@@ -108,7 +108,7 @@ def merge_existing_backfill_files(backfill_dir, backfill_file, issue_date, logge
             if pattern:
                 file_month = datetime.strptime(pattern[0], "%Y%m").replace(day=1)
                 end_date = (file_month + timedelta(days=32)).replace(day=1)
-                if issue_date >= file_month and issue_date < end_date:
+                if file_month <= issue_date < end_date:
                     return filename
         return ""
 
@@ -118,7 +118,9 @@ def merge_existing_backfill_files(backfill_dir, backfill_file, issue_date, logge
         logger.info("Issue date has no matching merged files", issue_date=issue_date.strftime("%Y-%m-%d"))
         return
 
-    logger.info("Adding missing date to merged file", issue_date=issue_date, filename=backfill_file, merged_filename=file_name)
+    logger.info(
+        "Adding missing date to merged file", issue_date=issue_date, filename=backfill_file, merged_filename=file_name
+    )
 
     # Start to merge files
     merge_file = f"{file_name.split('.')[0]}_after_merge.parquet"
@@ -168,7 +170,7 @@ def merge_backfill_file(backfill_dir, most_recent, logger, test_mode=False):
         logger.info("Not enough days, skipping merging", n_file_days=len(date_list))
         return
 
-    logger.info(f"Merging files", start_date=date_list[0], end_date=date_list[-1])
+    logger.info("Merging files", start_date=date_list[0], end_date=date_list[-1])
     # Start to merge files
     pdList = []
     for fn in new_files:

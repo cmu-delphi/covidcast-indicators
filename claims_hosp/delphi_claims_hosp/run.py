@@ -103,14 +103,13 @@ def run_module(params, logger=None):
     # Store backfill data
     if params["indicator"].get("generate_backfill_files", True):
         backfill_dir = params["indicator"]["backfill_dir"]
-        backfill_merge_day = params["indicator"]["backfill_merge_day"]
         if custom_run_flag:
-            backfilled_filepath = store_backfill_file(claims_file, dropdate_dt, backfill_dir)
+            backfilled_filepath = store_backfill_file(claims_file, dropdate_dt, backfill_dir, logger)
             merge_existing_backfill_files(backfill_dir, backfilled_filepath, issue_date, logger)
 
         else:
-            merge_backfill_file(backfill_dir, datetime.today())
-            store_backfill_file(claims_file, dropdate_dt, backfill_dir)
+            merge_backfill_file(backfill_dir, datetime.today(), logger)
+            store_backfill_file(claims_file, dropdate_dt, backfill_dir, logger)
 
     # print out information
     logger.info("Loaded params",

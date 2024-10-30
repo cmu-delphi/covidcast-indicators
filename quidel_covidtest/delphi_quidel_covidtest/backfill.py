@@ -164,7 +164,6 @@ def merge_backfill_file(backfill_dir, today, logger, test_mode=False):
         return datetime.strptime(fn, "%Y%m%d")
 
     date_list = list(map(get_date, new_files))
-    earliest_date = min(date_list)
     latest_date = max(date_list)
 
     # Check whether to merge

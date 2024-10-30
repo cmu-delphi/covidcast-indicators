@@ -130,9 +130,9 @@ def run_module(params, logger=None):
     for geo in params["indicator"]["geos"]:
         for weekday in params["indicator"]["weekday"]:
             if weekday:
-                logger.info("starting weekday adj", geo = geo)
+                logger.info("Starting weekday adj", geo_type=geo)
             else:
-                logger.info("starting no weekday adj", geo =  geo)
+                logger.info("Starting no weekday adj", geo_type=geo)
 
             signal_name = Config.signal_weekday_name if weekday else Config.signal_name
             if params["indicator"]["write_se"]:
@@ -140,7 +140,7 @@ def run_module(params, logger=None):
                     "supply obfuscated prefix in params.json"
                 signal_name = params["indicator"]["obfuscated_prefix"] + "_" + signal_name
 
-            logger.info("Updating signal name", signal_name = signal_name)
+            logger.info("Updating signal name", signal=signal_name)
             updater = ClaimsHospIndicatorUpdater(
                 startdate,
                 enddate,
@@ -149,16 +149,16 @@ def run_module(params, logger=None):
                 params["indicator"]["parallel"],
                 weekday,
                 params["indicator"]["write_se"],
-                signal_name
+                signal_name,
+                logger,
             )
             updater.update_indicator(
                 claims_file,
                 params["common"]["export_dir"],
-                logger,
             )
             max_dates.append(updater.output_dates[-1])
             n_csv_export.append(len(updater.output_dates))
-        logger.info("finished updating", geo = geo)
+        logger.info("Finished updating", geo_type=geo)
 
     # Remove all the raw files
     for fn in os.listdir(params["indicator"]["input_dir"]):

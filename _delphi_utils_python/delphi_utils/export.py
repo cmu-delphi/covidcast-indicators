@@ -1,15 +1,17 @@
 """Export data in the format expected by the Delphi API."""
 # -*- coding: utf-8 -*-
-from datetime import datetime
-from os.path import join
-from typing import Optional
+import gzip
 import logging
+from datetime import datetime
+from os.path import getsize, join
+from typing import Optional
 
-from epiweeks import Week
 import numpy as np
 import pandas as pd
+from epiweeks import Week
 
 from .nancodes import Nans
+
 
 def filter_contradicting_missing_codes(df, sensor, metric, date, logger=None):
     """Find values with contradictory missingness codes, filter them, and log."""
@@ -22,8 +24,10 @@ def filter_contradicting_missing_codes(df, sensor, metric, date, logger=None):
     for mask in masks:
         if not logger is None and df.loc[mask].size > 0:
             logger.info(
-                "Filtering contradictory missing code in " +
-                "{0}_{1}_{2}.".format(sensor, metric, date.strftime(format="%Y-%m-%d"))
+                "Filtering contradictory missing code",
+                sensor=sensor,
+                metric=metric,
+                date=date.strftime(format="%Y-%m-%d"),
             )
             df = df.loc[~mask]
         elif logger is None and df.loc[mask].size > 0:
@@ -130,3 +134,70 @@ def create_export_csv(
             export_df = export_df.sort_values(by="geo_id")
         export_df.to_csv(export_file, index=False, na_rep="NA")
     return dates
+
+
+def create_backup_csv(
+    df: pd.DataFrame,
+    backup_dir: str,
+    custom_run: bool,
+    issue: Optional[str] = None,
+    geo_res: Optional[str] = None,
+    sensor: Optional[str] = None,
+    metric: Optional[str] = None,
+    logger: Optional[logging.Logger] = None,
+):
+    """Save data for use as a backup.
+
+    This function is meant to save raw data fetched from data sources.
+    Therefore, it avoids manipulating the data as much as possible to
+    preserve the input.
+
+    When only required arguments are passed, data will be saved to a file of
+    the format `<export_dir>/<today's date as YYYYMMDD>.csv`. Optional arguments
+    should be passed if the source data is fetched from different tables or
+    in batches by signal, geo, etc.
+
+    Parameters
+    ----------
+    df: pd.DataFrame
+        Columns: geo_id, timestamp, val, se, sample_size
+    backup_dir: str
+        Backup directory
+    custom_run: bool
+        Flag indicating if the current run is a patch, or other run where
+        backups aren't needed. If so, don't save any data to disk
+    issue: Optional[str]
+        The date the data was fetched, in YYYYMMDD format. Defaults to "today"
+        if not provided
+    geo_res: Optional[str]
+        Geographic resolution of the data
+    sensor: Optional[str]
+        Sensor that has been calculated (cumulative_counts vs new_counts)
+    metric: Optional[str]
+        Metric we are considering, if any.
+    logger: Optional[logging.Logger]
+        Pass a logger object here to log information about name and size of the backup file.
+
+    Returns
+    ---------
+    dates: pd.Series[datetime]
+        Series of dates for which CSV files were exported.
+    """
+    if not custom_run:
+        # Label the file with today's date (the date the data was fetched).
+        if not issue:
+            issue = datetime.today().strftime("%Y%m%d")
+
+        backup_filename = [issue, geo_res, metric, sensor]
+        backup_filename = "_".join(filter(None, backup_filename)) + ".csv.gz"
+        backup_file = join(backup_dir, backup_filename)
+
+        with gzip.open(backup_file, "wt", newline="") as f:
+            df.to_csv(f, index=False, na_rep="NA")
+
+        if logger:
+            logger.info(
+                "Backup file created",
+                backup_file=backup_file,
+                backup_size=getsize(backup_file),
+            )

@@ -34,7 +34,7 @@ def write_to_csv(output_df: pd.DataFrame, geo_level, se, out_name, logger, outpu
       output_path: outfile path to write the csv (default is current directory)
     """
     if se:
-        logger.info(f"========= WARNING: WRITING SEs TO {out_name} =========")
+        logger.info("WARNING: WRITING SEs", filename=out_name)
 
     out_n = 0
     for d in set(output_df["date"]):
@@ -64,7 +64,7 @@ def write_to_csv(output_df: pd.DataFrame, geo_level, se, out_name, logger, outpu
                     outfile.write(
                         "%s,%f,%s,%s,%s\n" % (geo_id, sensor, "NA", "NA", "NA"))
                 out_n += 1
-    logger.debug(f"wrote {out_n} rows for {geo_level}")
+    logger.debug("Wrote rows", num_rows=out_n, geo_type=geo_level)
 
 
 def update_sensor(
@@ -177,7 +177,7 @@ def update_sensor(
 
     else:
         n_cpu = min(10, cpu_count())
-        logger.debug(f"starting pool with {n_cpu} workers")
+        logger.debug("Starting pool", n_workers=n_cpu)
 
         with Pool(n_cpu) as pool:
             pool_results = []

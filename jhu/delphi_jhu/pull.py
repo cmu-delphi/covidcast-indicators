@@ -63,7 +63,8 @@ def sanity_check_data(df: pd.DataFrame) -> pd.DataFrame:
         )
 
 
-def pull_jhu_data(base_url: str, metric: str, gmpr: GeoMapper) -> pd.DataFrame:
+def pull_jhu_data(base_url: str, metric: str, gmpr: GeoMapper,
+                  start_date: None, end_date: None) -> pd.DataFrame:
     """Pull the latest Johns Hopkins CSSE data, and conform it into a dataset.
 
     The output dataset has:
@@ -105,4 +106,7 @@ def pull_jhu_data(base_url: str, metric: str, gmpr: GeoMapper) -> pd.DataFrame:
     sanity_check_data(df)
     # Reorder columns
     df = df[["fips", "timestamp", "new_counts", "cumulative_counts"]]
+    if start_date is not None and end_date is not None:
+        date_filter = (df["timestamp"] >= start_date) & (df["timestamp"] <= end_date)
+        df = df[date_filter]
     return df

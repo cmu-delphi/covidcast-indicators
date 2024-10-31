@@ -14,7 +14,7 @@ from delphi_utils import (
     create_export_csv,
     Smoother,
     GeoMapper,
-    get_structured_logger,
+    get_structured_logger, read_params,
 )
 
 from .geo import geo_map
@@ -81,7 +81,10 @@ def run_module(params: Dict[str, Any]):
     start_time = time.time()
     csv_export_count = 0
     oldest_final_export_date = None
-    export_start_date = params["indicator"]["export_start_date"]
+    export_start_date = datetime.strptime(params["indicator"]["export_start_date"], "%Y-%m-%d")
+    export_end_date = params["indicator"].get("export_end_date")
+    if export_end_date:
+        export_end_date = datetime.strptime(export_end_date, "%Y-%m-%d")
     export_dir = params["common"]["export_dir"]
     base_url = params["indicator"]["base_url"]
     logger = get_structured_logger(
@@ -89,7 +92,7 @@ def run_module(params: Dict[str, Any]):
         log_exceptions=params["common"].get("log_exceptions", True))
 
     gmpr = GeoMapper()
-    dfs = {metric: pull_jhu_data(base_url, metric, gmpr) for metric in METRICS}
+    dfs = {metric: pull_jhu_data(base_url, metric, gmpr, export_start_date, export_end_date) for metric in METRICS}
     for metric, geo_res, sensor, smoother in product(
         METRICS, GEO_RESOLUTIONS, SENSORS, SMOOTHERS
     ):
@@ -112,14 +115,11 @@ def run_module(params: Dict[str, Any]):
         df = df[~df["val"].isnull()]
         df = df.reset_index()
         sensor_name = SENSOR_NAME_MAP[sensor][0]
-        # if (SENSOR_NAME_MAP[sensor][1] or SMOOTHERS_MAP[smoother][2]):
-        #     metric = f"wip_{metric}"
-        #     sensor_name = WIP_SENSOR_NAME_MAP[sensor][0]
         sensor_name = SMOOTHERS_MAP[smoother][1] + sensor_name
         exported_csv_dates = create_export_csv(
             df,
             export_dir=export_dir,
-            start_date=datetime.strptime(export_start_date, "%Y-%m-%d"),
+            start_date=export_start_date,
             metric=metric,
             geo_res=geo_res,
             sensor=sensor_name,
@@ -142,3 +142,7 @@ def run_module(params: Dict[str, Any]):
         csv_export_count = csv_export_count,
         max_lag_in_days = max_lag_in_days,
         oldest_final_export_date = formatted_oldest_final_export_date)
+
+if __name__ == "__main__":
+    params = read_params()
+    run_module(params)

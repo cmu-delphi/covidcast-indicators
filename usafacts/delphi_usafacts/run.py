@@ -13,7 +13,7 @@ import numpy as np
 from delphi_utils import (
     create_export_csv,
     get_structured_logger,
-    Smoother
+    Smoother, read_params
 )
 
 from .geo import geo_map
@@ -85,6 +85,7 @@ def run_module(params: Dict[str, Dict[str, Any]]):
         __name__, filename=params["common"].get("log_filename"),
         log_exceptions=params["common"].get("log_exceptions", True))
     export_start_date = params["indicator"]["export_start_date"]
+    export_end_date = params["indicator"].get("export_end_date")
     if export_start_date == "latest":
         export_start_date = datetime.combine(date.today(), time(0, 0)) - timedelta(days=1)
     else:
@@ -93,7 +94,7 @@ def run_module(params: Dict[str, Dict[str, Any]]):
     input_dir = params["common"]["input_dir"]
     base_url = params["indicator"]["base_url"]
 
-    dfs = {metric: pull_usafacts_data(base_url, metric, logger, input_dir) for metric in METRICS}
+    dfs = {metric: pull_usafacts_data(base_url, metric, logger, input_dir, start_date=export_start_date, end_date=export_end_date) for metric in METRICS}
     for metric, geo_res, sensor, smoother in product(
             METRICS, GEO_RESOLUTIONS, SENSORS, SMOOTHERS):
         if "cumulative" in sensor and "seven_day_average" in smoother:
@@ -148,3 +149,7 @@ def run_module(params: Dict[str, Dict[str, Any]]):
         csv_export_count = csv_export_count,
         max_lag_in_days = max_lag_in_days,
         oldest_final_export_date = formatted_oldest_final_export_date)
+
+if __name__ == "__main__":
+    params = read_params()
+    run_module(params)

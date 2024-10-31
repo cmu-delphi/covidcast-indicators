@@ -34,7 +34,8 @@ def fetch(url: str, cache: str) -> pd.DataFrame:
     return pd.read_csv(filename)
 
 
-def pull_usafacts_data(base_url: str, metric: str, logger: Logger, cache: str=None) -> pd.DataFrame:
+def pull_usafacts_data(base_url: str, metric: str, logger: Logger, cache: str=None, start_date=None,
+                       end_date=None) -> pd.DataFrame:
     """Pull the latest USA Facts data, and conform it into a dataset.
 
     The output dataset has:
@@ -146,6 +147,9 @@ def pull_usafacts_data(base_url: str, metric: str, logger: Logger, cache: str=No
     )
     # timestamp: str -> datetime
     df["timestamp"] = pd.to_datetime(df["timestamp"])
+    if start_date is not None or end_date is not None:
+        logger.info(f"Filtering by dates", start_date=start_date, end_date=end_date)
+        df = df[(df["timestamp"] >= start_date) & (df["timestamp"] <= end_date)]
     # Add a dummy first row here on day before first day
     min_ts = min(df["timestamp"])
     df_dummy = df.loc[df["timestamp"] == min_ts].copy()

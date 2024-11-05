@@ -2,7 +2,10 @@ import pytest
 import mock
 from freezegun import freeze_time
 from datetime import date, datetime
+from google.api_core.exceptions import BadRequest, ServerError
+
 import pandas as pd
+from google.rpc import error_details_pb2
 from pandas.testing import assert_frame_equal
 
 from delphi_google_symptoms.pull import (
@@ -119,6 +122,41 @@ class TestPullGoogleSymptoms:
         output = pull_gs_data_one_geolevel("state", ["", ""])
         expected = pd.DataFrame(columns=new_keep_cols)
         assert_frame_equal(output, expected, check_dtype = False)
+
+    def test_pull_one_gs_retry_success(self):
+        info = error_details_pb2.ErrorInfo(
+            reason="backendError",
+        )
+        badRequestException = BadRequest(message="message", error_info=info)
+        serverErrorException = ServerError(message="message")
+
+        with mock.patch("pandas_gbq.read_gbq") as mock_read_gbq:
+            mock_read_gbq.side_effect = [badRequestException, pd.DataFrame()]
+
+            output = pull_gs_data_one_geolevel("state", ["", ""])
+            expected = pd.DataFrame(columns=new_keep_cols)
+            assert_frame_equal(output, expected, check_dtype = False)
+            assert mock_read_gbq.call_count == 2
+
+    def test_pull_one_gs_retry_too_many(self):
+        info = error_details_pb2.ErrorInfo(
+            reason="backendError",
+        )
+        badRequestException = BadRequest(message="message", error_info=info)
+
+        with mock.patch("pandas_gbq.read_gbq") as mock_read_gbq:
+            with pytest.raises(BadRequest):
+                mock_read_gbq.side_effect = [badRequestException, badRequestException, pd.DataFrame()]
+                pull_gs_data_one_geolevel("state", ["", ""])
+
+
+    def test_pull_one_gs_retry_bad(self):
+        badRequestException = BadRequest(message="message", )
+
+        with mock.patch("pandas_gbq.read_gbq") as mock_read_gbq:
+            with pytest.raises(BadRequest):
+                mock_read_gbq.side_effect = [badRequestException,pd.DataFrame()]
+                pull_gs_data_one_geolevel("state", ["", ""])
 
     def test_preprocess_no_data(self):
         output = preprocess(pd.DataFrame(columns=keep_cols), "state")

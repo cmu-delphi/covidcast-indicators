@@ -3,13 +3,17 @@
 
 import re
 import threading
-from os import listdir
-from os.path import isfile, join
 import warnings
-import requests
-import pandas as pd
+from os import listdir
+
+# pylint: disable=W0707
+from os.path import isfile, join
+
 import numpy as np
-import covidcast
+import pandas as pd
+import requests
+from delphi_epidata import Epidata
+
 from .errors import APIDataFetchError, ValidationFailure
 
 FILENAME_REGEX = re.compile(
@@ -115,7 +119,13 @@ def get_geo_signal_combos(data_source, api_key):
     meta_response.raise_for_status()
     source_signal_mappings = {i['source']:i['db_source'] for i in
         meta_response.json()}
-    meta = covidcast.metadata()
+
+    response = Epidata.covidcast_meta()
+
+    meta = pd.DataFrame.from_dict(Epidata.check(response))
+    # note: this will fail for signals with weekly data, but currently not supported for validation
+    meta = meta[meta["time_type"] == "day"]
+
     source_meta = meta[meta['data_source'] == data_source]
     # Need to convert np.records to tuples so they are hashable and can be used in sets and dicts.
     geo_signal_combos = list(map(tuple,
@@ -158,18 +168,41 @@ def fetch_api_reference(data_source, start_date, end_date, geo_type, signal_type
 
     Formatting is changed to match that of source data CSVs.
     """
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        api_df = covidcast.signal(
-            data_source, signal_type, start_date, end_date, geo_type)
+    if start_date > end_date:
+        raise ValueError(
+            "end_date must be on or after start_date, but "
+            + f"start_date = '{start_date}', end_date = '{end_date}'"
+        )
+    response = Epidata.covidcast(
+        data_source,
+        signal_type,
+        time_type="day",
+        geo_type=geo_type,
+        time_values=Epidata.range(
+            start_date.strftime("%Y%m%d"), end_date.strftime("%Y%m%d")
+        ),
+        geo_value="*",
+    )
+
+    try:
+        epidata_dict = Epidata.check(response)
+    except Exception as e:
+        raise APIDataFetchError(str(e))
+
+    api_df = pd.DataFrame.from_dict(epidata_dict)
+    if isinstance(api_df, pd.DataFrame) and len(api_df) > 0:
+        # note: this will fail for signals with weekly data, but currently not supported for validation
+        api_df["issue"] = pd.to_datetime(api_df["issue"], format="%Y%m%d")
+        api_df["time_value"] = pd.to_datetime(api_df["time_value"], format="%Y%m%d")
+        api_df.drop("direction", axis=1, inplace=True)
+        api_df["data_source"] = data_source
+        api_df["signal"] = signal_type
 
     error_context = f"when fetching reference data from {start_date} to {end_date} " +\
         f"for data source: {data_source}, signal type: {signal_type}, geo type: {geo_type}"
 
     if api_df is None:
         raise APIDataFetchError("Error: no API data was returned " + error_context)
-    if not isinstance(api_df, pd.DataFrame):
-        raise APIDataFetchError("Error: API return value was not a dataframe " + error_context)
 
     column_names = ["geo_id", "val",
                     "se", "sample_size", "time_value"]

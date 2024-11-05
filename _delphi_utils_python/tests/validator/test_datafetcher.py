@@ -1,12 +1,15 @@
 """Tests for datafetcher.py."""
 
-from datetime import date
+from datetime import date, datetime
 import mock
+import json
+from pathlib import Path
 import numpy as np
 import pandas as pd
 import pytest
 from requests.exceptions import HTTPError
 import requests_mock
+from delphi_epidata import delphi_epidata
 from delphi_utils.validator.datafetcher import (FILENAME_REGEX,
                                                 make_date_filter,
                                                 get_geo_signal_combos,
@@ -14,6 +17,7 @@ from delphi_utils.validator.datafetcher import (FILENAME_REGEX,
 from delphi_utils.validator.errors import ValidationFailure
 
 
+TEST_DIR = Path(__file__).parent.parent
 
 class TestDataFetcher:
     """Tests for various data fetching utilities."""
@@ -45,6 +49,29 @@ class TestDataFetcher:
                 {'source': 'covid-act-now', 'db_source': 'covid-act-now'}], 200)
         elif "params" in kwargs and kwargs["params"] == {'signal': 'chng:inactive'}:
             return MockResponse([{"signals": [{"active": False}]}], 200)
+        elif args[0] == 'https://api.delphi.cmu.edu/epidata/covidcast_meta/' and \
+                'delphi_epidata' in kwargs["headers"]["user-agent"]:
+            with open(f"{TEST_DIR}/test_data/sample_epidata_metadata.json") as f:
+                epidata = json.load(f)
+                response = {"epidata": epidata, "result": 1, "message": "success"}
+                return MockResponse(response, 200)
+        elif args[0] == 'https://api.delphi.cmu.edu/epidata/covidcast/' and \
+            'delphi_epidata' in kwargs["headers"]["user-agent"]:
+            signal_type = args[1].get("signals")
+            geo_type = args[1].get("geo_type")
+            if signal_type == "a":
+                with open(f"{TEST_DIR}/test_data/sample_epidata_signal_a.json") as f:
+                    epidata = json.load(f)
+                    response = {"epidata": epidata, "result": 1, "message": "success"}
+                    return MockResponse(response, 200)
+            if geo_type == "county":
+                with open(f"{TEST_DIR}/test_data/sample_epidata_signal_county.json") as f:
+                    epidata = json.load(f)
+                    response = {"epidata": epidata, "result": 1, "message": "success"}
+                    return MockResponse(response, 200)
+            if geo_type == "state" and signal_type == "b":
+                return MockResponse({"epidata": {}, "result": 0, "message": "failed"}, 200)
+            return MockResponse({"epidata": {}, "result": 1, "message": "success"}, 200)
         else:
             return MockResponse([{"signals": [{"active": True}]}], 200)
 
@@ -57,27 +84,9 @@ class TestDataFetcher:
             get_geo_signal_combos("chng", api_key="")
 
     @mock.patch('requests.get', side_effect=mocked_requests_get)
-    @mock.patch("covidcast.metadata")
-    def test_get_geo_signal_combos(self, mock_metadata, mock_get):
+    def test_get_geo_signal_combos(self, mock_get):
+
         """Test that the geo signal combos are correctly pulled from the covidcast metadata."""
-        # Need to use actual data_source and signal names since we reference the API
-        # We let the chng signal "inactive" be an inactive signal
-        mock_metadata.return_value = pd.DataFrame({"data_source": ["chng", "chng", "chng",
-                                                                   "covid-act-now",
-                                                                   "covid-act-now",
-                                                                   "covid-act-now",
-                                                                   "chng"],
-                                                   "signal": ["smoothed_outpatient_cli",
-                                                              "smoothed_outpatient_covid",
-                                                              "smoothed_outpatient_covid",
-                                                              "pcr_specimen_positivity_rate",
-                                                              "pcr_specimen_positivity_rate",
-                                                              "pcr_specimen_total_tests",
-                                                              "inactive"],
-                                                   "geo_type": ["state", "state", "county",
-                                                                "hrr", "msa", "msa",
-                                                                "state"]
-                                                  })
         assert set(get_geo_signal_combos("chng", api_key="")) == set(
             [("state", "smoothed_outpatient_cli"),
              ("state", "smoothed_outpatient_covid"),
@@ -87,49 +96,20 @@ class TestDataFetcher:
              ("msa", "pcr_specimen_positivity_rate"),
              ("msa", "pcr_specimen_total_tests")])
 
-    @mock.patch("covidcast.signal")
-    def test_threaded_api_calls(self, mock_signal):
+    @mock.patch('requests.get', side_effect=mocked_requests_get)
+    def test_threaded_api_calls(self, mock_get):
         """Test that calls to the covidcast API are made."""
-
-        signal_data_1 = pd.DataFrame({"geo_value": ["1044"],
-                                      "stderr": [None],
-                                      "value": [3],
-                                      "issue": [10],
-                                      "lag": [7],
-                                      "sample_size": [None],
-                                      "time_value": [10]
-                                     })
-        signal_data_2 = pd.DataFrame({"geo_value": ["0888"],
-                                      "stderr": [2],
-                                      "value": [14],
-                                      "issue": [10],
-                                      "lag": [1],
-                                      "sample_size": [100],
-                                      "time_value": [8]
-                                     })
-
-        def mock_signal_return_fn(unused_data_source, signal_type, unused_start_date,
-                                  unused_end_date, geo_type):
-            """Function to return data when covidcast.signal() is called."""
-            if signal_type == "a":
-                return signal_data_1
-            if geo_type == "county":
-                return signal_data_2
-            return None
-
-        mock_signal.side_effect = mock_signal_return_fn
-
         processed_signal_data_1 = pd.DataFrame({"geo_id": ["1044"],
                                                 "val": [3],
                                                 "se": [np.nan],
                                                 "sample_size": [np.nan],
-                                                "time_value": [10]
+                                                "time_value": [datetime.strptime("20200101", "%Y%m%d")],
                                                })
         processed_signal_data_2 = pd.DataFrame({"geo_id": ["0888"],
                                                 "val": [14],
                                                 "se": [2],
                                                 "sample_size": [100],
-                                                "time_value": [8]
+                                                "time_value": [datetime.strptime("20200101", "%Y%m%d")],
                                                })
         expected = {
             ("county", "a"): processed_signal_data_1,
@@ -138,10 +118,7 @@ class TestDataFetcher:
             ("state", "b"): ValidationFailure("api_data_fetch_error",
                                               geo_type="state",
                                               signal="b",
-                                             message="Error: no API data was returned when "
-                                             "fetching reference data from 2020-03-10 "
-                                             "to 2020-06-10 for data source: "
-                                             "source, signal type: b, geo type: state")
+                                             message="Error fetching epidata: failed. (result=0)")
         }
         actual = threaded_api_calls("source", date(2020, 3, 10), date(2020, 6, 10), expected.keys())
 

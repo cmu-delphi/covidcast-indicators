@@ -92,7 +92,8 @@ class TestCHCSensorUpdater:
                 "timestamp": [pd.Timestamp(f'03-{i}-2020') for i in range(1, 14)]})
             if geo == "county": # test for rogue \N
                 row_contain_N = {"num": 700, "fips": r"\N", "den": 2000, "timestamp": pd.Timestamp("03-15-2020")}
-                test_data = test_data.append(row_contain_N, ignore_index=True)
+                test_data = pd.concat([test_data, pd.DataFrame([row_contain_N])], ignore_index=True)
+
             data_frame = su_inst.geo_reindex(test_data)
             assert data_frame.shape[0] == multiple*len(su_inst.fit_dates)
             assert (data_frame.sum(numeric_only=True) == (4200,19000)).all()

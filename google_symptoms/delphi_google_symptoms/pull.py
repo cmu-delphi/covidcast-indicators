@@ -1,11 +1,14 @@
 """Retrieve data and wrangle into appropriate format."""
 # -*- coding: utf-8 -*-
+import random
 import re
+import time
 from datetime import date, datetime  # pylint: disable=unused-import
 
 import numpy as np
 import pandas as pd
 import pandas_gbq
+from google.api_core.exceptions import BadRequest, InternalServerError, ServerError
 from google.oauth2 import service_account
 
 from .constants import COMBINED_METRIC, DC_FIPS, DTYPE_CONVERSIONS, METRICS, SYMPTOM_SETS
@@ -184,16 +187,30 @@ def pull_gs_data_one_geolevel(level, date_range):
     pd.DataFrame
     """
     query = produce_query(level, date_range)
+    df = None
 
-    df = pandas_gbq.read_gbq(query, progress_bar_type=None, dtypes = DTYPE_CONVERSIONS)
+    # recommends to only try once for 500/503 error
+    try:
+        df = pandas_gbq.read_gbq(query, progress_bar_type=None, dtypes=DTYPE_CONVERSIONS)
+    # pylint: disable=W0703
+    except Exception as e:
+        # sometimes google throws out 400 error when it's 500
+        # https://github.com/googleapis/python-bigquery/issues/23
+        if (
+            # pylint: disable=E1101
+            (isinstance(e, BadRequest) and e.reason == "backendError")
+            or isinstance(e, (ServerError, InternalServerError))
+        ):
+            time.sleep(2 + random.randint(0, 1000) / 1000.0)
+        else:
+            raise e
+    if df is None:
+        df = pandas_gbq.read_gbq(query, progress_bar_type=None, dtypes=DTYPE_CONVERSIONS)
+
     if len(df) == 0:
-        df = pd.DataFrame(
-            columns=["open_covid_region_code", "date"] +
-            list(colname_map.keys())
-        )
+        df = pd.DataFrame(columns=["open_covid_region_code", "date"] + list(colname_map.keys()))
 
     df = preprocess(df, level)
-
     return df
 
 

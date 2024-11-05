@@ -636,6 +636,7 @@ def interpolate_missing_values(dfs: DataDict) -> DataDict:
         # Here we exclude the 'positivity' signal from interpolation. This is a temporary fix.
         # https://github.com/cmu-delphi/covidcast-indicators/issues/1576
         _, sig, _ = key
+
         if sig == "positivity":
             reindexed_group_df = df.set_index(["geo_id", "timestamp"]).sort_index().reset_index()
             interpolate_df[key] = reindexed_group_df[~reindexed_group_df.val.isna()]
@@ -672,7 +673,8 @@ def interpolate_missing_values(dfs: DataDict) -> DataDict:
                 reindexed_group_df["publish_date"] = reindexed_group_df["publish_date"].fillna(
                     method="bfill"
                 )
-            reindexed_group_df = reindexed_group_df[~reindexed_group_df.val.isna()]
+            if "val" in reindexed_group_df.columns:
+                reindexed_group_df = reindexed_group_df[~reindexed_group_df.val.isna()]
             geo_dfs.append(reindexed_group_df)
         interpolate_df[key] = (
             pd.concat(geo_dfs)

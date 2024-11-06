@@ -5,11 +5,8 @@ import glob
 from datetime import datetime
 from pathlib import Path
 
-# third party
 import pandas as pd
-import pytest
 
-# first party
 from delphi_utils.logger import get_structured_logger
 from delphi_claims_hosp.config import Config, GeoConstants
 from delphi_claims_hosp.backfill import store_backfill_file, merge_backfill_file, merge_existing_backfill_files
@@ -44,7 +41,7 @@ class TestBackfill:
         # Store backfill file
         store_backfill_file(DATA_FILEPATH, dropdate, backfill_dir, logger)
         assert fn in os.listdir(backfill_dir)
-        assert "Stored backfill data in parquet" in caplog.text
+        assert "Stored source data in parquet" in caplog.text
 
 
         fn = "claims_hosp_as_of_20200101.parquet"
@@ -127,7 +124,7 @@ class TestBackfill:
         assert "Not enough days, skipping merging" in caplog.text
         self.cleanup()
 
-    def test_merge_existing_backfill_files(self, caplog):
+    def test_merge_existing_backfill_files(self, caplog, monkeypatch):
         issue_date = datetime(year=2020, month=6, day=13)
         issue_date_str = issue_date.strftime("%Y%m%d")
         caplog.set_level(logging.INFO)
@@ -138,6 +135,7 @@ class TestBackfill:
                 dropdate = datetime(2020, 6, d)
                 store_backfill_file(DATA_FILEPATH, dropdate, backfill_dir, logger)
 
+            monkeypatch.setattr(calendar, 'monthrange', lambda x, y: (1, 4))
             today = datetime(2020, 7, 1)
             # creating expected file
             merge_backfill_file(backfill_dir, today, logger,
@@ -147,6 +145,7 @@ class TestBackfill:
 
             # creating backfill without issue date
             os.remove(f"{backfill_dir}/claims_hosp_as_of_{issue_date_str}.parquet")
+            monkeypatch.setattr(calendar, 'monthrange', lambda x, y: (1, 3))
             merge_backfill_file(backfill_dir, today, logger,
                                 test_mode=True)
 

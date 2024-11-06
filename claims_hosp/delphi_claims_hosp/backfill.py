@@ -166,7 +166,7 @@ def merge_backfill_file(backfill_dir, most_recent, logger, test_mode=False):
     date_list = list(map(get_date, new_files))
     latest_date = max(date_list)
     num_of_days_in_month = calendar.monthrange(latest_date.year, latest_date.month)[1]
-    if len(date_list) < num_of_days_in_month:
+    if len(date_list) < (num_of_days_in_month * .8) or most_recent == latest_date + timedelta(days=1):
         logger.info("Not enough days, skipping merging", n_file_days=len(date_list))
         return
 

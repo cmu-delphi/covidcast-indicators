@@ -37,7 +37,8 @@ def warn_string(df, type_dict):
 
 
 def pull_nssp_data(socrata_token: str):
-    """Pull the latest NSSP ER visits primary dataset
+    """Pull the latest NSSP ER visits primary dataset.
+
     https://data.cdc.gov/Public-Health-Surveillance/NSSP-Emergency-Department-Visit-Trajectories-by-St/rdmq-nq56/data_preview
 
     Parameters
@@ -78,7 +79,8 @@ def pull_nssp_data(socrata_token: str):
 
 
 def secondary_pull_nssp_data(socrata_token: str):
-    """Pull the latest NSSP ER visits secondary dataset:
+    """Pull the latest NSSP ER visits secondary dataset.
+
     https://data.cdc.gov/Public-Health-Surveillance/2023-Respiratory-Virus-Response-NSSP-Emergency-Dep/7mra-9cq9/data_preview
 
     The output dataset has:

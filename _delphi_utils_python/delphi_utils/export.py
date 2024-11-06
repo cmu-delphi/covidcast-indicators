@@ -189,17 +189,18 @@ def create_backup_csv(
             issue = datetime.today().strftime("%Y%m%d")
 
         backup_filename = [issue, geo_res, metric, sensor]
-        backup_filename = "_".join(filter(None, backup_filename)) + ".csv.gz"
+        backup_filename = "_".join(filter(None, backup_filename))
         backup_file = join(backup_dir, backup_filename)
         try:
-            with gzip.open(backup_file, "wt", newline="") as f:
-                df.to_csv(f, index=False, na_rep="NA")
+            # defacto data format is csv, but parquet preserved data types (keeping both as intermidary measures)
+            df.to_csv(f"{backup_file}.csv.gz", index=False, na_rep="NA", compression='gzip')
+            df.to_parquet(f"{backup_file}.parquet", index=False)
 
             if logger:
                 logger.info(
                     "Backup file created",
                     backup_file=backup_file,
-                    backup_size=getsize(backup_file),
+                    backup_size=getsize(f"{backup_file}.csv.gz"),
                 )
         #pylint: disable=W0703
         except Exception as e:

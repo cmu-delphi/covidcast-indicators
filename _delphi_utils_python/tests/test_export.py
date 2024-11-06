@@ -402,3 +402,7 @@ class TestExport:
 
         actual = pd.read_csv(join(tmp_path, f"{today}_{geo_res}_{metric}_{sensor}.csv.gz"), dtype=dtypes, parse_dates=["timestamp"])
         assert self.DF.equals(actual)
+
+        actual_parquet = pd.read_parquet(join(tmp_path, f"{today}_{geo_res}_{metric}_{sensor}.parquet"))
+        assert actual_parquet.equals(actual)
+

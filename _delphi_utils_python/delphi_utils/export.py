@@ -191,13 +191,16 @@ def create_backup_csv(
         backup_filename = [issue, geo_res, metric, sensor]
         backup_filename = "_".join(filter(None, backup_filename)) + ".csv.gz"
         backup_file = join(backup_dir, backup_filename)
+        try:
+            with gzip.open(backup_file, "wt", newline="") as f:
+                df.to_csv(f, index=False, na_rep="NA")
 
-        with gzip.open(backup_file, "wt", newline="") as f:
-            df.to_csv(f, index=False, na_rep="NA")
-
-        if logger:
-            logger.info(
-                "Backup file created",
-                backup_file=backup_file,
-                backup_size=getsize(backup_file),
-            )
+            if logger:
+                logger.info(
+                    "Backup file created",
+                    backup_file=backup_file,
+                    backup_size=getsize(backup_file),
+                )
+        #pylint: disable=W0703
+        except Exception as e:
+            logger.info("Backup file creation failed", msg=e)

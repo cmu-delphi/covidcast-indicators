@@ -1,6 +1,5 @@
 """Export data in the format expected by the Delphi API."""
 # -*- coding: utf-8 -*-
-import gzip
 import logging
 from datetime import datetime
 from os.path import getsize, join

@@ -22,6 +22,7 @@ the following structure:
         - "cache_dir": str, directory of locally cached data
 """
 
+import sys
 import time
 from datetime import datetime
 
@@ -31,7 +32,7 @@ from delphi_utils import create_export_csv, get_structured_logger
 from delphi_utils.geomap import GeoMapper
 from delphi_utils.nancodes import add_default_nancodes
 
-from .constants import *
+from .constants import AUXILIARY_COLS, CSV_COLS, GEOS, SECONDARY_GEOS, SECONDARY_SIGNALS, SIGNALS
 from .pull import pull_nssp_data, secondary_pull_nssp_data
 
 
@@ -149,14 +150,15 @@ def run_module(params):
                 df = df[(df["geo_type"] == "state")]
                 df["geo_id"] = df["geo_value"].apply(
                     lambda x: (
-                        us.states.lookup(x).abbr.lower() if us.states.lookup(x)
+                        us.states.lookup(x).abbr.lower()
+                        if us.states.lookup(x)
                         else ("dc" if x == "District of Columbia" else x)
                     )
                 )
                 unexpected_state_names = df[df["geo_id"] == df["geo_value"]]
                 if unexpected_state_names.shape[0] > 0:
                     logger.error("Unexpected state names", df=unexpected_state_names)
-                    exit(1)
+                    sys.exit(1)
             elif geo == "nation":
                 df = df[(df["geo_type"] == "nation")]
                 df["geo_id"] = "us"

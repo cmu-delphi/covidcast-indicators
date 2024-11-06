@@ -6,7 +6,16 @@ import textwrap
 import pandas as pd
 from sodapy import Socrata
 
-from .constants import *
+from .constants import (
+    NEWLINE,
+    SECONDARY_COLS_MAP,
+    SECONDARY_KEEP_COLS,
+    SECONDARY_SIGNALS_MAP,
+    SECONDARY_TYPE_DICT,
+    SIGNALS,
+    SIGNALS_MAP,
+    TYPE_DICT,
+)
 
 
 def warn_string(df, type_dict):
@@ -102,15 +111,17 @@ def secondary_pull_nssp_data(socrata_token: str):
 
     # geo_type is not provided in the dataset, so we infer it from the geo_value
     # which is either state names, "National" or hhs region numbers
-    df_ervisits['geo_type'] = 'state'
+    df_ervisits["geo_type"] = "state"
 
-    df_ervisits.loc[df_ervisits['geo_value'] == 'National', 'geo_type'] = 'nation'
+    df_ervisits.loc[df_ervisits["geo_value"] == "National", "geo_type"] = "nation"
 
-    hhs_region_mask = df_ervisits['geo_value'].str.startswith('Region ')
-    df_ervisits.loc[hhs_region_mask, 'geo_value'] = df_ervisits.loc[hhs_region_mask, 'geo_value'].str.replace('Region ', '')
-    df_ervisits.loc[hhs_region_mask, 'geo_type'] = 'hhs'
+    hhs_region_mask = df_ervisits["geo_value"].str.startswith("Region ")
+    df_ervisits.loc[hhs_region_mask, "geo_value"] = df_ervisits.loc[hhs_region_mask, "geo_value"].str.replace(
+        "Region ", ""
+    )
+    df_ervisits.loc[hhs_region_mask, "geo_type"] = "hhs"
 
-    df_ervisits['signal'] = df_ervisits['signal'].map(SECONDARY_SIGNALS_MAP)
+    df_ervisits["signal"] = df_ervisits["signal"].map(SECONDARY_SIGNALS_MAP)
 
     df_ervisits = df_ervisits[SECONDARY_KEEP_COLS]
 

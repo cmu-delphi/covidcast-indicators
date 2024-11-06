@@ -57,7 +57,7 @@ SECONDARY_SIGNALS_MAP = {
 }
 
 SECONDARY_SIGNALS = [val for (key, val) in SECONDARY_SIGNALS_MAP.items()]
-SECONDARY_GEOS = ["state","nation","hhs"]
+SECONDARY_GEOS = ["state", "nation", "hhs"]
 
 SECONDARY_TYPE_DICT = {
     "timestamp": "datetime64[ns]",

@@ -1,14 +1,9 @@
 # standard
 import datetime
 import re
-from mock import MagicMock, patch
+from unittest.mock import MagicMock, patch
 import logging
 
-# third party
-import numpy as np
-from freezegun import freeze_time
-
-# first party
 from delphi_claims_hosp.download_claims_ftp_files import (change_date_format,
                                                           get_timestamp, download)
 

@@ -1,7 +1,10 @@
+import glob
 import os
 import pytest
 
 import pandas as pd
+
+from delphi_utils import get_structured_logger
 from delphi_utils.geomap import GeoMapper
 
 from delphi_nchs_mortality.pull import pull_nchs_mortality_data, standardize_columns
@@ -98,13 +101,30 @@ class TestPullNCHS:
         with pytest.raises(ValueError):
             pull_nchs_mortality_data(SOCRATA_TOKEN, backup_dir = "", custom_run = True, test_file = "bad_data_with_missing_cols.csv")
 
-    def test_backup_today_data(self):
+    def test_backup_today_data(self, caplog):
         today = pd.Timestamp.today().strftime("%Y%m%d")
         backup_dir = "./raw_data_backups"
-        pull_nchs_mortality_data(SOCRATA_TOKEN, backup_dir = backup_dir, custom_run = False, test_file = "test_data.csv")
-        backup_file = f"{backup_dir}/{today}.csv.gz"
-        backup_df = pd.read_csv(backup_file)
+        logger = get_structured_logger()
+        pull_nchs_mortality_data(SOCRATA_TOKEN, backup_dir = backup_dir, custom_run = False, test_file = "test_data.csv", logger=logger)
+
+        # Check logger used:
+        assert "Backup file created" in caplog.text
+
+        # Check that backup file was created
+        backup_files = glob.glob(f"{backup_dir}/{today}*")
+        assert len(backup_files) == 2, "Backup file was not created"
+
         source_df = pd.read_csv("test_data/test_data.csv")
+        for backup_file in backup_files:
+            if backup_file.endswith(".csv.gz"):
+                backup_df = pd.read_csv(backup_file)
+            else:
+                backup_df = pd.read_parquet(backup_file)
+            pd.testing.assert_frame_equal(source_df, backup_df)
+
+        backup_file_parquet = f"{backup_dir}/{today}.parquet"
+        backup_df = pd.read_parquet(backup_file_parquet)
         pd.testing.assert_frame_equal(source_df, backup_df)
+
         if os.path.exists(backup_file):
             os.remove(backup_file)

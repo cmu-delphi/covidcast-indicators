@@ -2,6 +2,8 @@ import json
 from unittest.mock import patch, MagicMock
 import os
 
+import pandas as pd
+
 from delphi_nssp.pull import (
     pull_nssp_data,
 )
@@ -40,6 +42,14 @@ class TestPullNSSPData:
         # Check that backup file was created
         backup_files = os.listdir(backup_dir)
         assert len(backup_files) == 2, "Backup file was not created"
+
+        expected_data = pd.DataFrame(test_data)
+        for backup_file in backup_files:
+            if backup_file.endswith(".csv.gz"):
+                actual_data = pd.read_csv(os.path.join(backup_dir, backup_file))
+            else:
+                actual_data = pd.read_parquet(os.path.join(backup_dir, backup_file))
+            pd.testing.assert_frame_equal(expected_data, actual_data)
 
         # Check that Socrata client was initialized with correct arguments
         mock_socrata.assert_called_once_with("data.cdc.gov", test_token)

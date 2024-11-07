@@ -83,6 +83,7 @@ def run_module(params):
 
     run_stats = []
 
+    logger.info("Generating primary signals")
     ## build the base version of the signal at the most detailed geo level you can get.
     ## compute stuff here or farm out to another function or file
     df_pull = pull_nssp_data(socrata_token)
@@ -139,9 +140,8 @@ def run_module(params):
             if len(dates) > 0:
                 run_stats.append((max(dates), len(dates)))
 
+    logger.info("Generating secondary signals")
     secondary_df_pull = secondary_pull_nssp_data(socrata_token)
-    ## aggregate
-    geo_mapper = GeoMapper()
     for signal in SECONDARY_SIGNALS:
         secondary_df_pull_signal = secondary_df_pull[secondary_df_pull["signal"] == signal]
         if secondary_df_pull_signal.empty:
@@ -160,8 +160,7 @@ def run_module(params):
                 )
                 unexpected_state_names = df[df["geo_id"] == df["geo_value"]]
                 if unexpected_state_names.shape[0] > 0:
-                    logger.error("Unexpected state names", df=unexpected_state_names)
-                    sys.exit(1)
+                    raise RuntimeError(f"Unexpected state names: {unexpected_state_names}")
             elif geo == "nation":
                 df = df[(df["geo_type"] == "nation")]
                 df["geo_id"] = "us"

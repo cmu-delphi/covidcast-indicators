@@ -12,10 +12,16 @@ import pandas.api.types as ptypes
 
 from delphi_nssp.pull import (
     pull_nssp_data,
+    secondary_pull_nssp_data,
+    pull_with_socrata_api,
 )
 from delphi_nssp.constants import (
-    SIGNALS,
     NEWLINE,
+    SECONDARY_COLS_MAP,
+    SECONDARY_KEEP_COLS,
+    SECONDARY_SIGNALS_MAP,
+    SECONDARY_TYPE_DICT,
+    SIGNALS,
     SIGNALS_MAP,
     TYPE_DICT,
 )
@@ -54,6 +60,34 @@ class TestPullNSSPData(unittest.TestCase):
         # Check for each signal in SIGNALS
         for signal in SIGNALS:
             assert result[signal].notnull().all(), f"{signal} has rogue NaN"
+
+    @patch("delphi_nssp.pull.Socrata")
+    def test_secondary_pull_nssp_data(self, mock_socrata):
+        # Load test data
+        with open("test_data/secondary_page.txt", "r") as f:
+            test_data = json.load(f)
+
+        # Mock Socrata client and its get method
+        mock_client = MagicMock()
+        mock_client.get.side_effect = [test_data, []]  # Return test data on first call, empty list on second call
+        mock_socrata.return_value = mock_client
+
+        # Call function with test token
+        test_token = "test_token"
+        result = secondary_pull_nssp_data(test_token)
+        # print(result)
+
+        # Check that Socrata client was initialized with correct arguments
+        mock_socrata.assert_called_once_with("data.cdc.gov", test_token)
+
+        # Check that get method was called with correct arguments
+        mock_client.get.assert_any_call("7mra-9cq9", limit=50000, offset=0)
+
+        for col in SECONDARY_KEEP_COLS:
+            assert result[col].notnull().all(), f"{col} has rogue NaN"
+
+        assert result[result['geo_value'].str.startswith('Region') ].empty, "'Region ' need to be removed from geo_value for geo_type 'hhs'"
+        assert (result[result['geo_type'] == 'nation']['geo_value'] == 'National').all(), "All rows with geo_type 'nation' must have geo_value 'National'"
 
 
 if __name__ == "__main__":

@@ -1,443 +1,73 @@
 [
     {
-        "week_end": "2024-08-03T00:00:00.000",
-        "pathogen": "COVID-19",
-        "geography": "Michigan",
-        "percent_visits": "1.5",
-        "status": "Reporting",
-        "trend_on_date": "Increasing",
-        "recent_trend": "Decreasing"
-    },
-    {
-        "week_end": "2024-08-03T00:00:00.000",
-        "pathogen": "COVID-19",
-        "geography": "Minnesota",
-        "percent_visits": "1.9",
-        "status": "Reporting",
-        "trend_on_date": "Increasing",
-        "recent_trend": "Decreasing"
-    },
-    {
-        "week_end": "2024-08-03T00:00:00.000",
-        "pathogen": "COVID-19",
-        "geography": "Mississippi",
-        "percent_visits": "3.6",
-        "status": "Reporting",
-        "trend_on_date": "Increasing",
-        "recent_trend": "Decreasing"
-    },
-    {
-        "week_end": "2024-08-03T00:00:00.000",
-        "pathogen": "COVID-19",
-        "geography": "Montana",
+        "week_end": "2022-10-01T00:00:00.000",
+        "pathogen": "COVID-19", "geography": "National",
         "percent_visits": "1.8",
         "status": "Reporting",
-        "trend_on_date": "No Change",
+        "trend_on_date": "Decreasing",
         "recent_trend": "Decreasing"
     },
     {
-        "week_end": "2024-08-03T00:00:00.000",
+        "week_end": "2022-10-01T00:00:00.000",
+        "pathogen": "Influenza",
+        "geography": "National",
+        "percent_visits": "0.5",
+        "status": "Reporting",
+        "trend_on_date": "Increasing",
+        "recent_trend": "Increasing"
+    },
+    {
+        "week_end": "2022-10-01T00:00:00.000",
+        "pathogen": "RSV",
+        "geography": "National",
+        "percent_visits": "0.5",
+        "status": "Reporting",
+        "trend_on_date": "Increasing",
+        "recent_trend": "Increasing"
+    },
+    {
+        "week_end": "2022-10-01T00:00:00.000",
+        "pathogen": "Combined",
+        "geography": "National",
+        "percent_visits": "2.8",
+        "status": "Reporting",
+        "trend_on_date": "Decreasing",
+        "recent_trend": "Decreasing"
+    },
+    {
+        "week_end": "2022-10-15T00:00:00.000",
         "pathogen": "COVID-19",
         "geography": "National",
-        "percent_visits": "2.5",
-        "status": "Reporting",
-        "trend_on_date": "Increasing",
-        "recent_trend": "Decreasing"
-    },
-    {
-        "week_end": "2024-08-03T00:00:00.000",
-        "pathogen": "COVID-19",
-        "geography": "Nebraska",
-        "percent_visits": "1.4",
-        "status": "Reporting",
-        "trend_on_date": "Increasing",
-        "recent_trend": "Decreasing"
-    },
-    {
-        "week_end": "2024-08-03T00:00:00.000",
-        "pathogen": "COVID-19",
-        "geography": "Nevada",
-        "percent_visits": "1.5",
-        "status": "Reporting",
-        "trend_on_date": "No Change",
-        "recent_trend": "Decreasing"
-    },
-    {
-        "week_end": "2024-08-03T00:00:00.000",
-        "pathogen": "COVID-19",
-        "geography": "New Jersey",
-        "percent_visits": "1.8",
-        "status": "Reporting",
-        "trend_on_date": "Increasing",
-        "recent_trend": "Decreasing"
-    },
-    {
-        "week_end": "2024-08-03T00:00:00.000",
-        "pathogen": "COVID-19",
-        "geography": "New Mexico",
-        "percent_visits": "2.8",
-        "status": "Reporting",
-        "trend_on_date": "Increasing",
-        "recent_trend": "Decreasing"
-    },
-    {
-        "week_end": "2024-08-03T00:00:00.000",
-        "pathogen": "COVID-19",
-        "geography": "New York",
         "percent_visits": "1.6",
         "status": "Reporting",
-        "trend_on_date": "Increasing",
-        "recent_trend": "Decreasing"
-    },
-    {
-        "week_end": "2024-08-03T00:00:00.000",
-        "pathogen": "COVID-19",
-        "geography": "North Carolina",
-        "percent_visits": "3.5",
-        "status": "Reporting",
-        "trend_on_date": "Increasing",
-        "recent_trend": "Decreasing"
-    },
-    {
-        "week_end": "2024-08-03T00:00:00.000",
-        "pathogen": "COVID-19",
-        "geography": "North Dakota",
-        "percent_visits": "1.0",
-        "status": "Reporting",
-        "trend_on_date": "Increasing",
-        "recent_trend": "Decreasing"
-    },
-    {
-        "week_end": "2024-08-03T00:00:00.000",
-        "pathogen": "COVID-19",
-        "geography": "Ohio",
-        "percent_visits": "1.8",
-        "status": "Reporting",
-        "trend_on_date": "Increasing",
-        "recent_trend": "Decreasing"
-    },
-    {
-        "week_end": "2024-08-03T00:00:00.000",
-        "pathogen": "COVID-19",
-        "geography": "Oklahoma",
-        "percent_visits": "2.0",
-        "status": "Reporting",
-        "trend_on_date": "Increasing",
-        "recent_trend": "Decreasing"
-    },
-    {
-        "week_end": "2024-08-03T00:00:00.000",
-        "pathogen": "COVID-19",
-        "geography": "Oregon",
-        "percent_visits": "2.6",
-        "status": "Reporting",
-        "trend_on_date": "Increasing",
-        "recent_trend": "Decreasing"
-    },
-    {
-        "week_end": "2024-08-03T00:00:00.000",
-        "pathogen": "COVID-19",
-        "geography": "Pennsylvania",
-        "percent_visits": "1.5",
-        "status": "Reporting",
-        "trend_on_date": "Increasing",
-        "recent_trend": "Decreasing"
-    },
-    {
-        "week_end": "2024-08-03T00:00:00.000",
-        "pathogen": "COVID-19",
-        "geography": "Region 1",
-        "percent_visits": "1.9",
-        "status": "Reporting",
-        "trend_on_date": "Increasing",
-        "recent_trend": "Decreasing"
-    },
-    {
-        "week_end": "2024-08-03T00:00:00.000",
-        "pathogen": "COVID-19",
-        "geography": "Region 10",
-        "percent_visits": "2.5",
-        "status": "Reporting",
-        "trend_on_date": "Increasing",
-        "recent_trend": "Decreasing"
-    },
-    {
-        "week_end": "2024-08-03T00:00:00.000",
-        "pathogen": "COVID-19",
-        "geography": "Region 2",
-        "percent_visits": "1.7",
-        "status": "Reporting",
-        "trend_on_date": "Increasing",
-        "recent_trend": "Decreasing"
-    },
-    {
-        "week_end": "2024-08-03T00:00:00.000",
-        "pathogen": "COVID-19",
-        "geography": "Region 3",
-        "percent_visits": "2.1",
-        "status": "Reporting",
-        "trend_on_date": "Increasing",
-        "recent_trend": "Decreasing"
-    },
-    {
-        "week_end": "2024-08-03T00:00:00.000",
-        "pathogen": "COVID-19",
-        "geography": "Region 4",
-        "percent_visits": "3.3",
-        "status": "Reporting",
-        "trend_on_date": "Increasing",
-        "recent_trend": "Decreasing"
-    },
-    {
-        "week_end": "2024-08-03T00:00:00.000",
-        "pathogen": "COVID-19",
-        "geography": "Region 5",
-        "percent_visits": "1.9",
-        "status": "Reporting",
-        "trend_on_date": "Increasing",
-        "recent_trend": "Decreasing"
-    },
-    {
-        "week_end": "2024-08-03T00:00:00.000",
-        "pathogen": "COVID-19",
-        "geography": "Region 6",
-        "percent_visits": "3.7",
-        "status": "Reporting",
-        "trend_on_date": "Increasing",
-        "recent_trend": "Decreasing"
-    },
-    {
-        "week_end": "2024-08-03T00:00:00.000",
-        "pathogen": "COVID-19",
-        "geography": "Region 7",
-        "percent_visits": "1.0",
-        "status": "Reporting",
-        "trend_on_date": "Increasing",
-        "recent_trend": "Decreasing"
-    },
-    {
-        "week_end": "2024-08-03T00:00:00.000",
-        "pathogen": "COVID-19",
-        "geography": "Region 8",
-        "percent_visits": "1.8",
-        "status": "Reporting",
-        "trend_on_date": "Increasing",
-        "recent_trend": "Decreasing"
-    },
-    {
-        "week_end": "2024-08-03T00:00:00.000",
-        "pathogen": "COVID-19",
-        "geography": "Region 9",
-        "percent_visits": "2.4",
-        "status": "Reporting",
-        "trend_on_date": "Increasing",
-        "recent_trend": "Decreasing"
-    },
-    {
-        "week_end": "2024-08-03T00:00:00.000",
-        "pathogen": "COVID-19",
-        "geography": "Rhode Island",
-        "percent_visits": "1.4",
-        "status": "Reporting",
-        "trend_on_date": "Increasing",
-        "recent_trend": "Decreasing"
-    },
-    {
-        "week_end": "2024-08-03T00:00:00.000",
-        "pathogen": "COVID-19",
-        "geography": "South Carolina",
-        "percent_visits": "3.4",
-        "status": "Reporting",
-        "trend_on_date": "Increasing",
-        "recent_trend": "Decreasing"
-    },
-    {
-        "week_end": "2024-08-03T00:00:00.000",
-        "pathogen": "COVID-19",
-        "geography": "Tennessee",
-        "percent_visits": "2.3",
-        "status": "Reporting",
-        "trend_on_date": "Increasing",
-        "recent_trend": "Decreasing"
-    },
-    {
-        "week_end": "2024-08-03T00:00:00.000",
-        "pathogen": "COVID-19",
-        "geography": "Texas",
-        "percent_visits": "3.9",
-        "status": "Reporting",
-        "trend_on_date": "Increasing",
-        "recent_trend": "Decreasing"
-    },
-    {
-        "week_end": "2024-08-03T00:00:00.000",
-        "pathogen": "COVID-19",
-        "geography": "Utah",
-        "percent_visits": "1.8",
-        "status": "Reporting",
-        "trend_on_date": "Increasing",
-        "recent_trend": "Decreasing"
-    },
-    {
-        "week_end": "2024-08-03T00:00:00.000",
-        "pathogen": "COVID-19",
-        "geography": "Vermont",
-        "percent_visits": "1.7",
-        "status": "Reporting",
-        "trend_on_date": "Increasing",
-        "recent_trend": "Decreasing"
-    },
-    {
-        "week_end": "2024-08-03T00:00:00.000",
-        "pathogen": "COVID-19",
-        "geography": "Virginia",
-        "percent_visits": "2.8",
-        "status": "Reporting",
-        "trend_on_date": "Increasing",
-        "recent_trend": "Decreasing"
-    },
-    {
-        "week_end": "2024-08-03T00:00:00.000",
-        "pathogen": "COVID-19",
-        "geography": "Washington",
-        "percent_visits": "2.5",
-        "status": "Reporting",
-        "trend_on_date": "Increasing",
-        "recent_trend": "Decreasing"
-    },
-    {
-        "week_end": "2024-08-03T00:00:00.000",
-        "pathogen": "COVID-19",
-        "geography": "West Virginia",
-        "percent_visits": "2.0",
-        "status": "Reporting",
-        "trend_on_date": "Increasing",
-        "recent_trend": "Decreasing"
-    },
-    {
-        "week_end": "2024-08-03T00:00:00.000",
-        "pathogen": "COVID-19",
-        "geography": "Wisconsin",
-        "percent_visits": "2.0",
-        "status": "Reporting",
-        "trend_on_date": "Increasing",
-        "recent_trend": "Decreasing"
-    },
-    {
-        "week_end": "2024-08-03T00:00:00.000",
-        "pathogen": "Influenza",
-        "geography": "Alabama",
-        "percent_visits": "0.1",
-        "status": "Reporting",
-        "trend_on_date": "No Change",
-        "recent_trend": "Increasing"
-    },
-    {
-        "week_end": "2024-08-03T00:00:00.000",
-        "pathogen": "Influenza",
-        "geography": "Alaska",
-        "percent_visits": "0.2",
-        "status": "Reporting",
-        "trend_on_date": "No Change",
-        "recent_trend": "Decreasing"
-    },
-    {
-        "week_end": "2024-08-03T00:00:00.000",
-        "pathogen": "Influenza",
-        "geography": "Arizona",
-        "percent_visits": "0.1",
-        "status": "Reporting",
-        "trend_on_date": "No Change",
-        "recent_trend": "Increasing"
-    },
-    {
-        "week_end": "2024-08-03T00:00:00.000",
-        "pathogen": "Influenza",
-        "geography": "Arkansas",
-        "percent_visits": "0.2",
-        "status": "Reporting",
-        "trend_on_date": "No Change",
-        "recent_trend": "No Change"
-    },
-    {
-        "week_end": "2024-08-03T00:00:00.000",
-        "pathogen": "Influenza",
-        "geography": "California",
-        "percent_visits": "0.1",
-        "status": "Reporting",
         "trend_on_date": "Decreasing",
-        "recent_trend": "No Change"
-    },
-    {
-        "week_end": "2024-08-03T00:00:00.000",
-        "pathogen": "Influenza",
-        "geography": "Colorado",
-        "percent_visits": "0.1",
-        "status": "Reporting",
-        "trend_on_date": "No Change",
-        "recent_trend": "Increasing"
-    },
-    {
-        "week_end": "2024-08-03T00:00:00.000",
-        "pathogen": "Influenza",
-        "geography": "Connecticut",
-        "percent_visits": "0.0",
-        "status": "Reporting",
-        "trend_on_date": "No Change",
-        "recent_trend": "No Change"
-    },
-    {
-        "week_end": "2024-08-03T00:00:00.000",
-        "pathogen": "Influenza",
-        "geography": "Delaware",
-        "percent_visits": "0.1",
-        "status": "Reporting",
-        "trend_on_date": "No Change",
-        "recent_trend": "No Change"
-    },
-    {
-        "week_end": "2024-08-03T00:00:00.000",
-        "pathogen": "Influenza",
-        "geography": "District of Columbia",
-        "percent_visits": "0.0",
-        "status": "Reporting",
-        "trend_on_date": "No Change",
-        "recent_trend": "No Change"
-    },
-    {
-        "week_end": "2024-08-03T00:00:00.000",
-        "pathogen": "Influenza",
-        "geography": "Florida",
-        "percent_visits": "0.4",
-        "status": "Reporting",
-        "trend_on_date": "Decreasing",
-        "recent_trend": "Increasing"
-    },
-    {
-        "week_end": "2024-08-03T00:00:00.000",
-        "pathogen": "Influenza",
-        "geography": "Georgia",
-        "percent_visits": "0.1",
-        "status": "Reporting",
-        "trend_on_date": "No Change",
-        "recent_trend": "No Change"
-    },
-    {
-        "week_end": "2024-08-03T00:00:00.000",
-        "pathogen": "Influenza",
-        "geography": "Hawaii",
-        "percent_visits": "1.0",
-        "status": "Reporting",
-        "trend_on_date": "No Change",
         "recent_trend": "Decreasing"
     },
     {
-        "week_end": "2024-08-03T00:00:00.000",
+        "week_end": "2022-10-15T00:00:00.000",
         "pathogen": "Influenza",
-        "geography": "Idaho",
-        "percent_visits": "0.0",
+        "geography": "National",
+        "percent_visits": "0.9",
         "status": "Reporting",
-        "trend_on_date": "No Change",
-        "recent_trend": "No Change"
+        "trend_on_date": "Increasing",
+        "recent_trend": "Increasing"
+    },
+    {
+        "week_end": "2022-10-15T00:00:00.000",
+        "pathogen": "RSV",
+        "geography": "National",
+        "percent_visits": "0.7",
+        "status": "Reporting",
+        "trend_on_date": "Increasing",
+        "recent_trend": "Increasing"
+    },
+    {
+        "week_end": "2022-10-15T00:00:00.000",
+        "pathogen": "Combined",
+        "geography": "National",
+        "percent_visits": "3.2",
+        "status": "Reporting",
+        "trend_on_date": "Increasing",
+        "recent_trend": "Decreasing"
     }
 ]

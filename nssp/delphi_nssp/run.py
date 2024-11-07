@@ -22,7 +22,6 @@ the following structure:
         - "cache_dir": str, directory of locally cached data
 """
 
-import sys
 import time
 from datetime import datetime
 
@@ -160,7 +159,11 @@ def run_module(params):
                 )
                 unexpected_state_names = df[df["geo_id"] == df["geo_value"]]
                 if unexpected_state_names.shape[0] > 0:
-                    raise RuntimeError(f"Unexpected state names: {unexpected_state_names}")
+                    logger.error(
+                        "Unexpected state names",
+                        unexpected_state_names=unexpected_state_names["geo_value"].unique(),
+                    )
+                    raise RuntimeError
             elif geo == "nation":
                 df = df[(df["geo_type"] == "nation")]
                 df["geo_id"] = "us"

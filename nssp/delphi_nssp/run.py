@@ -143,8 +143,11 @@ def run_module(params):
     ## aggregate
     geo_mapper = GeoMapper()
     for signal in SECONDARY_SIGNALS:
+        secondary_df_pull_signal = secondary_df_pull[secondary_df_pull["signal"] == signal]
+        if secondary_df_pull_signal.empty:
+            continue
         for geo in SECONDARY_GEOS:
-            df = secondary_df_pull.copy()
+            df = secondary_df_pull_signal.copy()
             logger.info("Generating signal and exporting to CSV", geo_type=geo, signal=signal)
             if geo == "state":
                 df = df[(df["geo_type"] == "state")]
@@ -164,7 +167,7 @@ def run_module(params):
                 df["geo_id"] = "us"
             elif geo == "hhs":
                 df = df[(df["geo_type"] == "hhs")]
-                df["geo_id"] = df["geo_type"]
+                df["geo_id"] = df["geo_value"]
             # add se, sample_size, and na codes
             missing_cols = set(CSV_COLS) - set(df.columns)
             df = add_needed_columns(df, col_names=list(missing_cols))

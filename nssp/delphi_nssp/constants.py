@@ -51,7 +51,7 @@ SECONDARY_COLS_MAP = {
 
 SECONDARY_SIGNALS_MAP = {
     "COVID-19": "pct_ed_visits_covid_secondary",
-    "INFLUENZA": "pct_ed_visits_influenza_secondary",
+    "Influenza": "pct_ed_visits_influenza_secondary",
     "RSV": "pct_ed_visits_rsv_secondary",
     "Combined": "pct_ed_visits_combined_secondary",
 }

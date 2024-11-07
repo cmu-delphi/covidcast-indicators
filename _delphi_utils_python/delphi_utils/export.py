@@ -192,7 +192,9 @@ def create_backup_csv(
         backup_file = join(backup_dir, backup_filename)
         try:
             # defacto data format is csv, but parquet preserved data types (keeping both as intermidary measures)
-            df.to_csv(f"{backup_file}.csv.gz", index=False, na_rep="NA", compression="gzip")
+            df.to_csv(
+                f"{backup_file}.csv.gz", index=False, na_rep="NA", compression="gzip"
+            )
             df.to_parquet(f"{backup_file}.parquet", index=False)
 
             if logger:

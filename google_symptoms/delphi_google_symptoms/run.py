@@ -68,8 +68,14 @@ def run_module(params, logger=None):
         export_end_date,
         num_export_days,
         custom_run_flag,
+        logger
     )
-    for geo_res in GEO_RESOLUTIONS:
+
+    for geo_res in GEO_RESOLUTIONS.keys():
+        df_pull = dfs[GEO_RESOLUTIONS[geo_res]]
+        if len(df_pull) == 0:
+            logger.info("Skipping processing; No data available for geo level", geo_level=geo_res)
+            continue
         if geo_res == "state":
             df_pull = dfs["state"]
         elif geo_res in ["hhs", "nation"]:
@@ -77,8 +83,6 @@ def run_module(params, logger=None):
         else:
             df_pull = geo_map(dfs["county"], geo_res)
 
-        if len(df_pull) == 0:
-            continue
         for metric, smoother in product(COMBINED_METRIC, SMOOTHERS):
             sensor_name = "_".join([smoother, "search"])
             logger.info("Generating signal and exporting to CSV", geo_type=geo_res, signal=f"{metric}_{sensor_name}")

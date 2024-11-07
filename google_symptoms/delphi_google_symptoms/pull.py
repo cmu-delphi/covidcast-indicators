@@ -158,7 +158,7 @@ def produce_query(level, date_range):
     return query
 
 
-def pull_gs_data_one_geolevel(level, date_range):
+def pull_gs_data_one_geolevel(level, date_range, logger):
     """Pull latest data for a single geo level.
 
     Fetch data and transform it into the appropriate format, as described in
@@ -209,6 +209,7 @@ def pull_gs_data_one_geolevel(level, date_range):
 
     if len(df) == 0:
         df = pd.DataFrame(columns=["open_covid_region_code", "date"] + list(colname_map.keys()))
+        logger.info("No data available for date range", geo_level=level, start_date=date_range[0], end_date=date_range[1])
 
     df = preprocess(df, level)
     return df
@@ -232,7 +233,7 @@ def initialize_credentials(credentials):
     pandas_gbq.context.project = credentials.project_id
 
 
-def pull_gs_data(credentials, export_start_date, export_end_date, num_export_days, custom_run_flag):
+def pull_gs_data(credentials, export_start_date, export_end_date, num_export_days, custom_run_flag, logger):
     """Pull latest dataset for each geo level and combine.
 
     PS:  No information for PR
@@ -264,10 +265,9 @@ def pull_gs_data(credentials, export_start_date, export_end_date, num_export_day
     dfs = {}
 
     # For state level data
-    dfs["state"] = pull_gs_data_one_geolevel("state", retrieve_dates)
+    dfs["state"] = pull_gs_data_one_geolevel("state", retrieve_dates, logger)
     # For county level data
-    dfs["county"] = pull_gs_data_one_geolevel("county", retrieve_dates)
-
+    dfs["county"] = pull_gs_data_one_geolevel("county", retrieve_dates, logger)
 
     # Add District of Columbia as county
     try:

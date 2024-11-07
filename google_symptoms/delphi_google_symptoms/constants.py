@@ -30,14 +30,15 @@ for combmetric in COMBINED_METRIC:
     METRICS = METRICS + SYMPTOM_SETS[combmetric]
 
 SMOOTHERS = ["raw", "smoothed"]
-GEO_RESOLUTIONS = [
-    "state",
-    "county",
-    "msa",
-    "hrr",
-    "hhs",
-    "nation"
-]
+
+GEO_RESOLUTIONS = {
+    "state" :  "state",
+    "county" : "county",
+    "msa": "county",
+    "hrr": "county",
+    "hhs": "state",
+    "nation": "state",
+}
 
 SMOOTHERS_MAP = {
     "raw":               (Smoother("identity", impute_method=None),

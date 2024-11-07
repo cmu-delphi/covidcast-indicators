@@ -71,17 +71,17 @@ def run_module(params, logger=None):
         logger
     )
 
-    for geo_res in GEO_RESOLUTIONS.keys():
-        df_pull = dfs[GEO_RESOLUTIONS[geo_res]]
+    for geo_level, mapped_res in GEO_RESOLUTIONS.items():
+        df_pull = dfs[mapped_res]
         if len(df_pull) == 0:
-            logger.info("Skipping processing; No data available for geo level", geo_level=geo_res)
+            logger.info("Skipping processing; No data available for geo level", geo_level=geo_level)
             continue
-        if geo_res == "state":
+        if geo_level == "state":
             df_pull = dfs["state"]
-        elif geo_res in ["hhs", "nation"]:
-            df_pull = geo_map(dfs["state"], geo_res)
+        elif geo_level in ["hhs", "nation"]:
+            df_pull = geo_map(dfs[mapped_res], geo_level)
         else:
-            df_pull = geo_map(dfs["county"], geo_res)
+            df_pull = geo_map(dfs[mapped_res], geo_level)
 
         for metric, smoother in product(COMBINED_METRIC, SMOOTHERS):
             sensor_name = "_".join([smoother, "search"])

@@ -13,7 +13,6 @@ required = [
     "pydocstyle",
     "pylint==2.8.3",
     "pytest-cov",
-    "pyarrow",
     "pytest",
     "sodapy",
 ]

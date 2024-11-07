@@ -12,7 +12,6 @@ required = [
     "sodapy",
     "epiweeks",
     "freezegun",
-    "pyarrow",
     "us",
 ]
 

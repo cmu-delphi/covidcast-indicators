@@ -46,7 +46,8 @@ class TestPullNSSPData:
         expected_data = pd.DataFrame(test_data)
         for backup_file in backup_files:
             if backup_file.endswith(".csv.gz"):
-                actual_data = pd.read_csv(os.path.join(backup_dir, backup_file))
+                dtypes = expected_data.dtypes.to_dict()
+                actual_data = pd.read_csv(os.path.join(backup_dir, backup_file), dtype=dtypes)
             else:
                 actual_data = pd.read_parquet(os.path.join(backup_dir, backup_file))
             pd.testing.assert_frame_equal(expected_data, actual_data)

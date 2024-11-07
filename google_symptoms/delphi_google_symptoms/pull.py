@@ -209,7 +209,9 @@ def pull_gs_data_one_geolevel(level, date_range, logger):
 
     if len(df) == 0:
         df = pd.DataFrame(columns=["open_covid_region_code", "date"] + list(colname_map.keys()))
-        logger.info("No data available for date range", geo_level=level, start_date=date_range[0], end_date=date_range[1])
+        logger.info(
+            "No data available for date range", geo_level=level, start_date=date_range[0], end_date=date_range[1]
+        )
 
     df = preprocess(df, level)
     return df

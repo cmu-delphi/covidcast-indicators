@@ -68,20 +68,20 @@ def run_module(params, logger=None):
         export_end_date,
         num_export_days,
         custom_run_flag,
-        logger
+        logger,
     )
 
-    for geo_level, mapped_res in GEO_RESOLUTIONS.items():
+    for geo_res, mapped_res in GEO_RESOLUTIONS.items():
         df_pull = dfs[mapped_res]
         if len(df_pull) == 0:
-            logger.info("Skipping processing; No data available for geo level", geo_level=geo_level)
+            logger.info("Skipping processing; No data available for geo", geo_type=geo_res)
             continue
-        if geo_level == "state":
+        if geo_res == "state":
             df_pull = dfs["state"]
-        elif geo_level in ["hhs", "nation"]:
-            df_pull = geo_map(dfs[mapped_res], geo_level)
+        elif geo_res in ["hhs", "nation"]:
+            df_pull = geo_map(dfs[mapped_res], geo_res)
         else:
-            df_pull = geo_map(dfs[mapped_res], geo_level)
+            df_pull = geo_map(dfs[mapped_res], geo_res)
 
         for metric, smoother in product(COMBINED_METRIC, SMOOTHERS):
             sensor_name = "_".join([smoother, "search"])

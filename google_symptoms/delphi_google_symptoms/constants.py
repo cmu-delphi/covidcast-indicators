@@ -32,8 +32,8 @@ for combmetric in COMBINED_METRIC:
 SMOOTHERS = ["raw", "smoothed"]
 
 GEO_RESOLUTIONS = {
-    "state" :  "state",
-    "county" : "county",
+    "state": "state",
+    "county": "county",
     "msa": "county",
     "hrr": "county",
     "hhs": "state",

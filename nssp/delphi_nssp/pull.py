@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 """Functions for pulling NSSP ER data."""
-
+import logging
 import textwrap
+from typing import Optional
 
 import pandas as pd
+from delphi_utils import create_backup_csv
 from sodapy import Socrata
 
 from .constants import NEWLINE, SIGNALS, SIGNALS_MAP, TYPE_DICT
@@ -27,7 +29,7 @@ def warn_string(df, type_dict):
     return warn
 
 
-def pull_nssp_data(socrata_token: str):
+def pull_nssp_data(socrata_token: str, backup_dir: str, custom_run: bool, logger: Optional[logging.Logger] = None):
     """Pull the latest NSSP ER visits data, and conforms it into a dataset.
 
     The output dataset has:
@@ -38,9 +40,13 @@ def pull_nssp_data(socrata_token: str):
     Parameters
     ----------
     socrata_token: str
-        My App Token for pulling the NWSS data (could be the same as the nchs data)
-    test_file: Optional[str]
-        When not null, name of file from which to read test data
+        My App Token for pulling the NSSP data (could be the same as the nchs data)
+    backup_dir: str
+        Directory to which to save raw backup data
+    custom_run: bool
+        Flag indicating if the current run is a patch. If so, don't save any data to disk
+    logger: Optional[logging.Logger]
+        logger object
 
     Returns
     -------
@@ -59,6 +65,7 @@ def pull_nssp_data(socrata_token: str):
         results.extend(page)
         offset += limit
     df_ervisits = pd.DataFrame.from_records(results)
+    create_backup_csv(df_ervisits, backup_dir, custom_run, logger=logger)
     df_ervisits = df_ervisits.rename(columns={"week_end": "timestamp"})
     df_ervisits = df_ervisits.rename(columns=SIGNALS_MAP)
 

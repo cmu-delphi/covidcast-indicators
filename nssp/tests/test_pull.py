@@ -1,29 +1,23 @@
-from datetime import datetime, date
+import glob
 import json
-import unittest
 from unittest.mock import patch, MagicMock
-import tempfile
 import os
-import time
-from datetime import datetime
-import pdb
+
 import pandas as pd
-import pandas.api.types as ptypes
 
 from delphi_nssp.pull import (
     pull_nssp_data,
 )
-from delphi_nssp.constants import (
-    SIGNALS,
-    NEWLINE,
-    SIGNALS_MAP,
-    TYPE_DICT,
-)
+from delphi_nssp.constants import SIGNALS
 
+from delphi_utils import get_structured_logger
 
-class TestPullNSSPData(unittest.TestCase):
+class TestPullNSSPData:
     @patch("delphi_nssp.pull.Socrata")
-    def test_pull_nssp_data(self, mock_socrata):
+    def test_pull_nssp_data(self, mock_socrata, caplog):
+        today = pd.Timestamp.today().strftime("%Y%m%d")
+        backup_dir = 'test_raw_data_backups'
+
         # Load test data
         with open("test_data/page.txt", "r") as f:
             test_data = json.load(f)
@@ -33,10 +27,27 @@ class TestPullNSSPData(unittest.TestCase):
         mock_client.get.side_effect = [test_data, []]  # Return test data on first call, empty list on second call
         mock_socrata.return_value = mock_client
 
+        custom_run = False
+        logger = get_structured_logger()
         # Call function with test token
         test_token = "test_token"
-        result = pull_nssp_data(test_token)
-        print(result)
+        result = pull_nssp_data(test_token, backup_dir, custom_run, logger)
+
+        # Check logger used:
+        assert "Backup file created" in caplog.text
+
+        # Check that backup file was created
+        backup_files = glob.glob(f"{backup_dir}/{today}*")
+        assert len(backup_files) == 2, "Backup file was not created"
+
+        expected_data = pd.DataFrame(test_data)
+        for backup_file in backup_files:
+            if backup_file.endswith(".csv.gz"):
+                dtypes = expected_data.dtypes.to_dict()
+                actual_data = pd.read_csv(backup_file, dtype=dtypes)
+            else:
+                actual_data = pd.read_parquet(backup_file)
+            pd.testing.assert_frame_equal(expected_data, actual_data)
 
         # Check that Socrata client was initialized with correct arguments
         mock_socrata.assert_called_once_with("data.cdc.gov", test_token)
@@ -55,6 +66,6 @@ class TestPullNSSPData(unittest.TestCase):
         for signal in SIGNALS:
             assert result[signal].notnull().all(), f"{signal} has rogue NaN"
 
-
-if __name__ == "__main__":
-    unittest.main()
+        # clean up
+        for file in backup_files:
+            os.remove(file)

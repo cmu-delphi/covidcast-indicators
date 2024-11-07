@@ -78,12 +78,14 @@ def run_module(params):
         log_exceptions=params["common"].get("log_exceptions", True),
     )
     export_dir = params["common"]["export_dir"]
+    backup_dir = params["common"]["backup_dir"]
+    custom_run = params["common"].get("custom_run", False)
     socrata_token = params["indicator"]["socrata_token"]
 
     run_stats = []
     ## build the base version of the signal at the most detailed geo level you can get.
     ## compute stuff here or farm out to another function or file
-    df_pull = pull_nssp_data(socrata_token)
+    df_pull = pull_nssp_data(socrata_token, backup_dir, custom_run=custom_run, logger=logger)
     ## aggregate
     geo_mapper = GeoMapper()
     for signal in SIGNALS:

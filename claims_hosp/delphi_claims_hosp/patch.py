@@ -56,6 +56,9 @@ def patch():
     makedirs(params["patch"]["patch_dir"], exist_ok=True)
 
     current_issue = start_issue
+    if not params["common"]["custom_run"]:
+        logger.warning("Custom flag not set; setting it to true for patching")
+        params["common"]["custom_flag"] = True
 
     while current_issue <= end_issue:
         logger.info("Running issue", issue_date=current_issue.strftime("%Y-%m-%d"))

@@ -9,9 +9,11 @@ Created: 2022-08-03
 import calendar
 import glob
 import os
+import pathlib
 import re
 import shutil
 from datetime import datetime, timedelta
+from pathlib import Path
 from typing import Union
 
 # third party
@@ -101,41 +103,47 @@ def merge_existing_backfill_files(backfill_dir, backfill_file, issue_date, logge
     """
     new_files = glob.glob(backfill_dir + "/claims_hosp_*")
 
-    def get_file_with_date(files) -> Union[str, None]:
-        for filename in files:
+    def get_file_with_date(files) -> Union[pathlib.Path, None]:
+        for file_path in files:
             # need to only match files with 6 digits for merged files
-            pattern = re.findall(r"_(\d{6,6})\.parquet", filename)
+            pattern = re.findall(r"_(\d{6,6})\.parquet", file_path)
             if pattern:
                 file_month = datetime.strptime(pattern[0], "%Y%m").replace(day=1)
                 end_date = (file_month + timedelta(days=32)).replace(day=1)
                 if file_month <= issue_date < end_date:
-                    return filename
-        return ""
+                    return Path(file_path)
+        return
 
-    file_name = get_file_with_date(new_files)
+    file_path = get_file_with_date(new_files)
 
-    if len(file_name) == 0:
+    if not file_path:
         logger.info("Issue date has no matching merged files", issue_date=issue_date.strftime("%Y-%m-%d"))
         return
 
     logger.info(
-        "Adding missing date to merged file", issue_date=issue_date, filename=backfill_file, merged_filename=file_name
+        "Adding missing date to merged file", issue_date=issue_date, filename=backfill_file, merged_filename=file_path
     )
 
     # Start to merge files
-    merge_file = f"{file_name.split('.')[0]}_after_merge.parquet"
+    file_name = Path(file_path).name
+    merge_file = f"{file_path.parent}/{file_name}_after_merge.parquet"
+
     try:
-        shutil.copyfile(file_name, merge_file)
+        shutil.copyfile(file_path, merge_file)
         existing_df = pd.read_parquet(merge_file, engine="pyarrow")
         df = pd.read_parquet(backfill_file, engine="pyarrow")
         merged_df = pd.concat([existing_df, df]).sort_values(["time_value", "fips"])
         merged_df.to_parquet(merge_file, index=False)
-        os.remove(file_name)
-        os.rename(merge_file, file_name)
+
     # pylint: disable=W0703:
     except Exception as e:
+        logger.info("Failed to merge existing backfill files", issue_date=issue_date.strftime("%Y-%m-%d"), msg=e)
         os.remove(merge_file)
-        logger.error(e)
+        os.remove(backfill_file)
+        return
+
+    os.remove(file_path)
+    os.rename(merge_file, file_path)
     return
 
 
@@ -163,22 +171,27 @@ def merge_backfill_file(backfill_dir, most_recent, logger, test_mode=False):
         fn = file_link.split("/")[-1].split(".parquet")[0].split("_")[-1]
         return datetime.strptime(fn, "%Y%m%d")
 
-    date_list = list(map(get_date, new_files))
+    date_list = sorted(map(get_date, new_files))
     latest_date = max(date_list)
     num_of_days_in_month = calendar.monthrange(latest_date.year, latest_date.month)[1]
-    if len(date_list) < (num_of_days_in_month * 0.8) or most_recent == latest_date + timedelta(days=1):
+    if len(date_list) < (num_of_days_in_month * 0.8) and most_recent != latest_date + timedelta(days=1):
         logger.info("Not enough days, skipping merging", n_file_days=len(date_list))
         return
 
     logger.info("Merging files", start_date=date_list[0], end_date=date_list[-1])
     # Start to merge files
     pdList = []
-    for fn in new_files:
-        df = pd.read_parquet(fn, engine='pyarrow')
-        pdList.append(df)
-    merged_file = pd.concat(pdList).sort_values(["time_value", "fips"])
-    path = f"{backfill_dir}/claims_hosp_{datetime.strftime(latest_date, '%Y%m')}.parquet"
-    merged_file.to_parquet(path, index=False)
+    try:
+        for fn in new_files:
+            df = pd.read_parquet(fn, engine='pyarrow')
+            pdList.append(df)
+        merged_file = pd.concat(pdList).sort_values(["time_value", "fips"])
+        path = f"{backfill_dir}/claims_hosp_{datetime.strftime(latest_date, '%Y%m')}.parquet"
+        merged_file.to_parquet(path, index=False)
+
+    except Exception as e:
+        logger.info("Failed to merge backfill files", msg=e)
+        return
 
     # Delete daily files once we have the merged one.
     if not test_mode:

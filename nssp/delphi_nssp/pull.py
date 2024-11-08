@@ -65,7 +65,7 @@ def pull_with_socrata_api(socrata_token: str, dataset_id: str):
     return results
 
 
-def pull_nssp_data(socrata_token: str, backup_dir: str, custom_run: bool, logger: Optional[logging.Logger] = None)::
+def pull_nssp_data(socrata_token: str, backup_dir: str, custom_run: bool, logger: Optional[logging.Logger] = None):
     """Pull the latest NSSP ER visits primary dataset.
 
     https://data.cdc.gov/Public-Health-Surveillance/NSSP-Emergency-Department-Visit-Trajectories-by-St/rdmq-nq56/data_preview

@@ -112,7 +112,7 @@ def merge_existing_backfill_files(backfill_dir, backfill_file, issue_date, logge
                 end_date = (file_month + timedelta(days=32)).replace(day=1)
                 if file_month <= issue_date < end_date:
                     return Path(file_path)
-        return
+        return None
 
     file_path = get_file_with_date(new_files)
 
@@ -135,7 +135,7 @@ def merge_existing_backfill_files(backfill_dir, backfill_file, issue_date, logge
         merged_df = pd.concat([existing_df, df]).sort_values(["time_value", "fips"])
         merged_df.to_parquet(merge_file, index=False)
 
-    # pylint: disable=W0703:
+    # pylint: disable=W0703
     except Exception as e:
         logger.info("Failed to merge existing backfill files", issue_date=issue_date.strftime("%Y-%m-%d"), msg=e)
         os.remove(merge_file)
@@ -183,12 +183,13 @@ def merge_backfill_file(backfill_dir, most_recent, logger, test_mode=False):
     pdList = []
     try:
         for fn in new_files:
-            df = pd.read_parquet(fn, engine='pyarrow')
+            df = pd.read_parquet(fn, engine="pyarrow")
             pdList.append(df)
         merged_file = pd.concat(pdList).sort_values(["time_value", "fips"])
         path = f"{backfill_dir}/claims_hosp_{datetime.strftime(latest_date, '%Y%m')}.parquet"
         merged_file.to_parquet(path, index=False)
 
+    # pylint: disable=W0703
     except Exception as e:
         logger.info("Failed to merge backfill files", msg=e)
         return

@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 """Functions for pulling NSSP ER data."""
-
+import logging
 import textwrap
+from typing import Optional
 
 import pandas as pd
+from delphi_utils import create_backup_csv
 from sodapy import Socrata
 
 from .constants import (
@@ -63,7 +65,7 @@ def pull_with_socrata_api(socrata_token: str, dataset_id: str):
     return results
 
 
-def pull_nssp_data(socrata_token: str):
+def pull_nssp_data(socrata_token: str, backup_dir: str, custom_run: bool, logger: Optional[logging.Logger] = None)::
     """Pull the latest NSSP ER visits primary dataset.
 
     https://data.cdc.gov/Public-Health-Surveillance/NSSP-Emergency-Department-Visit-Trajectories-by-St/rdmq-nq56/data_preview
@@ -80,6 +82,7 @@ def pull_nssp_data(socrata_token: str):
     """
     socrata_results = pull_with_socrata_api(socrata_token, "rdmq-nq56")
     df_ervisits = pd.DataFrame.from_records(socrata_results)
+    create_backup_csv(df_ervisits, backup_dir, custom_run, logger=logger)
     df_ervisits = df_ervisits.rename(columns={"week_end": "timestamp"})
     df_ervisits = df_ervisits.rename(columns=SIGNALS_MAP)
 

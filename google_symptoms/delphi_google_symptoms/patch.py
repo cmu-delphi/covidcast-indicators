@@ -78,7 +78,7 @@ def patch(params):
         makedirs(f"{current_issue_dir}", exist_ok=True)
 
         params["common"]["export_dir"] = f"""{current_issue_dir}"""
-        params["indicator"]["custom_run"] = True
+        params["common"]["custom_run"] = True
 
         date_settings = patch_dates[issue_date]
 

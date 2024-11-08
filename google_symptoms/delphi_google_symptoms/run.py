@@ -58,7 +58,7 @@ def run_module(params, logger=None):
     num_export_days = generate_num_export_days(params, logger)
     # safety check for patch parameters exists in file, but not running custom runs/patches
     custom_run_flag = (
-        False if not params["indicator"].get("custom_run", False) else params["indicator"].get("custom_run", False)
+        False if not params["common"].get("custom_run", False) else params["indicator"].get("custom_run", False)
     )
 
     # Pull GS data

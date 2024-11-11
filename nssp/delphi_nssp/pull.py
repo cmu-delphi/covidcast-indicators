@@ -98,7 +98,9 @@ def pull_nssp_data(socrata_token: str, backup_dir: str, custom_run: bool, logger
     return df_ervisits[SIGNALS + keep_columns]
 
 
-def secondary_pull_nssp_data(socrata_token: str, backup_dir: str, custom_run: bool, logger: Optional[logging.Logger] = None):
+def secondary_pull_nssp_data(
+    socrata_token: str, backup_dir: str, custom_run: bool, logger: Optional[logging.Logger] = None
+):
     """Pull the latest NSSP ER visits secondary dataset.
 
     https://data.cdc.gov/Public-Health-Surveillance/2023-Respiratory-Virus-Response-NSSP-Emergency-Dep/7mra-9cq9/data_preview

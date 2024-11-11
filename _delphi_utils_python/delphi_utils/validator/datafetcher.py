@@ -189,20 +189,19 @@ def fetch_api_reference(data_source, start_date, end_date, geo_type, signal_type
     except Exception as e:
         raise APIDataFetchError(str(e))
 
-    api_df = pd.DataFrame.from_dict(epidata_dict)
-    if isinstance(api_df, pd.DataFrame) and len(api_df) > 0:
-        # note: this will fail for signals with weekly data, but currently not supported for validation
-        api_df["issue"] = pd.to_datetime(api_df["issue"], format="%Y%m%d")
-        api_df["time_value"] = pd.to_datetime(api_df["time_value"], format="%Y%m%d")
-        api_df.drop("direction", axis=1, inplace=True)
-        api_df["data_source"] = data_source
-        api_df["signal"] = signal_type
-
-    error_context = f"when fetching reference data from {start_date} to {end_date} " +\
-        f"for data source: {data_source}, signal type: {signal_type}, geo type: {geo_type}"
-
-    if api_df is None:
+    if len(response["epidata"]) == 0:
+        error_context = f"when fetching reference data from {start_date} to {end_date} " + \
+                        f"for data source: {data_source}, signal type: {signal_type}, geo type: {geo_type}"
         raise APIDataFetchError("Error: no API data was returned " + error_context)
+
+    api_df = pd.DataFrame.from_dict(epidata_dict)
+    # note: this will fail for signals with weekly data, but currently not supported for validation
+    api_df["issue"] = pd.to_datetime(api_df["issue"], format="%Y%m%d")
+    api_df["time_value"] = pd.to_datetime(api_df["time_value"], format="%Y%m%d")
+    api_df.drop("direction", axis=1, inplace=True)
+    api_df["data_source"] = data_source
+    api_df["signal"] = signal_type
+
 
     column_names = ["geo_id", "val",
                     "se", "sample_size", "time_value"]

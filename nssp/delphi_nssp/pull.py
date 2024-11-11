@@ -127,7 +127,7 @@ def secondary_pull_nssp_data(socrata_token: str):
 
     df_ervisits.loc[df_ervisits["geo_value"] == "National", "geo_type"] = "nation"
 
-    hhs_region_mask = df_ervisits["geo_value"].str.startswith("Region ")
+    hhs_region_mask = df_ervisits["geo_value"].str.lower().startswith("region ")
     df_ervisits.loc[hhs_region_mask, "geo_value"] = df_ervisits.loc[hhs_region_mask, "geo_value"].str.replace(
         "Region ", ""
     )

@@ -146,6 +146,7 @@ def run_module(params):
     for signal in SECONDARY_SIGNALS:
         secondary_df_pull_signal = secondary_df_pull[secondary_df_pull["signal"] == signal]
         if secondary_df_pull_signal.empty:
+            logger.warning("No data found for signal", signal=signal)
             continue
         for geo in SECONDARY_GEOS:
             df = secondary_df_pull_signal.copy()

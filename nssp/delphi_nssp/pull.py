@@ -98,7 +98,7 @@ def pull_nssp_data(socrata_token: str, backup_dir: str, custom_run: bool, logger
     return df_ervisits[SIGNALS + keep_columns]
 
 
-def secondary_pull_nssp_data(socrata_token: str):
+def secondary_pull_nssp_data(socrata_token: str, backup_dir: str, custom_run: bool, logger: Optional[logging.Logger] = None):
     """Pull the latest NSSP ER visits secondary dataset.
 
     https://data.cdc.gov/Public-Health-Surveillance/2023-Respiratory-Virus-Response-NSSP-Emergency-Dep/7mra-9cq9/data_preview
@@ -119,6 +119,7 @@ def secondary_pull_nssp_data(socrata_token: str):
     """
     socrata_results = pull_with_socrata_api(socrata_token, "7mra-9cq9")
     df_ervisits = pd.DataFrame.from_records(socrata_results)
+    create_backup_csv(df_ervisits, backup_dir, custom_run, sensor="secondary", logger=logger)
     df_ervisits = df_ervisits.rename(columns=SECONDARY_COLS_MAP)
 
     # geo_type is not provided in the dataset, so we infer it from the geo_value

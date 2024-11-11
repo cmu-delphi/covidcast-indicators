@@ -142,7 +142,7 @@ def run_module(params):
                 run_stats.append((max(dates), len(dates)))
 
     logger.info("Generating secondary signals")
-    secondary_df_pull = secondary_pull_nssp_data(socrata_token)
+    secondary_df_pull = secondary_pull_nssp_data(socrata_token, backup_dir, custom_run, logger)
     for signal in SECONDARY_SIGNALS:
         secondary_df_pull_signal = secondary_df_pull[secondary_df_pull["signal"] == signal]
         if secondary_df_pull_signal.empty:

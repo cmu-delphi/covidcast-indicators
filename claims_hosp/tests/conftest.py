@@ -19,9 +19,9 @@ TEST_DIR = Path(__file__).parent
 def params():
     params = {
         "common": {
-            "export_dir": f"{TEST_DIR}/receiving",
+            "export_dir": f"{TEST_DIR}/retrieve_files",
             "log_filename": f"{TEST_DIR}/test.log",
-            "custom_run": True,
+            "custom_run": False,
         },
         "indicator": {
             "drop_date": None,
@@ -58,9 +58,10 @@ def params():
 @pytest.fixture
 def params_w_patch(params):
     params_copy = copy.deepcopy(params)
+    params_copy["common"]["custom_run"] = True
     params_copy["patch"] = {
-            "start_issue": "2020-11-07",
-            "end_issue": "2020-11-07",
+            "start_issue": "2020-06-12",
+            "end_issue": "2020-06-12",
             "patch_dir": "./patch_dir"
         }
     return params_copy

@@ -1,9 +1,9 @@
-{"geo_value": ["1044"],
-                                      "stderr": [null],
-                                      "value": [3],
-                                      "issue": [20200101],
-                                      "lag": [7],
-                                      "sample_size": [null],
-                                      "time_value": [20200101],
-                                      "direction": [null]
-                                     }
+[{"geo_value": "1044",
+  "stderr": null,
+  "value": 3,
+  "issue": 20200101,
+  "lag": 7,
+  "sample_size": null,
+  "time_value": 20200101,
+  "direction": null
+}]

@@ -58,7 +58,7 @@ def run_module(params, logger=None):
     num_export_days = generate_num_export_days(params, logger)
     # safety check for patch parameters exists in file, but not running custom runs/patches
     custom_run_flag = (
-        False if not params["indicator"].get("custom_run", False) else params["indicator"].get("custom_run", False)
+        False if not params["common"].get("custom_run", False) else params["indicator"].get("custom_run", False)
     )
 
     # Pull GS data
@@ -68,17 +68,21 @@ def run_module(params, logger=None):
         export_end_date,
         num_export_days,
         custom_run_flag,
+        logger,
     )
-    for geo_res in GEO_RESOLUTIONS:
+
+    for geo_res, mapped_res in GEO_RESOLUTIONS.items():
+        df_pull = dfs[mapped_res]
+        if len(df_pull) == 0:
+            logger.info("Skipping processing; No data available for geo", geo_type=geo_res)
+            continue
         if geo_res == "state":
             df_pull = dfs["state"]
         elif geo_res in ["hhs", "nation"]:
-            df_pull = geo_map(dfs["state"], geo_res)
+            df_pull = geo_map(dfs[mapped_res], geo_res)
         else:
-            df_pull = geo_map(dfs["county"], geo_res)
+            df_pull = geo_map(dfs[mapped_res], geo_res)
 
-        if len(df_pull) == 0:
-            continue
         for metric, smoother in product(COMBINED_METRIC, SMOOTHERS):
             sensor_name = "_".join([smoother, "search"])
             logger.info("Generating signal and exporting to CSV", geo_type=geo_res, signal=f"{metric}_{sensor_name}")

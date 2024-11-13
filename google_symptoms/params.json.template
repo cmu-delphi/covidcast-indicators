@@ -2,6 +2,7 @@
   "common": {
     "export_dir": "./receiving",
     "log_exceptions": false,
+    "custom_run": false,
     "log_filename": "./google-symptoms.log"
   },
   "indicator": {

@@ -12,6 +12,7 @@ from delphi_google_symptoms.pull import (
     pull_gs_data, preprocess, format_dates_for_query, pull_gs_data_one_geolevel)
 from delphi_google_symptoms.constants import METRICS, COMBINED_METRIC
 from conftest import TEST_DIR
+from delphi_utils import get_structured_logger
 
 good_input = {
     "state": f"{TEST_DIR}/test_data/small_states_daily.csv",
@@ -30,6 +31,7 @@ new_keep_cols = ["geo_id", "timestamp"] + METRICS + COMBINED_METRIC
 
 
 class TestPullGoogleSymptoms:
+    logger = get_structured_logger()
     @freeze_time("2021-01-05")
     @mock.patch("pandas_gbq.read_gbq")
     @mock.patch("delphi_google_symptoms.pull.initialize_credentials")
@@ -49,7 +51,9 @@ class TestPullGoogleSymptoms:
         end_date = datetime.combine(date.today(), datetime.min.time())
 
         dfs = pull_gs_data("", datetime.strptime(
-            "20201230", "%Y%m%d"), datetime.combine(date.today(), datetime.min.time()), 0, False)
+            "20201230", "%Y%m%d"),
+                           datetime.combine(date.today(), datetime.min.time()),
+                           0, False, self.logger)
 
         for level in ["county", "state"]:
             df = dfs[level]
@@ -119,7 +123,7 @@ class TestPullGoogleSymptoms:
     def test_pull_one_gs_no_dates(self, mock_read_gbq):
         mock_read_gbq.return_value = pd.DataFrame()
 
-        output = pull_gs_data_one_geolevel("state", ["", ""])
+        output = pull_gs_data_one_geolevel("state", ["", ""], self.logger)
         expected = pd.DataFrame(columns=new_keep_cols)
         assert_frame_equal(output, expected, check_dtype = False)
 
@@ -133,7 +137,7 @@ class TestPullGoogleSymptoms:
         with mock.patch("pandas_gbq.read_gbq") as mock_read_gbq:
             mock_read_gbq.side_effect = [badRequestException, pd.DataFrame()]
 
-            output = pull_gs_data_one_geolevel("state", ["", ""])
+            output = pull_gs_data_one_geolevel("state", ["", ""], self.logger)
             expected = pd.DataFrame(columns=new_keep_cols)
             assert_frame_equal(output, expected, check_dtype = False)
             assert mock_read_gbq.call_count == 2
@@ -147,7 +151,7 @@ class TestPullGoogleSymptoms:
         with mock.patch("pandas_gbq.read_gbq") as mock_read_gbq:
             with pytest.raises(BadRequest):
                 mock_read_gbq.side_effect = [badRequestException, badRequestException, pd.DataFrame()]
-                pull_gs_data_one_geolevel("state", ["", ""])
+                pull_gs_data_one_geolevel("state", ["", ""], self.logger)
 
 
     def test_pull_one_gs_retry_bad(self):
@@ -156,7 +160,7 @@ class TestPullGoogleSymptoms:
         with mock.patch("pandas_gbq.read_gbq") as mock_read_gbq:
             with pytest.raises(BadRequest):
                 mock_read_gbq.side_effect = [badRequestException,pd.DataFrame()]
-                pull_gs_data_one_geolevel("state", ["", ""])
+                pull_gs_data_one_geolevel("state", ["", ""], self.logger)
 
     def test_preprocess_no_data(self):
         output = preprocess(pd.DataFrame(columns=keep_cols), "state")

@@ -36,36 +36,62 @@ HOSPITAL_CONFIRMED_FLU_ADULT_PERCENT = "Percent Hospitals Reporting TotalPatient
 CONFIRMED_FLU_PEDIATRIC_PERCENT = "Percent Pediatric Influenza Admissions"
 HOSPTIAL_CONFIRMED_FLU_PEDIATRIC_PERCENT = "Percent Hospitals Reporting Pediatric Influenza Admissions"
 
+AGE_GROUPS = [
+    "0to4",
+    "5to17",
+    "18to49",
+    "50to64",
+    "65to74",
+    "75plus",
+    "unk"
+]
+
 # column name from socrata
-CONFIRMED_COVID_API = "total_admissions_all_covid_confirmed"
-HOSPITAL_CONFIRMED_COVID_API = "percent_hospitals_admissions_all_covid_confirmed"
+TOTAL_ADMISSION_COVID_API = "totalconfc19newadm"
+ADULT_ADMISSION_COVID_API = "numconfc19newadmadult"
+TOTAL_ADULT_ADMISSION_COVID_API = "totalconfc19newadmadult"
+PEDIATRIC_ADMISSION_COVID_API = "numconfc19newadmped"
+TOTAL_PEDIATRIC_ADMISSION_COVID_API = "totalconfc19newadmped"
 
-ADULT_CONFIRMED_COVID_API = "total_admissions_adult_covid_confirmed"
-PEDIATRIC_CONFIRMED_COVID_API = "total_admissions_pediatric_covid_confirmed"
+PERCENT_ADULT_ADMISSION_COVID_API = "pctconfrsvnewadmadult"
+PERCENT_PEDIATRIC_ADMISSION_COVID_API = "pctconfrsvnewadmped"
 
-CONFIRMED_COVID_ADULT_PERCENT_API = "percent_adult_covid_admissions"
-HOSPITAL_CONFIRMED_COVID_ADULT_PERCENT = "percent_hospitals_previous_day_admission_adult_covid_confirmed"
+TOTAL_ADMISSION_FLU_API = "totalconfflunewadm"
+ADULT_ADMISSION_FLU_API = "numconffluhosppatsadult"
+TOTAL_ADULT_ADMISSION_FLU_API = "numconfflunewadmadult"
+PEDIATRIC_ADMISSION_FLU_API = "numconfflunewadmped"
+TOTAL_PEDIATRIC_ADMISSION_FLU_API = "totalconfflunewadmped"
 
-CONFIRMED_COVID_PEDIATRIC_PERCENT_API = "percent_pediatric_covid_admissions"
-HOSPITAL_COVID_CONFIRMED_PEDIATRIC_PERCENT_API = "percent_hospitals_previous_day_admission_pediatric_covid_confirmed"
-
-CONFIRMED_FLU_API = "total_admissions_all_influenza_confirmed"
-HOSPITAL_CONFIRMED_FLU_API = "percent_hospitals_previous_day_admission_influenza_confirmed"
-
+TOTAL_ADMISSION_RSV_API = "totalconfrsvnewadm"
+ADULT_ADMISSION_RSV_API = "numconfrsvnewadmadult"
+TOTAL_ADULT_ADMISSION_RSV_API = "totalconfrsvnewadmadult"
+PEDIATRIC_ADMISSION_RSV_API = "numconfrsvnewadmped"
+TOTAL_PEDIATRIC_ADMISSION_RSV_API = "totalconfrsvnewadmped"
 
 PARTIAL_SIGNALS = [
-    CONFIRMED_COVID_API,
-    ADULT_CONFIRMED_COVID_API,
-    PEDIATRIC_CONFIRMED_COVID_API,
-    CONFIRMED_COVID_ADULT_PERCENT_API,
-    CONFIRMED_COVID_PEDIATRIC_PERCENT_API,
-    CONFIRMED_FLU_API
+    TOTAL_ADMISSION_COVID_API,
+    ADULT_ADMISSION_COVID_API,
+    TOTAL_ADULT_ADMISSION_COVID_API,
+    PEDIATRIC_ADMISSION_COVID_API,
+    TOTAL_PEDIATRIC_ADMISSION_COVID_API,
+    PERCENT_ADULT_ADMISSION_COVID_API,
+    PERCENT_PEDIATRIC_ADMISSION_COVID_API,
+    TOTAL_ADMISSION_FLU_API,
+    ADULT_ADMISSION_FLU_API,
+    TOTAL_ADULT_ADMISSION_FLU_API,
+    PEDIATRIC_ADMISSION_FLU_API,
+    TOTAL_PEDIATRIC_ADMISSION_FLU_API,
+    TOTAL_ADMISSION_RSV_API,
+    ADULT_ADMISSION_RSV_API,
+    TOTAL_ADULT_ADMISSION_RSV_API,
+    PEDIATRIC_ADMISSION_RSV_API,
+    TOTAL_PEDIATRIC_ADMISSION_RSV_API,
 ]
 
 SIGNALS_MAP = {
-    "confirmed_admissions_covid": [CONFIRMED_COVID_API],
-    "confirmed_admissions_flu": [CONFIRMED_FLU_API],
-    "pct_confirmed_admissions_covid": [CONFIRMED_COVID_ADULT_PERCENT_API, CONFIRMED_COVID_PEDIATRIC_PERCENT_API]
+    "confirmed_admissions_covid": [TOTAL_ADMISSION_COVID_API],
+    "confirmed_admissions_flu": [TOTAL_ADMISSION_FLU_API],
+    "confirmed_admissions_rsv": [TOTAL_ADMISSION_RSV_API],
 }
 
 TYPE_DICT = {

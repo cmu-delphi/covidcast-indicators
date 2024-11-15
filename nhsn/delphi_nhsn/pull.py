@@ -47,7 +47,7 @@ def pull_nhsn_data(socrata_token: str, backup_dir: str, custom_run: bool, logger
     offset = 0
     limit = 50000  # maximum limit allowed by SODA 2.0
     while True:
-        page = client.get("aemt-mg7g", limit=limit, offset=offset)
+        page = client.get("ua7e-t2fy", limit=limit, offset=offset)
         if not page:
             break  # exit the loop if no more results
         results.extend(page)
@@ -56,7 +56,7 @@ def pull_nhsn_data(socrata_token: str, backup_dir: str, custom_run: bool, logger
 
     create_backup_csv(df, backup_dir, custom_run, logger=logger)
 
-    df = df.rename(columns={"week_end_date": "timestamp"})
+    df = df.rename(columns={"weekendingdate": "timestamp"})
     df = df[TYPE_DICT.keys()]
     df = df.astype(TYPE_DICT)
     processed_df = process_signal_data(df)

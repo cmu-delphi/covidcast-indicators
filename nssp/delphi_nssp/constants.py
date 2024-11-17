@@ -50,10 +50,10 @@ SECONDARY_COLS_MAP = {
 }
 
 SECONDARY_SIGNALS_MAP = {
-    "COVID-19": "pct_ed_visits_covid_secondary",
-    "Influenza": "pct_ed_visits_influenza_secondary",
-    "RSV": "pct_ed_visits_rsv_secondary",
-    "Combined": "pct_ed_visits_combined_secondary",
+    "COVID-19": "pct_ed_visits_covid_2023RVR",
+    "Influenza": "pct_ed_visits_influenza_2023RVR",
+    "RSV": "pct_ed_visits_rsv_2023RVR",
+    "Combined": "pct_ed_visits_combined_2023RVR",
 }
 
 SECONDARY_SIGNALS = [val for (key, val) in SECONDARY_SIGNALS_MAP.items()]

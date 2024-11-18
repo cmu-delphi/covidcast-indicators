@@ -1,20 +1,13 @@
 # -*- coding: utf-8 -*-
 """Functions for pulling NSSP ER data."""
 import logging
-import textwrap
 from typing import Optional
 
 import pandas as pd
-from delphi_utils import create_backup_csv
+from delphi_utils import create_backup_csv, GeoMapper
 from sodapy import Socrata
 
-from .constants import SIGNALS_MAP, TYPE_DICT, PARTIAL_SIGNALS
-
-
-def process_signal_data(df):
-    for signal, signal_parts in SIGNALS_MAP.items():
-        df[signal] = sum([df[col] for col in signal_parts])
-    return df
+from .constants import TYPE_DICT, SIGNALS_MAP
 
 
 def pull_nhsn_data(socrata_token: str, backup_dir: str, custom_run: bool, logger: Optional[logging.Logger] = None):
@@ -52,13 +45,21 @@ def pull_nhsn_data(socrata_token: str, backup_dir: str, custom_run: bool, logger
             break  # exit the loop if no more results
         results.extend(page)
         offset += limit
+
     df = pd.DataFrame.from_records(results)
+    keep_columns = list(TYPE_DICT.keys())
 
-    create_backup_csv(df, backup_dir, custom_run, logger=logger)
+    if not df.empty:
+        create_backup_csv(df, backup_dir, custom_run, logger=logger)
 
-    df = df.rename(columns={"weekendingdate": "timestamp"})
-    df = df[TYPE_DICT.keys()]
-    df = df.astype(TYPE_DICT)
-    processed_df = process_signal_data(df)
-    processed_df = processed_df.drop(columns=PARTIAL_SIGNALS)
-    return processed_df
+        df = df.rename(columns={"weekendingdate": "timestamp", "jurisdiction": "geo_id"})
+
+        for signal, col_name in SIGNALS_MAP.items():
+            df[signal] = df[col_name]
+
+        df = df[keep_columns]
+        df = df.astype(TYPE_DICT)
+    else:
+        df = pd.DataFrame(columns=keep_columns)
+
+    return df

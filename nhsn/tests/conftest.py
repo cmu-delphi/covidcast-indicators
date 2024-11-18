@@ -1,0 +1,63 @@
+import copy
+import json
+from unittest.mock import patch
+
+import pytest
+from pathlib import Path
+
+from delphi_nhsn.run import run_module
+
+TEST_DIR = Path(__file__).parent
+
+# test data generated with following url with socrata:
+# https://data.cdc.gov/resource/ua7e-t2fy.json?$where=weekendingdate%20between%20%272023-08-19T00:00:00.000%27%20and%20%272023-10-19T00:00:00.000%27%20and%20jurisdiction%20in(%27CO%27,%27USA%27)
+# queries the nhsn data with timestamp (2021-08-19, 2021-10-19) with CO and USA data
+TEST_DATA = []
+with open("test_data/page.json", "r") as f:
+    TEST_DATA = json.load(f)
+
+@pytest.fixture(scope="session")
+def params():
+    params = {
+        "common": {
+            "export_dir": f"{TEST_DIR}/receiving",
+            "log_filename": f"{TEST_DIR}/test.log",
+            "backup_dir": f"{TEST_DIR}/backups",
+            "custom_run": False
+        },
+        "indicator": {
+            "wip_signal": True,
+            "export_start_date": "2020-08-01",
+            "static_file_dir": "./static",
+            "socrata_token": "test_token"
+        },
+        "validation": {
+            "common": {
+                "span_length": 14,
+                "min_expected_lag": {"all": "3"},
+                "max_expected_lag": {"all": "4"},
+            }
+        }
+    }
+    return copy.deepcopy(params)
+
+@pytest.fixture
+def params_w_patch(params):
+    params_copy = copy.deepcopy(params)
+    params_copy["patch"] = {
+            "start_issue": "2024-06-27",
+            "end_issue": "2024-06-29",
+            "patch_dir": "./patch_dir"
+        }
+    return params_copy
+@pytest.fixture
+def mock_get(request):
+    with patch('sodapy.Socrata.get') as mock_get:
+        mock_get.side_effect = [TEST_DATA,[]]
+        yield mock_get
+
+@pytest.fixture(scope="function")
+def run_as_module(params, mock_get):
+
+    run_module(params)
+

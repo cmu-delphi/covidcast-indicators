@@ -59,7 +59,7 @@ def run_module(params, logger=None):
     # safety check for patch parameters exists in file, but not running custom runs/patches
     custom_run_flag = False if not params["common"].get("custom_run", False) else params["common"]["custom_run"]
     issue_date_str = params.get("patch", {}).get("current_issue", None)
-    issue_date = datetime.strptime(issue_date_str, "%Y-%m-%d") if issue_date_str else None
+    issue_date = datetime.strptime(issue_date_str + " 23:59:00", "%Y-%m-%d %H:%M:%S") if issue_date_str else None
     if not logger:
         logger = get_structured_logger(
             __name__,

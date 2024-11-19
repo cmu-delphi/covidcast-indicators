@@ -52,8 +52,8 @@ def params_w_patch(params):
     params_copy = copy.deepcopy(params)
     params_copy["common"]["custom_run"] = True
     params_copy["patch"] = {
-            "start_issue": "2020-06-12",
-            "end_issue": "2020-06-12",
+            "start_issue": "2020-06-11",
+            "end_issue": "2020-06-11",
             "patch_dir": "./patch_dir"
         }
     return params_copy

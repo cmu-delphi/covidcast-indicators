@@ -1,4 +1,5 @@
 """Registry for signal names."""
+
 GEOS = ["state", "nation"]
 
 # column name from socrata

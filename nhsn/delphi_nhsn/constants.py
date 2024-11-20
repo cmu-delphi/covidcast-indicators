@@ -1,4 +1,5 @@
 """Registry for signal names."""
+import itertools
 
 GEOS = [
     "state",
@@ -15,8 +16,20 @@ SIGNALS_MAP = {
 }
 
 TYPE_DICT = {
-        "timestamp": "datetime64[ns]",
-        "geo_id": str,
+    "timestamp": "datetime64[ns]",
+    "geo_id": str,
 }
-
 TYPE_DICT.update({signal: float for signal in SIGNALS_MAP.keys()})
+
+# signal mapping for secondary, preliminary source
+PRELIM_SIGNALS_MAP = {
+    "prelim_confirmed_admissions_covid": TOTAL_ADMISSION_COVID_API,
+    "prelim_confirmed_admissions_flu": TOTAL_ADMISSION_FLU_API,
+}
+PRELIM_TYPE_DICT = {
+    "timestamp": "datetime64[ns]",
+    "geo_id": str,
+}
+PRELIM_TYPE_DICT.update({signal: float for signal in PRELIM_SIGNALS_MAP.keys()})
+
+ALL_SIGNALS = list(itertools.chain(SIGNALS_MAP.keys(),PRELIM_SIGNALS_MAP.keys()))

@@ -11,10 +11,16 @@ TEST_DIR = Path(__file__).parent
 
 # test data generated with following url with socrata:
 # https://data.cdc.gov/resource/ua7e-t2fy.json?$where=weekendingdate%20between%20%272023-08-19T00:00:00.000%27%20and%20%272023-10-19T00:00:00.000%27%20and%20jurisdiction%20in(%27CO%27,%27USA%27)
+# preliminary source
+# https://data.cdc.gov/resource/mpgq-jmmr.json?$where=weekendingdate%20between%20%272023-08-19T00:00:00.000%27%20and%20%272023-10-19T00:00:00.000%27%20and%20jurisdiction%20in(%27CO%27,%27USA%27)
 # queries the nhsn data with timestamp (2021-08-19, 2021-10-19) with CO and USA data
-TEST_DATA = []
+
+
 with open("test_data/page.json", "r") as f:
     TEST_DATA = json.load(f)
+
+with open("test_data/prelim_page.json", "r") as f:
+    PRELIM_TEST_DATA = json.load(f)
 
 @pytest.fixture(scope="session")
 def params():
@@ -50,14 +56,18 @@ def params_w_patch(params):
             "patch_dir": "./patch_dir"
         }
     return params_copy
-@pytest.fixture
-def mock_get(request):
-    with patch('sodapy.Socrata.get') as mock_get:
-        mock_get.side_effect = [TEST_DATA,[]]
-        yield mock_get
 
 @pytest.fixture(scope="function")
-def run_as_module(params, mock_get):
-
-    run_module(params)
+def run_as_module(params):
+    with patch('sodapy.Socrata.get') as mock_get:
+        def side_effect(*args, **kwargs):
+            if kwargs['offset'] == 0:
+                if "ua7e-t2fy" in args[0]:
+                    return TEST_DATA
+                if "mpgq-jmmr" in args[0]:
+                    return PRELIM_TEST_DATA
+            else:
+                return []
+        mock_get.side_effect = side_effect
+        run_module(params)
 

@@ -24,8 +24,8 @@ from delphi_utils import get_structured_logger
 from delphi_utils.export import create_export_csv
 from delphi_utils.geomap import GeoMapper
 
-from .constants import GEOS, SIGNALS_MAP
-from .pull import pull_nhsn_data
+from .constants import GEOS, ALL_SIGNALS
+from .pull import pull_nhsn_data, pull_preliminary_nhsn_data
 
 
 def run_module(params):
@@ -55,11 +55,14 @@ def run_module(params):
             days=date.today().weekday() + 2)
         export_start_date = export_start_date.strftime('%Y-%m-%d')
 
-    df_pull = pull_nhsn_data(socrata_token, backup_dir, custom_run=custom_run, logger=logger)
+    nhsn_df = pull_nhsn_data(socrata_token, backup_dir, custom_run=custom_run, logger=logger)
+    preliminary_nhsn_df = pull_preliminary_nhsn_data(socrata_token, backup_dir, custom_run=custom_run, logger=logger)
 
+    df_pull = pd.concat([nhsn_df, preliminary_nhsn_df])
 
     nation_df = df_pull[df_pull["geo_id"] == "USA"]
     state_df = df_pull[df_pull["geo_id"] != "USA"]
+
 
     if not df_pull.empty:
         for geo in GEOS:
@@ -67,7 +70,7 @@ def run_module(params):
                 df = nation_df
             else:
                 df = state_df
-            for signal in SIGNALS_MAP.keys():
+            for signal in ALL_SIGNALS:
                 df["val"] = df[signal]
                 df["se"] = np.nan
                 df["sample_size"] = np.nan

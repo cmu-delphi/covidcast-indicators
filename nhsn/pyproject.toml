@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "delphi_nhsn"
 version = "0.1.0"
-description = "SHORT DESCRIPTION"
+description = "Indicators NHSN Hospital Respiratory Data"
 readme = "README.md"
 requires-python = "== 3.8.*"
 license = { text = "MIT License" }

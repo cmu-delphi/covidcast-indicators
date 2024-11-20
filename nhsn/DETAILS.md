@@ -12,5 +12,7 @@ Secondary (preliminary source): https://data.cdc.gov/Public-Health-Surveillance/
 * `national`: just `us` for now
 
 ## Metrics
-*  `confirmed_admissions_covid`: percentage of emergency department patient visits for specified pathogen.
-*  `confirmed_admissions_flu`: sum of the three percentages of visits for flu, rsv and covid.
+*  `confirmed_admissions_covid`: total number of confirmed admission for covid
+*  `confirmed_admissions_flu`: total number of confirmed admission for flu
+*  `prelim_confirmed_admissions_covid`: total number of confirmed admission for covid from preliminary source
+*  `prelim_confirmed_admissions_flu`: total number of confirmed admission for flu  from preliminary source

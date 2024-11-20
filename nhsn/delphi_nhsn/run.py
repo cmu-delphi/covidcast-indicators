@@ -22,7 +22,7 @@ import pandas as pd
 from delphi_utils import get_structured_logger
 from delphi_utils.export import create_export_csv
 
-from .constants import ALL_SIGNALS, GEOS
+from .constants import GEOS, PRELIM_SIGNALS_MAP, SIGNALS_MAP
 from .pull import pull_nhsn_data, pull_preliminary_nhsn_data
 
 
@@ -55,18 +55,13 @@ def run_module(params):
     nhsn_df = pull_nhsn_data(socrata_token, backup_dir, custom_run=custom_run, logger=logger)
     preliminary_nhsn_df = pull_preliminary_nhsn_data(socrata_token, backup_dir, custom_run=custom_run, logger=logger)
 
-    df_pull = pd.concat([nhsn_df, preliminary_nhsn_df])
-
-    nation_df = df_pull[df_pull["geo_id"] == "USA"]
-    state_df = df_pull[df_pull["geo_id"] != "USA"]
-
-    if not df_pull.empty:
+    for signals, df_pull in [(SIGNALS_MAP.keys(), nhsn_df), (PRELIM_SIGNALS_MAP.keys(), preliminary_nhsn_df)]:
         for geo in GEOS:
             if geo == "nation":
-                df = nation_df
+                df = df_pull[df_pull["geo_id"] == "USA"]
             else:
-                df = state_df
-            for signal in ALL_SIGNALS:
+                df = df_pull[df_pull["geo_id"] != "USA"]
+            for signal in signals:
                 df["val"] = df[signal]
                 df["se"] = np.nan
                 df["sample_size"] = np.nan

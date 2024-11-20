@@ -29,10 +29,3 @@ PRELIM_TYPE_DICT = {
     "prelim_confirmed_admissions_covid": float,
     "prelim_confirmed_admissions_flu": float,
 }
-
-ALL_SIGNALS = [
-    "confirmed_admissions_covid",
-    "confirmed_admissions_covid",
-    "prelim_confirmed_admissions_covid",
-    "prelim_confirmed_admissions_flu",
-]

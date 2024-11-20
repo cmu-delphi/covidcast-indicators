@@ -15,16 +15,14 @@ the following structure:
         - Any other indicator-specific settings
 """
 import time
-from datetime import timedelta, datetime, date
-from itertools import product
+from datetime import date, datetime, timedelta
 
 import numpy as np
 import pandas as pd
 from delphi_utils import get_structured_logger
 from delphi_utils.export import create_export_csv
-from delphi_utils.geomap import GeoMapper
 
-from .constants import GEOS, ALL_SIGNALS
+from .constants import ALL_SIGNALS, GEOS
 from .pull import pull_nhsn_data, pull_preliminary_nhsn_data
 
 
@@ -51,9 +49,8 @@ def run_module(params):
     run_stats = []
 
     if export_start_date == "latest":  # Find the previous Saturday
-        export_start_date = date.today() - timedelta(
-            days=date.today().weekday() + 2)
-        export_start_date = export_start_date.strftime('%Y-%m-%d')
+        export_start_date = date.today() - timedelta(days=date.today().weekday() + 2)
+        export_start_date = export_start_date.strftime("%Y-%m-%d")
 
     nhsn_df = pull_nhsn_data(socrata_token, backup_dir, custom_run=custom_run, logger=logger)
     preliminary_nhsn_df = pull_preliminary_nhsn_data(socrata_token, backup_dir, custom_run=custom_run, logger=logger)
@@ -62,7 +59,6 @@ def run_module(params):
 
     nation_df = df_pull[df_pull["geo_id"] == "USA"]
     state_df = df_pull[df_pull["geo_id"] != "USA"]
-
 
     if not df_pull.empty:
         for geo in GEOS:
@@ -80,7 +76,7 @@ def run_module(params):
                     export_dir=export_dir,
                     start_date=datetime.strptime(export_start_date, "%Y-%m-%d"),
                     sensor=signal,
-                    weekly_dates=True
+                    weekly_dates=True,
                 )
                 if len(dates) > 0:
                     run_stats.append((max(dates), len(dates)))
@@ -97,4 +93,3 @@ def run_module(params):
         max_lag_in_days=max_lag_in_days,
         oldest_final_export_date=formatted_min_max_date,
     )
-

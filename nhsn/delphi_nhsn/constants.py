@@ -1,10 +1,5 @@
 """Registry for signal names."""
-import itertools
-
-GEOS = [
-    "state",
-    "nation"
-]
+GEOS = ["state", "nation"]
 
 # column name from socrata
 TOTAL_ADMISSION_COVID_API = "totalconfc19newadm"
@@ -18,8 +13,9 @@ SIGNALS_MAP = {
 TYPE_DICT = {
     "timestamp": "datetime64[ns]",
     "geo_id": str,
+    "confirmed_admissions_covid": float,
+    "confirmed_admissions_flu": float,
 }
-TYPE_DICT.update({signal: float for signal in SIGNALS_MAP.keys()})
 
 # signal mapping for secondary, preliminary source
 PRELIM_SIGNALS_MAP = {
@@ -29,7 +25,13 @@ PRELIM_SIGNALS_MAP = {
 PRELIM_TYPE_DICT = {
     "timestamp": "datetime64[ns]",
     "geo_id": str,
+    "prelim_confirmed_admissions_covid": float,
+    "prelim_confirmed_admissions_flu": float,
 }
-PRELIM_TYPE_DICT.update({signal: float for signal in PRELIM_SIGNALS_MAP.keys()})
 
-ALL_SIGNALS = list(itertools.chain(SIGNALS_MAP.keys(),PRELIM_SIGNALS_MAP.keys()))
+ALL_SIGNALS = [
+    "confirmed_admissions_covid",
+    "confirmed_admissions_covid",
+    "prelim_confirmed_admissions_covid",
+    "prelim_confirmed_admissions_flu",
+]

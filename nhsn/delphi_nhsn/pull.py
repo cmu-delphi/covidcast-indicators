@@ -7,10 +7,11 @@ import pandas as pd
 from delphi_utils import create_backup_csv
 from sodapy import Socrata
 
-from .constants import TYPE_DICT, SIGNALS_MAP, PRELIM_SIGNALS_MAP, PRELIM_TYPE_DICT
+from .constants import PRELIM_SIGNALS_MAP, PRELIM_TYPE_DICT, SIGNALS_MAP, TYPE_DICT
 
-def pull_data(socrata_token: str,  dataset_id:str):
-    # Pull data from Socrata API
+
+def pull_data(socrata_token: str, dataset_id: str):
+    """Pull data from Socrata API"""
     client = Socrata("data.cdc.gov", socrata_token)
     results = []
     offset = 0
@@ -71,7 +72,9 @@ def pull_nhsn_data(socrata_token: str, backup_dir: str, custom_run: bool, logger
     return df
 
 
-def pull_preliminary_nhsn_data(socrata_token: str, backup_dir: str, custom_run: bool, logger: Optional[logging.Logger] = None):
+def pull_preliminary_nhsn_data(
+    socrata_token: str, backup_dir: str, custom_run: bool, logger: Optional[logging.Logger] = None
+):
     """Pull the latest NSSP ER visits data, and conforms it into a dataset.
 
     The output dataset has:

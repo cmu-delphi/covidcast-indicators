@@ -10,9 +10,9 @@ from delphi_nhsn.run import run_module
 TEST_DIR = Path(__file__).parent
 
 # test data generated with following url with socrata:
-# https://data.cdc.gov/resource/ua7e-t2fy.json?$where=weekendingdate%20between%20%272023-08-19T00:00:00.000%27%20and%20%272023-10-19T00:00:00.000%27%20and%20jurisdiction%20in(%27CO%27,%27USA%27)
+# https://data.cdc.gov/resource/ua7e-t2fy.json?$where=weekendingdate%20between%20%272021-08-19T00:00:00.000%27%20and%20%272021-10-19T00:00:00.000%27%20and%20jurisdiction%20in(%27CO%27,%27USA%27)
 # preliminary source
-# https://data.cdc.gov/resource/mpgq-jmmr.json?$where=weekendingdate%20between%20%272023-08-19T00:00:00.000%27%20and%20%272023-10-19T00:00:00.000%27%20and%20jurisdiction%20in(%27CO%27,%27USA%27)
+# https://data.cdc.gov/resource/mpgq-jmmr.json?$where=weekendingdate%20between%20%272021-08-19T00:00:00.000%27%20and%20%272021-10-19T00:00:00.000%27%20and%20jurisdiction%20in(%27CO%27,%27USA%27)
 # queries the nhsn data with timestamp (2021-08-19, 2021-10-19) with CO and USA data
 
 

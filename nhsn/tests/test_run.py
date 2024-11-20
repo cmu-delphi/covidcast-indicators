@@ -26,7 +26,7 @@ class TestRun:
         dates = [
             "2021-08-21", "2021-08-28", "2021-09-04",
             "2021-09-11", "2021-09-18", "2021-09-25",
-            "2021-10-02", "2021-10-16"
+            "2021-10-02", "2021-10-09", "2021-10-16"
         ]
         date_prefix = self.generate_week_file_prefix(dates)
 
@@ -36,7 +36,7 @@ class TestRun:
                 for metric in metrics:
                     expected_files += [f"weekly_{d}_{geo}_{metric}.csv"]
 
-        assert set(expected_files).issubset(set(csv_files))
+        assert set(csv_files).issubset(set(expected_files))
 
         for geo in geos:
             df = pd.read_csv(

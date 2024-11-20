@@ -11,7 +11,7 @@ from .constants import PRELIM_SIGNALS_MAP, PRELIM_TYPE_DICT, SIGNALS_MAP, TYPE_D
 
 
 def pull_data(socrata_token: str, dataset_id: str):
-    """Pull data from Socrata API"""
+    """Pull data from Socrata API."""
     client = Socrata("data.cdc.gov", socrata_token)
     results = []
     offset = 0

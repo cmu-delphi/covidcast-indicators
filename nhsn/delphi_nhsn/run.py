@@ -28,7 +28,7 @@ from .pull import pull_nhsn_data, pull_preliminary_nhsn_data
 
 def run_module(params):
     """
-    Runs the indicator
+    Run the indicator.
 
     Arguments
     --------

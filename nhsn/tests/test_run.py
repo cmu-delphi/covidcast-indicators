@@ -8,7 +8,6 @@ from delphi_nhsn.constants import SIGNALS_MAP, PRELIM_SIGNALS_MAP
 
 
 class TestRun:
-    # the 14th was a Monday
     def generate_week_file_prefix(self, dates):
 
         epiweeks_lst = [ Week.fromdate(pd.to_datetime(str(date))) for date in dates ]

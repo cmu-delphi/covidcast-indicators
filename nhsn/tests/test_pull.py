@@ -1,5 +1,4 @@
 import glob
-import json
 from unittest.mock import patch, MagicMock
 import os
 import pytest

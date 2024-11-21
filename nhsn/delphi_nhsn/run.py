@@ -18,7 +18,6 @@ import time
 from datetime import date, datetime, timedelta
 
 import numpy as np
-import pandas as pd
 from delphi_utils import get_structured_logger
 from delphi_utils.export import create_export_csv
 

@@ -5,7 +5,7 @@
   },
   "validation": {
     "common": {
-      "data_source": "NAME",
+      "data_source": "nhsn",
       "span_length": 14,
       "min_expected_lag": {"all": "1"},
       "max_expected_lag": {"all": "3"},

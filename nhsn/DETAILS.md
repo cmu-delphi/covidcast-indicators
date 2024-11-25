@@ -10,6 +10,7 @@ Secondary (preliminary source): https://data.cdc.gov/Public-Health-Surveillance/
 ## Geographical Levels
 * `state`: reported using two-letter postal code
 * `national`: just `us` for now
+* `hhs`: reporting using Geomapper with state level 
 
 ## Metrics
 *  `confirmed_admissions_covid`: total number of confirmed admission for covid

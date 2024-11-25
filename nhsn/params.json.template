@@ -1,7 +1,7 @@
 {
   "common": {
     "export_dir": "./receiving",
-    "log_filename": "NAME.log"
+    "log_filename": "nhsn.log"
   },
   "validation": {
     "common": {

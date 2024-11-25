@@ -16,9 +16,10 @@ the following structure:
 """
 import time
 from datetime import date, datetime, timedelta
+from itertools import product
 
 import numpy as np
-from delphi_utils import get_structured_logger
+from delphi_utils import get_structured_logger, GeoMapper
 from delphi_utils.export import create_export_csv
 
 from .constants import GEOS, PRELIM_SIGNALS_MAP, SIGNALS_MAP
@@ -54,26 +55,39 @@ def run_module(params):
     nhsn_df = pull_nhsn_data(socrata_token, backup_dir, custom_run=custom_run, logger=logger)
     preliminary_nhsn_df = pull_preliminary_nhsn_data(socrata_token, backup_dir, custom_run=custom_run, logger=logger)
 
-    for signals, df_pull in [(SIGNALS_MAP.keys(), nhsn_df), (PRELIM_SIGNALS_MAP.keys(), preliminary_nhsn_df)]:
+    geo_mapper = GeoMapper()
+    signal_df_dict = {signal: nhsn_df for signal in SIGNALS_MAP.keys()}
+    signal_df_dict.update({signal: preliminary_nhsn_df for signal in PRELIM_SIGNALS_MAP.keys()})
+
+    for signal, df_pull in signal_df_dict.items():
         for geo in GEOS:
+            df = df_pull.copy()
+            df = df[["timestamp", "geo_id", signal]]
+            df.rename({signal: "val"}, axis=1, inplace=True)
             if geo == "nation":
-                df = df_pull[df_pull["geo_id"] == "USA"]
+                df = df[df["geo_id"] == "us"]
+            elif geo == "hhs":
+                df = df[df["geo_id"] != "us"]
+                df = geo_mapper.add_population_column(df, geocode_type="state_id", geocode_col="geo_id")
+                df = geo_mapper.add_geocode(df, "state_id", "state_code", from_col="state_id")
+                df = geo_mapper.add_geocode(df, "state_code", "hhs", from_col="state_code", new_col="geo_id")
+                df = geo_mapper.aggregate_by_weighted_sum(df, "geo_id_y", "val", "timestamp", "population")
+                df = df.rename(columns={"weighted_val": "val"})
             else:
-                df = df_pull[df_pull["geo_id"] != "USA"]
-            for signal in signals:
-                df["val"] = df[signal]
-                df["se"] = np.nan
-                df["sample_size"] = np.nan
-                dates = create_export_csv(
-                    df,
-                    geo_res=geo,
-                    export_dir=export_dir,
-                    start_date=datetime.strptime(export_start_date, "%Y-%m-%d"),
-                    sensor=signal,
-                    weekly_dates=True,
-                )
-                if len(dates) > 0:
-                    run_stats.append((max(dates), len(dates)))
+                df = df[df_pull["geo_id"] != "us"]
+            df["se"] = np.nan
+            df["sample_size"] = np.nan
+            print(signal, geo)
+            dates = create_export_csv(
+                df,
+                geo_res=geo,
+                export_dir=export_dir,
+                start_date=datetime.strptime(export_start_date, "%Y-%m-%d"),
+                sensor=signal,
+                weekly_dates=True,
+            )
+            if len(dates) > 0:
+                run_stats.append((max(dates), len(dates)))
 
     elapsed_time_in_seconds = round(time.time() - start_time, 2)
     min_max_date = run_stats and min(s[0] for s in run_stats)

@@ -1,6 +1,6 @@
 """Registry for signal names."""
 
-GEOS = ["state", "nation"]
+GEOS = ["state", "nation", "hhs"]
 
 # column name from socrata
 TOTAL_ADMISSION_COVID_API = "totalconfc19newadm"

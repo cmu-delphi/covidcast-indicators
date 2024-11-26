@@ -72,7 +72,7 @@ def run_module(params):
                 df = geo_mapper.add_geocode(df, "state_id", "state_code", from_col="state_id")
                 df = geo_mapper.add_geocode(df, "state_code", "hhs", from_col="state_code", new_col="geo_id")
                 df = geo_mapper.aggregate_by_weighted_sum(df, "geo_id_y", "val", "timestamp", "population")
-                df = df.rename(columns={"weighted_val": "val"})
+                df = df.rename(columns={"weighted_val": "val", "geo_id_y": "geo_id"})
             else:
                 df = df[df_pull["geo_id"] != "us"]
             df["se"] = np.nan

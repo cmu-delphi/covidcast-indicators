@@ -2,6 +2,14 @@
   "common": {
     "export_dir": "./receiving",
     "log_filename": "nhsn.log"
+    "backup_dir": "./raw_data_backups",
+
+  },
+    "indicator": {
+    "wip_signal": true,
+    "export_start_date": "2020-08-01",
+    "static_file_dir": "./static",
+    "socrata_token": ""
   },
   "validation": {
     "common": {

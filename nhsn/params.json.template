@@ -1,8 +1,8 @@
 {
   "common": {
     "export_dir": "./receiving",
-    "log_filename": "nhsn.log"
-    "backup_dir": "./raw_data_backups",
+    "log_filename": "nhsn.log",
+    "backup_dir": "./raw_data_backups"
 
   },
     "indicator": {

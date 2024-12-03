@@ -66,7 +66,7 @@ def pull_nhsn_data(socrata_token: str, backup_dir: str, custom_run: bool, logger
 
         df = df[keep_columns]
         df["geo_id"] = df["geo_id"].str.lower()
-        df.loc[df["geo_id"] == "usa", 'geo_id'] = "us"
+        df.loc[df["geo_id"] == "usa", "geo_id"] = "us"
         df = df.astype(TYPE_DICT)
     else:
         df = pd.DataFrame(columns=keep_columns)
@@ -116,7 +116,7 @@ def pull_preliminary_nhsn_data(
         df = df[keep_columns]
         df = df.astype(PRELIM_TYPE_DICT)
         df["geo_id"] = df["geo_id"].str.lower()
-        df.loc[df["geo_id"] == "usa", 'geo_id'] = "us"
+        df.loc[df["geo_id"] == "usa", "geo_id"] = "us"
     else:
         df = pd.DataFrame(columns=keep_columns)
 

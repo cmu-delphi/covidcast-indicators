@@ -16,10 +16,9 @@ the following structure:
 """
 import time
 from datetime import date, datetime, timedelta
-from itertools import product
 
 import numpy as np
-from delphi_utils import get_structured_logger, GeoMapper
+from delphi_utils import GeoMapper, get_structured_logger
 from delphi_utils.export import create_export_csv
 
 from .constants import GEOS, PRELIM_SIGNALS_MAP, SIGNALS_MAP
@@ -56,8 +55,8 @@ def run_module(params):
     preliminary_nhsn_df = pull_preliminary_nhsn_data(socrata_token, backup_dir, custom_run=custom_run, logger=logger)
 
     geo_mapper = GeoMapper()
-    signal_df_dict = {signal: nhsn_df for signal in SIGNALS_MAP.keys()}
-    signal_df_dict.update({signal: preliminary_nhsn_df for signal in PRELIM_SIGNALS_MAP.keys()})
+    signal_df_dict = {signal: nhsn_df for signal in SIGNALS_MAP}
+    signal_df_dict.update({signal: preliminary_nhsn_df for signal in PRELIM_SIGNALS_MAP})
 
     for signal, df_pull in signal_df_dict.items():
         for geo in GEOS:
@@ -71,7 +70,9 @@ def run_module(params):
                 df.rename(columns={"geo_id": "state_id"}, inplace=True)
                 df = geo_mapper.add_geocode(df, "state_id", "state_code", from_col="state_id")
                 df = geo_mapper.add_geocode(df, "state_code", "hhs", from_col="state_code", new_col="hhs")
-                df = geo_mapper.replace_geocode(df, from_col="state_code", from_code="state_code", new_col="geo_id", new_code="hhs")
+                df = geo_mapper.replace_geocode(
+                    df, from_col="state_code", from_code="state_code", new_col="geo_id", new_code="hhs"
+                )
             else:
                 df = df[df_pull["geo_id"] != "us"]
             df["se"] = np.nan

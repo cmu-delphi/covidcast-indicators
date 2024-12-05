@@ -77,7 +77,6 @@ def run_module(params):
                 df = df[df_pull["geo_id"] != "us"]
             df["se"] = np.nan
             df["sample_size"] = np.nan
-            print(signal, geo)
             dates = create_export_csv(
                 df,
                 geo_res=geo,

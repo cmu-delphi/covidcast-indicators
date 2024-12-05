@@ -20,7 +20,7 @@ class TestRun:
     def test_output_files_exist(self, params, run_as_module):
         export_dir = params["common"]["export_dir"]
         csv_files = [f.name for f in Path(export_dir).glob("*.csv")]
-        geos = ["nation", "state"]
+        geos = ["nation", "state", "hhs"]
         metrics = list(SIGNALS_MAP.keys()) + list(PRELIM_SIGNALS_MAP.keys())
         dates = [
             "2021-08-21", "2021-08-28", "2021-09-04",
@@ -34,7 +34,6 @@ class TestRun:
             for d in date_prefix:
                 for metric in metrics:
                     expected_files += [f"weekly_{d}_{geo}_{metric}.csv"]
-
         assert set(csv_files).issubset(set(expected_files))
 
         for geo in geos:

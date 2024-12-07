@@ -20,10 +20,8 @@ To use this module, you need to specify the range of issue dates in params.json,
 It will generate data for that range of issue dates, and store them in batch issue format:
 [name-of-patch]/issue_[issue-date]/quidel_covidtest/actual_data_file.csv
 """
-import time
 from datetime import datetime, timedelta
 from os import makedirs
-from pathlib import Path
 
 from delphi_utils import get_structured_logger, read_params
 

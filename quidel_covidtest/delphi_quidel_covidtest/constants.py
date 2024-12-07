@@ -53,4 +53,3 @@ AGE_GROUPS = [
 ]
 
 FULL_BKFILL_START_DATE = datetime(2020, 5, 26)
-

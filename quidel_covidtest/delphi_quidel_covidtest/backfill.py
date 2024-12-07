@@ -81,7 +81,7 @@ def store_backfill_file(df, _end_date, backfill_dir, logger):
     try:
         backfilldata.to_parquet(path, index=False)
         logger.info("Stored source data in parquet", filename=filename)
-    except Exception as e:
+    except Exception: # pylint: disable=W0703
         logger.info("Failed to store source data in parquet")
     return path
 
@@ -105,6 +105,7 @@ def merge_existing_backfill_files(backfill_dir, backfill_file, issue_date, logge
     new_files = glob.glob(backfill_dir + "/quidel_covidtest_*")
 
     def get_file_with_date(files) -> Union[str, None]:
+        # pylint: disable=R1716
         for filename in files:
             # need to only match files with 6 digits for merged files
             pattern = re.findall(r"_(\d{6,6})\.parquet", filename)
@@ -113,6 +114,7 @@ def merge_existing_backfill_files(backfill_dir, backfill_file, issue_date, logge
                 end_date = (file_month + timedelta(days=32)).replace(day=1)
                 if issue_date >= file_month and issue_date < end_date:
                     return filename
+        # pylint: enable=R1716
         return ""
 
     file_name = get_file_with_date(new_files)
@@ -121,7 +123,8 @@ def merge_existing_backfill_files(backfill_dir, backfill_file, issue_date, logge
         logger.info("Issue date has no matching merged files", issue_date=issue_date.strftime("%Y-%m-%d"))
         return
 
-    logger.info("Adding missing date to merged file", issue_date=issue_date, filename=backfill_file, merged_filename=file_name)
+    logger.info("Adding missing date to merged file", issue_date=issue_date,
+        filename=backfill_file, merged_filename=file_name)
 
     # Start to merge files
     merge_file = f"{file_name.split('.')[0]}_after_merge.parquet"
@@ -133,8 +136,7 @@ def merge_existing_backfill_files(backfill_dir, backfill_file, issue_date, logge
         merged_df.to_parquet(merge_file, index=False)
         os.remove(file_name)
         os.rename(merge_file, file_name)
-    # pylint: disable=W0703:
-    except Exception as e:
+    except Exception as e: # pylint: disable=W0703
         os.remove(merge_file)
         logger.error(e)
     return
@@ -175,7 +177,7 @@ def merge_backfill_file(backfill_dir, today, logger, test_mode=False):
         return
 
     # Start to merge files
-    logger.info(f"Merging files", start_date=date_list[0], end_date=date_list[-1])
+    logger.info("Merging files", start_date=date_list[0], end_date=date_list[-1])
     pdList = []
     for fn in new_files:
         df = pd.read_parquet(fn, engine='pyarrow')

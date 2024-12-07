@@ -7,6 +7,7 @@ required = [
     "darker[isort]~=2.1.1",
     "delphi-utils",
     "imap-tools",
+    "mock",
     "numpy",
     "openpyxl",
     "pandas",

@@ -24,13 +24,36 @@ class Config:
     GEO_COL = "PatCountyFIPS"
     AGE_COL = "PatAgeGroup"
     HRR_COLS = ["Pat HRR Name", "Pat HRR ID"]
-    ID_COLS = [DATE_COL] + [GEO_COL] + [AGE_COL] + HRR_COLS
-    FILT_COLS = ID_COLS + COUNT_COLS
-    DTYPES = {"ServiceDate": str, "PatCountyFIPS": str,
-              "Denominator": int, "Flu1": int,
-              "Covid_like": int, "Flu_like": int,
-              "Mixed": int, "PatAgeGroup": str,
-              "Pat HRR Name": str, "Pat HRR ID": float}
+    # as of 2020-05-11, input file expected to have 10 columns
+    # id cols: ServiceDate, PatCountyFIPS, PatAgeGroup, Pat HRR ID/Pat HRR Name
+    # value cols: Denominator, Covid_like, Flu_like, Flu1, Mixed
+    ID_COLS = [DATE_COL] + [GEO_COL] + HRR_COLS + [AGE_COL]
+    # drop HRR columns - unused for now since we assign HRRs by FIPS
+    FILT_COLS = [DATE_COL] + [GEO_COL] + [AGE_COL] + COUNT_COLS
+    DTYPES = {
+        "ServiceDate": str,
+        "PatCountyFIPS": str,
+        "Denominator": int,
+        "Flu1": int,
+        "Covid_like": int,
+        "Flu_like": int,
+        "Mixed": int,
+        "PatAgeGroup": str,
+        "Pat HRR Name": str,
+        "Pat HRR ID": float,
+        "servicedate": str,
+        "patCountyFIPS": str,
+        "patAgeGroup": str,
+        "patHRRname": str,
+        "patHRRid": float,
+    }
+    DEVIANT_COLS_MAP = {
+        "servicedate": "ServiceDate",
+        "patCountyFIPS": "PatCountyFIPS",
+        "patHRRname": "Pat HRR Name",
+        "patAgeGroup": "PatAgeGroup",
+        "patHRRid": "Pat HRR ID",
+    }
 
     SMOOTHER_BANDWIDTH = 100  # bandwidth for the linear left Gaussian filter
     MAX_BACKFILL_WINDOW = 7  # maximum number of days used to average a backfill correction

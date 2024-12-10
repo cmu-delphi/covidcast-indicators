@@ -14,8 +14,8 @@ SIGNALS_MAP = {
 TYPE_DICT = {
     "timestamp": "datetime64[ns]",
     "geo_id": str,
-    "confirmed_admissions_covid": float,
-    "confirmed_admissions_flu": float,
+    "confirmed_admissions_covid_ew": float,
+    "confirmed_admissions_flu_ew": float,
 }
 
 # signal mapping for secondary, preliminary source
@@ -26,6 +26,6 @@ PRELIM_SIGNALS_MAP = {
 PRELIM_TYPE_DICT = {
     "timestamp": "datetime64[ns]",
     "geo_id": str,
-    "prelim_confirmed_admissions_covid": float,
-    "prelim_confirmed_admissions_flu": float,
+    "confirmed_admissions_covid_ew_prelim": float,
+    "confirmed_admissions_flu_ew_prelim": float,
 }

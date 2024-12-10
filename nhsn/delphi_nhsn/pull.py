@@ -28,7 +28,7 @@ def pull_data(socrata_token: str, dataset_id: str):
 
 
 def pull_nhsn_data(socrata_token: str, backup_dir: str, custom_run: bool, logger: Optional[logging.Logger] = None):
-    """Pull the latest NSSP ER visits data, and conforms it into a dataset.
+    """Pull the latest NHSN hospital admission data, and conforms it into a dataset.
 
     The output dataset has:
 
@@ -77,7 +77,7 @@ def pull_nhsn_data(socrata_token: str, backup_dir: str, custom_run: bool, logger
 def pull_preliminary_nhsn_data(
     socrata_token: str, backup_dir: str, custom_run: bool, logger: Optional[logging.Logger] = None
 ):
-    """Pull the latest NSSP ER visits data, and conforms it into a dataset.
+    """Pull the latest preliminary NHSN hospital admission data, and conforms it into a dataset.
 
     The output dataset has:
 

@@ -31,8 +31,8 @@ from delphi_utils import create_export_csv, get_structured_logger
 from delphi_utils.geomap import GeoMapper
 from delphi_utils.nancodes import add_default_nancodes
 
-from .constants import AUXILIARY_COLS, CSV_COLS, GEOS, SIGNALS
-from .pull import pull_nssp_data
+from .constants import AUXILIARY_COLS, CSV_COLS, GEOS, SECONDARY_GEOS, SECONDARY_SIGNALS, SIGNALS
+from .pull import pull_nssp_data, secondary_pull_nssp_data
 
 
 def add_needed_columns(df, col_names=None):
@@ -78,19 +78,23 @@ def run_module(params):
         log_exceptions=params["common"].get("log_exceptions", True),
     )
     export_dir = params["common"]["export_dir"]
+    backup_dir = params["common"]["backup_dir"]
+    custom_run = params["common"].get("custom_run", False)
     socrata_token = params["indicator"]["socrata_token"]
 
     run_stats = []
+
+    logger.info("Generating primary signals")
     ## build the base version of the signal at the most detailed geo level you can get.
     ## compute stuff here or farm out to another function or file
-    df_pull = pull_nssp_data(socrata_token)
+    df_pull = pull_nssp_data(socrata_token, backup_dir, custom_run=custom_run, logger=logger)
     ## aggregate
     geo_mapper = GeoMapper()
     for signal in SIGNALS:
         for geo in GEOS:
             df = df_pull.copy()
             df["val"] = df[signal]
-            logger.info("Generating signal and exporting to CSV", metric=signal)
+            logger.info("Generating signal and exporting to CSV", geo_type=geo, signal=signal)
             if geo == "nation":
                 df = df[df["geography"] == "United States"]
                 df["geo_id"] = "us"
@@ -122,6 +126,53 @@ def run_module(params):
             else:
                 df = df[df["county"] != "All"]
                 df["geo_id"] = df["fips"]
+            # add se, sample_size, and na codes
+            missing_cols = set(CSV_COLS) - set(df.columns)
+            df = add_needed_columns(df, col_names=list(missing_cols))
+            df_csv = df[CSV_COLS + ["timestamp"]]
+            # actual export
+            dates = create_export_csv(
+                df_csv,
+                geo_res=geo,
+                export_dir=export_dir,
+                sensor=signal,
+                weekly_dates=True,
+            )
+            if len(dates) > 0:
+                run_stats.append((max(dates), len(dates)))
+
+    logger.info("Generating secondary signals")
+    secondary_df_pull = secondary_pull_nssp_data(socrata_token, backup_dir, custom_run, logger)
+    for signal in SECONDARY_SIGNALS:
+        secondary_df_pull_signal = secondary_df_pull[secondary_df_pull["signal"] == signal]
+        if secondary_df_pull_signal.empty:
+            logger.warning("No data found for signal", signal=signal)
+            continue
+        for geo in SECONDARY_GEOS:
+            df = secondary_df_pull_signal.copy()
+            logger.info("Generating signal and exporting to CSV", geo_type=geo, signal=signal)
+            if geo == "state":
+                df = df[(df["geo_type"] == "state")]
+                df["geo_id"] = df["geo_value"].apply(
+                    lambda x: (
+                        us.states.lookup(x).abbr.lower()
+                        if us.states.lookup(x)
+                        else ("dc" if x == "District of Columbia" else x)
+                    )
+                )
+                unexpected_state_names = df[df["geo_id"] == df["geo_value"]]
+                if unexpected_state_names.shape[0] > 0:
+                    logger.error(
+                        "Unexpected state names",
+                        unexpected_state_names=unexpected_state_names["geo_value"].unique(),
+                    )
+                    raise RuntimeError
+            elif geo == "nation":
+                df = df[(df["geo_type"] == "nation")]
+                df["geo_id"] = "us"
+            elif geo == "hhs":
+                df = df[(df["geo_type"] == "hhs")]
+                df["geo_id"] = df["geo_value"]
             # add se, sample_size, and na codes
             missing_cols = set(CSV_COLS) - set(df.columns)
             df = add_needed_columns(df, col_names=list(missing_cols))

@@ -9,6 +9,7 @@ from tempfile import TemporaryDirectory
 import pandas as pd
 import numpy as np
 from boto3 import Session
+from delphi_utils import get_structured_logger
 from moto import mock_s3
 import pytest
 
@@ -28,7 +29,7 @@ COVID_FILEPATH = PARAMS["indicator"]["input_covid_file"]
 DENOM_FILEPATH = PARAMS["indicator"]["input_denom_file"]
 DROP_DATE = pd.to_datetime(PARAMS["indicator"]["drop_date"])
 OUTPATH="test_data/"
-TEST_LOGGER = logging.getLogger()
+TEST_LOGGER = get_structured_logger()
 
 class TestCHCSensorUpdater:
     """Tests for updating the sensors."""

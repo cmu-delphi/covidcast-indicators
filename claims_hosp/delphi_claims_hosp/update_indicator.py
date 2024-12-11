@@ -7,7 +7,6 @@ Created: 2020-09-27
 """
 
 # standard packages
-import logging
 from multiprocessing import Pool, cpu_count
 
 # third party
@@ -28,8 +27,7 @@ class ClaimsHospIndicatorUpdater:
     # pylint: disable=too-many-instance-attributes, too-many-arguments
     # all variables are used
 
-    def __init__(self, startdate, enddate, dropdate, geo, parallel, weekday,
-                 write_se, signal_name):
+    def __init__(self, startdate, enddate, dropdate, geo, parallel, weekday, write_se, signal_name, logger):
         """
         Initialize updater for the claims-based hospitalization indicator.
 
@@ -53,6 +51,7 @@ class ClaimsHospIndicatorUpdater:
         # init in shift_dates, declared here for pylint
         self.burnindate, self.fit_dates, self.burn_in_dates, self.output_dates = \
             [None] * 4
+        self.logger = logger
 
         assert (
                 self.startdate > (Config.FIRST_DATA_DATE + Config.BURN_IN_PERIOD)
@@ -114,9 +113,9 @@ class ClaimsHospIndicatorUpdater:
         elif self.geo == "hrr":
             data_frame = data  # data is already adjusted in aggregation step above
         else:
-            logging.error(
-                "%s is invalid, pick one of 'county', 'state', 'msa', 'hrr', 'hhs', nation'",
-                self.geo)
+            self.logger.error(
+                "Geo is invalid, pick one of 'county', 'state', 'msa', 'hrr', 'hhs', nation'", geo_type=self.geo
+            )
             return False
 
         unique_geo_ids = pd.unique(data_frame[self.geo])
@@ -133,7 +132,7 @@ class ClaimsHospIndicatorUpdater:
         data_frame.fillna(0, inplace=True)
         return data_frame
 
-    def update_indicator(self, input_filepath, outpath, logger):
+    def update_indicator(self, input_filepath, outpath):
         """
         Generate and output indicator values.
 
@@ -159,7 +158,7 @@ class ClaimsHospIndicatorUpdater:
                 ["num"],
                 Config.DATE_COL,
                 [1, 1e5],
-                logger,
+                self.logger,
             )
             if self.weekday
             else None
@@ -182,7 +181,7 @@ class ClaimsHospIndicatorUpdater:
                 valid_inds[geo_id] = np.array(res.loc[final_output_inds, "incl"])
         else:
             n_cpu = min(Config.MAX_CPU_POOL, cpu_count())
-            logging.debug("starting pool with %d workers", n_cpu)
+            self.logger.debug("Starting pool", n_workers=n_cpu)
             with Pool(n_cpu) as pool:
                 pool_results = []
                 for geo_id, sub_data in data_frame.groupby(level=0, as_index=False):
@@ -217,7 +216,7 @@ class ClaimsHospIndicatorUpdater:
         }
 
         self.write_to_csv(output_dict, outpath)
-        logging.debug("wrote files to %s", outpath)
+        self.logger.debug("Wrote files", export_dir=outpath)
 
     def write_to_csv(self, output_dict, output_path="./receiving"):
         """
@@ -229,8 +228,7 @@ class ClaimsHospIndicatorUpdater:
 
         """
         if self.write_se:
-            logging.info("========= WARNING: WRITING SEs TO %s =========",
-                         self.signal_name)
+            self.logger.info("WARNING: WRITING SEs", signal=self.signal_name)
 
         geo_level = output_dict["geo_level"]
         dates = output_dict["dates"]
@@ -255,7 +253,7 @@ class ClaimsHospIndicatorUpdater:
                         assert not np.isnan(val), "value for included value is nan"
                         assert not np.isnan(se), "se for included rate is nan"
                         if val > 90:
-                            logging.warning("value suspicious, %s: %d", geo_id, val)
+                            self.logger.warning("Value suspicious", geo_type=geo_level, geo_value=geo_id, value=val)
                         assert se < 5, f"se suspicious, {geo_id}: {se}"
                         if self.write_se:
                             assert val > 0 and se > 0, "p=0, std_err=0 invalid"
@@ -267,4 +265,4 @@ class ClaimsHospIndicatorUpdater:
                                 "%s,%f,%s,%s,%s\n" % (geo_id, val, "NA", "NA", "NA"))
                         out_n += 1
 
-        logging.debug("wrote %d rows for %d %s", out_n, len(geo_ids), geo_level)
+        self.logger.debug("Wrote rows", num_rows=out_n, geo_type=geo_level, num_geo_ids=len(geo_ids))

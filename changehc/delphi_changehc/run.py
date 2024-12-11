@@ -25,7 +25,7 @@ def retrieve_files(params, filedate, logger):
     if files["denom"] is None:
 
         ## download recent files from FTP server
-        logger.info("downloading recent files through SFTP")
+        logger.info("Downloading recent files through SFTP")
         download_counts(filedate, params["indicator"]["input_cache_dir"], params["indicator"]["ftp_conn"])
 
         denom_file = "%s/%s_Counts_Products_Denom.dat.gz" % (params["indicator"]["input_cache_dir"],filedate)
@@ -157,18 +157,20 @@ def run_module(params: Dict[str, Dict[str, Any]]):
 
     startdate, enddate = process_dates(params, startdate_dt, enddate_dt)
 
-    logger.info("generating signal and exporting to CSV",
-        first_sensor_date = startdate,
-        last_sensor_date = enddate,
-        drop_date = dropdate,
-        n_backfill_days = n_backfill_days,
-        n_waiting_days = n_waiting_days,
-        geos = params["indicator"]["geos"],
-        export_dir = params["common"]["export_dir"],
-        parallel = params["indicator"]["parallel"],
-        weekday = params["indicator"]["weekday"],
-        types = params["indicator"]["types"],
-        se = params["indicator"]["se"])
+    logger.info(
+        "Generating signal and exporting to CSV",
+        first_sensor_date=startdate,
+        last_sensor_date=enddate,
+        drop_date=dropdate,
+        n_backfill_days=n_backfill_days,
+        n_waiting_days=n_waiting_days,
+        geos=params["indicator"]["geos"],
+        export_dir=params["common"]["export_dir"],
+        parallel=params["indicator"]["parallel"],
+        weekday=params["indicator"]["weekday"],
+        types=params["indicator"]["types"],
+        se=params["indicator"]["se"],
+    )
 
     ## start generating
     stats = []
@@ -176,9 +178,9 @@ def run_module(params: Dict[str, Dict[str, Any]]):
         for numtype in params["indicator"]["types"]:
             for weekday in params["indicator"]["weekday"]:
                 if weekday:
-                    logger.info("starting weekday adj", geo = geo, numtype = numtype)
+                    logger.info("Starting weekday adj", geo_type=geo, numtype=numtype)
                 else:
-                    logger.info("starting no adj", geo = geo, numtype = numtype)
+                    logger.info("Starting no adj", geo_type=geo, numtype=numtype)
                 su_inst = CHCSensorUpdater(
                     startdate,
                     enddate,
@@ -211,7 +213,7 @@ def run_module(params: Dict[str, Dict[str, Any]]):
                 )
                 stats.extend(more_stats)
 
-            logger.info("finished processing", geo = geo)
+            logger.info("Finished processing", geo_type=geo)
 
     elapsed_time_in_seconds = round(time.time() - start_time, 2)
     min_max_date = stats and min(s[0] for s in stats)

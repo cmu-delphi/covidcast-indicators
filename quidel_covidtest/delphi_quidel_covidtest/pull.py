@@ -56,7 +56,7 @@ def get_from_s3(start_date, end_date, bucket, logger):
     seen_files = set()
     for search_date in [start_date + timedelta(days=x) for x in range(n_days)]:
         if search_date in s3_files.keys():
-            logger.info(f"Pulling data received on {search_date.date()}")
+            logger.info("Pulling data received on date", search_date=search_date.date())
 
             # Fetch data received on the same day
             for fn in s3_files[search_date]:
@@ -110,11 +110,11 @@ def fix_date(df, logger):
     df.insert(2, "timestamp", df["TestDate"])
 
     mask = df["TestDate"] <= df["StorageDate"]
-    logger.info(f"Removing {((len(df) - np.sum(mask)) * 100 / len(df)):.2f}% of unusual data")
+    logger.info("Removing unusual data", percent=round((len(df) - np.sum(mask)) * 100 / len(df), 2))
     df = df[mask]
 
     mask = df["StorageDate"] - df["TestDate"] > pd.Timedelta(days=90)
-    logger.info(f"Fixing {(np.sum(mask) * 100 / len(df)):.2f}% of outdated data")
+    logger.info("Fixing outdated data", percent=round((np.sum(mask) * 100 / len(df)), 2))
     df["timestamp"].values[mask] = df["StorageDate"].values[mask]
     return df
 

@@ -98,7 +98,7 @@ def generate_num_export_days(params: Dict, logger) -> [int]:
                 expected_date_diff += global_max_expected_lag
 
             if latest_date_diff > expected_date_diff:
-                logger.info(f"Missing dates from: {to_datetime(min(gs_metadata.max_time)).date()}")
+                logger.info("Lag is more than expected", expected_lag=expected_date_diff, lag=latest_date_diff)
 
             num_export_days = expected_date_diff
 

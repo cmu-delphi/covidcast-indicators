@@ -118,10 +118,10 @@ class CHCSensor:
         se_valid = valid_rates.eval('sqrt(rate * (1 - rate) / den)')
         rate_data['se'] = se_valid
 
-        logger.debug("{0}: {1:.3f},[{2:.3f}]".format(
-            geo_id, rate_data['rate'][-1], rate_data['se'][-1]
-        ))
-        return {"geo_id": geo_id,
-                "rate": 100 * rate_data['rate'],
-                "se": 100 * rate_data['se'],
-                "incl": include}
+        logger.debug(
+            ".fit() DEBUG - last rate/se for geo",
+            geo_value=geo_id,
+            value=rate_data["rate"][-1],
+            se=rate_data["se"][-1],
+        )
+        return {"geo_id": geo_id, "rate": 100 * rate_data["rate"], "se": 100 * rate_data["se"], "incl": include}

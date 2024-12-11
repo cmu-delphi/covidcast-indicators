@@ -57,7 +57,7 @@ def download(ftp_credentials, out_path, logger):
     """Pull the latest raw files."""
     current_time = datetime.datetime.now()
     seconds_in_day = 24 * 60 * 60
-    logger.info("starting download", time=current_time)
+    logger.info("Starting download")
 
     # open client
     client = paramiko.SSHClient()

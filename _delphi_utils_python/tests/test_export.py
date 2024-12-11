@@ -1,15 +1,16 @@
 """Tests for exporting CSV files."""
 from datetime import datetime
+import logging
 from os import listdir
 from os.path import join
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 import mock
 import numpy as np
 import pandas as pd
 from pandas.testing import assert_frame_equal
 
-from delphi_utils import create_export_csv, Nans
+from delphi_utils import create_export_csv, Nans, create_backup_csv, get_structured_logger
 
 
 def _set_df_dtypes(df: pd.DataFrame, dtypes: Dict[str, Any]) -> pd.DataFrame:
@@ -323,12 +324,13 @@ class TestExport:
 
     @mock.patch("delphi_utils.logger")
     def test_export_df_with_contradictory_missingness(self, mock_logger, tmp_path):
-
+        sensor = "test"
+        geo_res = "state"
         create_export_csv(
             df=self.DF3.copy(),
             export_dir=tmp_path,
-            geo_res="state",
-            sensor="test",
+            sensor=sensor,
+            geo_res=geo_res,
             logger=mock_logger
         )
         assert set(listdir(tmp_path)) == set(
@@ -339,8 +341,9 @@ class TestExport:
             ]
         )
         assert pd.read_csv(join(tmp_path, "20200315_state_test.csv")).size > 0
+        date_str = datetime.strftime(self.TIMES[0], "%Y-%m-%d")
         mock_logger.info.assert_called_once_with(
-            "Filtering contradictory missing code in test_None_2020-02-15."
+            "Filtering contradictory missing code", sensor=sensor, metric=None, date=date_str
         )
 
     def test_export_sort(self, tmp_path):
@@ -384,3 +387,22 @@ class TestExport:
         })
         sorted_csv = _set_df_dtypes(pd.read_csv(join(tmp_path, "20200215_county_test.csv")), dtypes={"geo_id": str})
         assert_frame_equal(sorted_csv,expected_df)
+
+    def test_create_backup_regular(self, caplog, tmp_path):
+        caplog.set_level(logging.INFO)
+        logger = get_structured_logger()
+        today = datetime.strftime(datetime.today(), "%Y%m%d")
+        dtypes = self.DF.dtypes.to_dict()
+        del dtypes["timestamp"]
+        geo_res = "county"
+        metric = "test"
+        sensor = "deaths"
+        create_backup_csv(df=self.DF, backup_dir=tmp_path, custom_run=False, issue=None, geo_res=geo_res, metric=metric, sensor=sensor, logger=logger)
+        assert "Backup file created" in caplog.text
+
+        actual = pd.read_csv(join(tmp_path, f"{today}_{geo_res}_{metric}_{sensor}.csv.gz"), dtype=dtypes, parse_dates=["timestamp"])
+        assert self.DF.equals(actual)
+
+        actual_parquet = pd.read_parquet(join(tmp_path, f"{today}_{geo_res}_{metric}_{sensor}.parquet"))
+        assert actual_parquet.equals(actual)
+

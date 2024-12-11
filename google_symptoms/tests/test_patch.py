@@ -54,7 +54,7 @@ class TestPatchModule:
              mock_patch("delphi_google_symptoms.pull.pandas_gbq.read_gbq") as mock_read_gbq, \
              mock_patch("delphi_google_symptoms.pull.initialize_credentials", return_value=None), \
              mock_patch("delphi_google_symptoms.date_utils.covidcast.metadata", return_value=covidcast_metadata), \
-             mock_patch("delphi_google_symptoms.run.GEO_RESOLUTIONS", new=["state"]):
+             mock_patch("delphi_google_symptoms.run.GEO_RESOLUTIONS", new={"state": "state"}):
             def side_effect(*args, **kwargs):
                 if "symptom_search_sub_region_1_daily" in args[0]:
                     df = state_data_gap

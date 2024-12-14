@@ -1,0 +1,21 @@
+{
+  "common": {
+    "export_dir": "./receiving",
+    "log_filename": "./nwss_mortality.log",
+    "log_exceptions": false
+  },
+  "indicator": {
+    "wip_signal": true,
+    "export_start_date": "2020-02-01",
+    "static_file_dir": "./static",
+    "socrata_token": ""
+  },
+  "archive": {
+    "aws_credentials": {
+      "aws_access_key_id": "",
+      "aws_secret_access_key": ""
+    },
+    "bucket_name": "",
+    "cache_dir": "./cache"
+  }
+}

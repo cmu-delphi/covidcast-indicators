@@ -1,5 +1,22 @@
 {
-  "static_file_dir": "./static",
-  "export_dir": "./receiving",
-  "cache_dir": "./cache"
+  "common": {
+    "export_dir": "./receiving",
+    "log_filename": "NAME.log"
+  },
+  "validation": {
+    "common": {
+      "data_source": "NAME",
+      "span_length": 14,
+      "min_expected_lag": {"all": "1"},
+      "max_expected_lag": {"all": "3"},
+      "dry_run": true,
+      "suppressed_errors": []
+    },
+    "static": {
+      "minimum_sample_size": 0,
+      "missing_se_allowed": true,
+      "missing_sample_size_allowed": true
+    },
+    "dynamic": {}
+  }
 }

@@ -1,0 +1,22 @@
+{
+  "common": {
+    "export_dir": "./receiving",
+    "log_filename": "./hhs_hosp.log"
+  },
+  "validation": {
+    "common": {
+      "data_source": "hhs",
+      "span_length": 14,
+      "min_expected_lag": {"all": "8"},
+      "max_expected_lag": {"all": "14"},
+      "dry_run": true,
+      "suppressed_errors": []
+    },
+    "static": {
+      "minimum_sample_size": 0,
+      "missing_se_allowed": true,
+      "missing_sample_size_allowed": true
+    },
+    "dynamic": {}
+  }
+}

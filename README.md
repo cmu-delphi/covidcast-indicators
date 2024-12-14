@@ -1,93 +1,85 @@
 # Covidcast Indicators
 
-Pipeline code and supporting libraries for the **Real-time COVID-19 Indicators** used in the Delphi Group's [**COVIDcast** map](https://covidcast.cmu.edu).
+[![License: MIT][mit-image]][mit-url]
 
-## The indicators
+In early April 2020, Delphi developed a uniform data schema for [a new Epidata endpoint focused on COVID-19](https://cmu-delphi.github.io/delphi-epidata/api/covidcast.html). Our intent was to provide signals that would track in real-time and in fine geographic granularity all facets of the COVID-19 pandemic, aiding both nowcasting and forecasting. Delphi's long history in tracking and forecasting influenza made us uniquely situated to provide access to data streams not available anywhere else, including medical claims data, electronic medical records, lab test records, massive public surveys, and internet search trends. We also process commonly-used publicly-available data sources, both for user convenience and to provide data versioning for sources that do not track revisions themselves.
 
-Each subdirectory contained here that is named after an indicator has specific documentation. Please review as necessary!
+Each data stream arrives in a different format using a different delivery technique, be it sftp, an access-controlled API, or an email attachment. The purpose of each pipeline in this repository is to fetch the raw source data, extract informative aggregate signals, and output those signals---which we call **COVID-19 indicators**---in a common format for upload to the [COVIDcast API](https://cmu-delphi.github.io/delphi-epidata/api/covidcast.html).
 
-## General workflow for indicators creation and deployment
+For client access to the API, along with a variety of other utilities, see our [R](https://cmu-delphi.github.io/covidcast/covidcastR/) and [Python](https://cmu-delphi.github.io/covidcast/covidcast-py/html/) packages.
 
-**tl;dr**
+For interactive visualizations (of a subset of the available indicators), see our [COVIDcast map](https://covidcast.cmu.edu).
 
-1. Create your new indicator branch from `main`.
-2. Build it using the appropriate template, following the guidelines in the included README.md and REVIEW.md files.
-3. Make some stuff!
-4. When your stuff works, push your `dev-*` branch to remote for review.
-5. Consult with a platform engineer for the remaining production setup needs. They will create a branch called `deploy-*` for your indicator.
-6. Initiate a pull request against this new branch.
-7. Following [the source documentation template](https://github.com/cmu-delphi/delphi-epidata/blob/main/docs/api/covidcast-signals/_source-template.md), create public API documentation for the source. You can submit this as a pull request against the delphi-epidata repository.
-8. If your peers like the code, the documentation is ready, and Jenkins approves, deploy your changes by merging the PR.
-9. Rejoice!
+## Organization
 
-### Starting out
+Utilities:
 
-The `main` branch should contain up-to-date code and supporting libraries. This should be your starting point when creating a new indicator.
+- `_delphi_utils_python` - common behaviors
+- `_template_python` & `_template_r` - starting points for new data sources
+- `ansible` & `jenkins` - automated testing and deployment
+- `sir_complainsalot` - a Slack bot to check for missing data
 
-```shell
-# Hint
-#
-git checkout main
-git checkout -b dev-my-feature-branch
+Indicator pipelines: all remaining directories.
+
+Each indicator pipeline includes its own documentation.
+
+- Consult README.md for directions to install, lint, test, and run the pipeline for that indicator.
+- Consult REVIEW.md for the checklist to use for code reviews.
+- Consult DETAILS.md (if present) for implementation details, including handling of corner cases.
+
+## Development
+
+`prod` reflects what is currently in production. `main` is the staging branch for the next release.
+
+1. Branch from `main` to develop a new change
+2. PR into `main` and assign a reviewer (or tag someone) to get feedback on your change. List the issue number under `Fixes` if your change resolves an existing [GitHub Issue](https://github.com/cmu-delphi/covidcast-indicators/issues).
+3. Add new commits to your branch in response to feedback.
+4. When approved, tag an admin to merge the PR. Let them know if this change should be released immediately, at a set future date, or if it can just go along for the ride whenever the next release happens.
+
+### Linting and Formatting
+
+Each indicator has a `make lint` command to check for linting errors and a `make
+format` command to incrementally format your code (using
+[darker](https://github.com/akaihola/darker)). These are both automated with a
+[Github Action](.github/workflows/python-ci.yml).
+
+If you get the error `ERROR:darker.git:fatal: Not a valid commit name <hash>`,
+then it's likely because your local main branch is not up to date; either you
+need to rebase or merge. Note that `darker` reads from `pyproject.toml` for
+default settings.
+
+If the lines you change are in a file that uses 2 space indentation, `darker`
+will indent the lines around your changes and not the rest, which will likely
+break the code; in that case, you should probably just pass the whole file
+through black. You can do that with the following command (using the same
+virtual environment as above):
+
+```sh
+env/bin/black <file>
 ```
 
-### Creating your indicator
+## Release Process
 
-Create a directory for your new indicator by making a copy of `_template_r` or `_template_python` depending on the programming language you intend to use. The template copies of `README.md` and `REVIEW.md` include the minimum requirements for code structure, documentation, linting, testing, and method of configuration. Beyond that, we don't have any established restrictions on implementation; you can look at other existing indicators see some examples of code layout, organization, and general approach.
+The release process consists of multiple steps which can all be done via the GitHub website:
 
-- Consult your peers with questions! :handshake:
+1. Go to [create_release GitHub Action](https://github.com/cmu-delphi/covidcast-indicators/actions/workflows/create-release.yml) and click the `Run workflow` dropdown button. Leave branch as `main` unless you know what you're doing. Enter the type of release (patch: bugfixes, params file changes, new signals for existing indicators; minor: new indicators, new utilities; major: backwards-incompatible changes requiring substantial refactoring) and GitHub will automatically compute the next version number for you; alternately, specify the version number by hand. Hit the green `Run workflow` button.
+2. The action will prepare a new release and generate an associated [Pull Request](https://github.com/cmu-delphi/covidcast-indicators/pulls).
+3. Edit the PR description and **list all pull requests included in this release**. This is a manual step to make sure you are aware of 100% of the changes that will be deployed. You can use `#xxx` notation and GitHub will automatically render the title of each PR in Preview mode and when the edit is saved.
+4. Verify that CI passes for the PR as a whole and for the most-recent/bottom-most commit in the PR. We're currently having problems where [python-ci does not run on release PRs](https://github.com/cmu-delphi/covidcast-indicators/issues/1310), but if you see a green check next to the most-recent commit you should be fine.
+5. Approve the PR, merge it, and delete the branch.
+6. Jenkins will automatically deploy the most-recently-built indicator packages to the pipeline servers
+7. Another GitHub action will automatically
+   1. Create a git tag
+   2. Create another [Pull Request](https://github.com/cmu-delphi/covidcast-indicators/pulls) to merge the changes back into the `main` branch
+   3. (if `delphi-utils` was updated) Upload the new version of `delphi-utils` to PyPI
+8. Approve the sync PR, merge it, and delete the branch
+9. Done
 
-Once you have something that runs locally and passes tests you set up your remote branch eventual review and production deployment.
+You may need to be an admin to perform some of the steps above.
 
-```shell
-# Hint
-#
-git push -u origin dev-my-feature-branch
-```
+## License
 
-You can then set draft public API documentation for people who would fetch this
-data from the API. Public API documentation is kept in the delphi-epidata
-repository, and there is a [template Markdown
-file](https://github.com/cmu-delphi/delphi-epidata/blob/main/docs/api/covidcast-signals/_source-template.md)
-that outlines the features that need to be documented. You can create a pull
-request to add a new file to `docs/api/covidcast-signals/` for your source. Our
-goal is to have public API documentation for the data at the same time as it
-becomes available to the public.
+This repository is released under the **MIT License**.
 
-### Setting up for review and deployment
-
-Once you have your branch set up you should get in touch with a platform engineer to pair up on the remaining production needs. These include:
-
-- Creating the corresponding `deploy-*` branch in the repo.
-- Adding the necessary Jenkins scripts for your indicator.
-- Preparing the runtime host with any Automation configuration necessities.
-- Reviewing the workflow to make sure it meets the general guidelines and will run as expected on the runtime host.
-
-Once all the last mile configuration is in place you can create a pull request against the correct `deploy-*` branch to initiate the CI/CD pipeline which will build, test, and package your indicator for deployment.
-
-If everything looks ok, you've drafted source documentation, platform engineering has validated the last mile, and the pull request is accepted, you can merge the PR. Deployment will start automatically.
-
-Hopefully it'll be a full on :tada:, after that :crossed_fingers:
-
-If not, circle back and try again.
-
-## Production overview
-
-### Running production code
-
-Currently, the production indicators all live and run on the venerable and perennially useful Delphi primary server (also known generically as "the runtime host").
-
-- This is a virtual machine running RHEL 7.5 and living in CMU's Campus Cloud vSphere-based infrastructure environemnt.
-
-### Delivering an indicator to the production environment
-
-We use a branch-based git workflow coupled with [Jenkins](https://www.jenkins.io/) and [Ansible](https://www.ansible.com/) to build, test, package, and deploy each indicator individually to the runtime host.
-
-- Jenkins dutifully manages the whole process for us by executing several "stages" in the context of a [CI/CD pipeline](https://dzone.com/articles/learn-how-to-setup-a-cicd-pipeline-from-scratch). Each stage does something unique, building on the previous stage. The stages are:
-  - Environment - Sets up some environment-specific needs that the other stages depend on.
-  - Build - Create the Python venv on the Jenkins host.
-  - Test - Run linting and unit tests.
-  - Package - Tar and gzip the built environment.
-  - Deploy - Trigger an Ansible playbook to place the built package onto the runtime host, place any necessary production configuration, and adjust the runtime envirnemnt (if necessary).
-
-There are several additional Jenkins-specific files that will need to be created for each indicator, as well as some configuration additions to the runtime host. It will be important to pair with a platform engineer to prepare the necessary production environment needs, test the workflow, validate on production, and ultimately sign off on a production release.
+[mit-image]: https://img.shields.io/badge/License-MIT-yellow.svg
+[mit-url]: https://opensource.org/licenses/MIT

@@ -1,0 +1,72 @@
+{
+  "common": {
+    "export_dir": "/common/covidcast/receiving/chng",
+    "log_filename": "/var/log/indicators/changehc.log"
+  },
+  "indicator": {
+    "input_cache_dir": "./cache",
+    "input_files": {
+      "denom": null,
+      "covid": null,
+      "flu": null,
+      "mixed": null,
+      "flu_like": null,
+      "covid_like": null
+    },
+    "start_date": null,
+    "end_date": null,
+    "drop_date": null,
+    "generate_backfill_files": true,
+    "backfill_dir": "/common/backfill/chng",
+    "backfill_merge_day": 0,
+    "n_backfill_days": 60,
+    "n_waiting_days": 3,
+    "se": false,
+    "parallel": false,
+    "geos": ["state", "msa", "hrr", "county", "hhs", "nation"],
+    "weekday": [true, false],
+    "types": ["covid","cli","flu"],
+    "wip_signal": "",
+    "ftp_conn": {
+      "host": "{{ changehc_sftp_host }}",
+      "user": "{{ changehc_sftp_user }}",
+      "pass": "{{ changehc_sftp_password }}",
+      "port": "{{ changehc_sftp_port }}"
+    }
+  },
+  "validation": {
+    "common": {
+      "data_source": "chng",
+      "api_credentials": "{{ validation_api_key }}",
+      "span_length": 14,
+      "min_expected_lag": {"all": "4"},
+      "max_expected_lag": {"all": "6"},
+      "dry_run": true,
+      "suppressed_errors": [
+      ]
+    },
+    "static": {
+      "minimum_sample_size": 0,
+      "missing_se_allowed": true,
+      "missing_sample_size_allowed": true
+    },
+    "dynamic": {
+      "ref_window_size": 7,
+      "smoothed_signals": [
+        "smoothed_adj_outpatient_cli",
+        "smoothed_adj_outpatient_covid",
+        "smoothed_outpatient_cli",
+        "smoothed_outpatient_covid"
+      ]
+    }
+  },
+  "archive": {
+    "aws_credentials": {
+      "aws_access_key_id": "{{ archive_differ_bucket_user_access_key_id }}",
+      "aws_secret_access_key": "{{ archive_differ_bucket_user_secret_access_key }}"
+    },
+    "bucket_name": "{{ archive_differ_bucket_name }}",
+    "cache_dir": "./cache",
+    "indicator_prefix": "delphi_changehc"
+  }
+}

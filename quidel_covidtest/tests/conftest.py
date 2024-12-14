@@ -1,17 +1,16 @@
 # -*- coding: utf-8 -*-
 
-import pytest
-
-import os
 from os.path import join
-
-from delphi_quidel_covidtest.run import run_module
+import os
+import pytest
 
 
 @pytest.fixture(scope="session")
-def run_as_module():
+def clean_receiving_dir():
     # Clean receiving directory
     for fname in os.listdir("receiving"):
-        os.remove(join("receiving", fname))
-
-    run_module()
+        if ".csv" in fname:
+            os.remove(join("receiving", fname))
+    for fname in os.listdir("cache"):
+        if ".csv" in fname:
+            os.remove(join("cache", fname))

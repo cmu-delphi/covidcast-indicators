@@ -1,0 +1,9 @@
+{
+  "flash": {
+    "aws_bucket": "{{ flash_aws_bucket_name }}",
+    "signals": ["confirmed_incidence_num"],
+    "lags": ["1"],
+    "support": ["0", "400000000"]
+  }
+}
+

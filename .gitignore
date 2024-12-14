@@ -4,7 +4,7 @@
 params.json
 
 # Do not commit output files
-receiving/*.csv
+**/receiving/*.csv
 
 # Do not commit hidden macOS files
 .DS_Store
@@ -116,6 +116,12 @@ venv.bak/
 # mkdocs documentation
 /site
 
+# VSCode settings
+*.vscode
+
+# Pycharm settings
+.idea/
+
 # mypy
 .mypy_cache/
 
@@ -123,3 +129,9 @@ venv.bak/
 .retry
 .indicators-ansible-vault-pass
 indicators-ansible-vault-pass
+vault_plain*
+vault_backup*
+
+# testing_utils
+testing_utils/cache
+testing_utils/*.csv

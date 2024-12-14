@@ -1,13 +1,67 @@
 {
-  "static_file_dir": "./static",
-  "export_dir": "./receiving",
-  "cache_dir": "./cache",
-  "export_start_date": "2020-05-26",
-  "export_end_date": "",
-  "pull_start_date": "2020-05-26",
-  "pull_end_date":"",
-  "mail_server": "imap.exchange.andrew.cmu.edu",
-  "account": "delphi-datadrop@andrew.cmu.edu",
-  "password": "",
-  "sender": ""
+  "common": {
+    "export_dir": "./receiving",
+    "log_exceptions": false,
+    "log_filename": "./logs/quidel-covidtest.log"
+  },
+  "indicator": {
+    "static_file_dir": "./static",
+    "input_cache_dir": "./cache",
+    "generate_backfill_files": false,
+    "backfill_dir": "./backfill",
+    "backfill_merge_day": 0,
+    "export_start_date": "2020-05-26",
+    "export_end_date": "",
+    "pull_start_date": "2020-05-26",
+    "pull_end_date":"",
+    "export_day_range":40,
+    "aws_credentials": {
+      "aws_access_key_id": "",
+      "aws_secret_access_key": ""
+    },
+    "bucket_name": "",
+    "wip_signal": [""],
+    "test_mode": false
+  },
+  "archive": {
+    "aws_credentials": {
+      "aws_access_key_id": "{{ archive_differ_bucket_user_access_key_id }}",
+      "aws_secret_access_key": "{{ archive_differ_bucket_user_secret_access_key }}"
+    },
+    "bucket_name": "{{ archive_differ_bucket_name }}",
+    "cache_dir": "./archivediffer_cache",
+    "indicator_prefix": "quidel"
+  },
+  "validation": {
+    "common": {
+      "data_source": "quidel",
+      "span_length": 14,
+      "min_expected_lag": {"all": "5"},
+      "max_expected_lag": {"all": "5"},
+      "dry_run": true,
+      "suppressed_errors": [
+        {"check_name": "check_rapid_change_num_rows",
+        "signal": "covid_ag_raw_pct_positive",
+        "geo_type": "hrr"},
+        {"check_name": "check_rapid_change_num_rows",
+        "signal": "covid_ag_raw_pct_positive",
+        "geo_type": "msa"},
+        {"check_name": "check_rapid_change_num_rows",
+        "signal": "covid_ag_raw_pct_positive",
+        "geo_type": "county"}
+      ]
+    },
+    "static": {
+      "minimum_sample_size": 50
+    },
+    "dynamic": {
+      "ref_window_size": 7,
+      "smoothed_signals": [
+        "covid_ag_smoothed_pct_positive"
+      ]
+    }
+  },
+  "delivery": {
+    "delivery_dir": "./receiving"
+  }
 }

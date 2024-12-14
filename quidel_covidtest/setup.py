@@ -2,14 +2,20 @@ from setuptools import setup
 from setuptools import find_packages
 
 required = [
-    "numpy",
-    "pandas",
-    "pytest",
-    "pytest-cov",
-    "pylint",
+    "boto3",
+    "covidcast",
+    "darker[isort]~=2.1.1",
     "delphi-utils",
     "imap-tools",
-    "xlrd"
+    "numpy",
+    "openpyxl",
+    "pandas",
+    "pyarrow",
+    "pydocstyle",
+    "pylint==2.8.3",
+    "pytest-cov",
+    "pytest",
+    "xlrd==1.2.0", # needed by Pandas to read Excel files
 ]
 
 setup(
@@ -23,7 +29,7 @@ setup(
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",
-        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
     ],
     packages=find_packages(),
 )

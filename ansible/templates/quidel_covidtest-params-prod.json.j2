@@ -1,0 +1,67 @@
+{
+  "common": {
+    "export_dir": "./receiving",
+    "log_filename": "/var/log/indicators/quidel_covidtest.log"
+  },
+  "indicator": {
+    "static_file_dir": "./static",
+    "input_cache_dir": "./cache",
+    "export_start_date": "2020-05-26",
+    "export_end_date": "",
+    "pull_start_date": "2020-05-26",
+    "pull_end_date":"",
+    "generate_backfill_files": true,
+    "backfill_dir": "/common/backfill/quidel_covidtest",
+    "backfill_merge_day": 0,
+    "export_day_range":40,
+    "aws_credentials": {
+      "aws_access_key_id": "{{ quidel_aws_access_key_id }}",
+      "aws_secret_access_key": "{{ quidel_aws_secret_access_key }}"
+    },
+    "bucket_name": "{{ quidel_aws_bucket_name }}",
+    "wip_signal": [""],
+    "test_mode": false
+  },
+  "validation": {
+    "common": {
+      "data_source": "quidel",
+      "api_credentials": "{{ validation_api_key }}",
+      "span_length": 14,
+      "min_expected_lag": {"all": "5"},
+      "max_expected_lag": {"all": "5"},
+      "dry_run": true,
+      "suppressed_errors": [
+        {"check_name": "check_rapid_change_num_rows",
+        "signal": "covid_ag_raw_pct_positive",
+        "geo_type": "hrr"},
+        {"check_name": "check_rapid_change_num_rows",
+        "signal": "covid_ag_raw_pct_positive",
+        "geo_type": "msa"},
+        {"check_name": "check_rapid_change_num_rows",
+        "signal": "covid_ag_raw_pct_positive",
+        "geo_type": "county"}
+      ]
+    },
+    "static": {
+      "minimum_sample_size": 50
+    },
+    "dynamic": {
+      "ref_window_size": 7,
+      "smoothed_signals": [
+        "covid_ag_smoothed_pct_positive"
+      ]
+    }
+  },
+  "archive": {
+    "aws_credentials": {
+      "aws_access_key_id": "{{ archive_differ_bucket_user_access_key_id }}",
+      "aws_secret_access_key": "{{ archive_differ_bucket_user_secret_access_key }}"
+    },
+    "bucket_name": "{{ archive_differ_bucket_name }}",
+    "cache_dir": "./archivediffer_cache",
+    "indicator_prefix": "quidel"
+  },
+  "delivery": {
+    "delivery_dir": "/common/covidcast/receiving/quidel"
+  }
+}

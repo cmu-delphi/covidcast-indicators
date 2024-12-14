@@ -1,0 +1,23 @@
+{
+  "common": {
+    "daily_export_dir": "./daily_receiving",
+    "weekly_export_dir": "./receiving",
+    "backup_dir": "./raw_data_backups",
+    "log_filename": "./nchs_mortality.log",
+    "log_exceptions": false
+  },
+  "indicator": {
+    "export_start_date": "2020-02-01",
+    "static_file_dir": "./static",
+    "socrata_token": ""
+  },
+  "archive": {
+    "aws_credentials": {
+      "aws_access_key_id": "",
+      "aws_secret_access_key": ""
+    },
+    "bucket_name": "",
+    "daily_cache_dir": "./daily_cache",
+    "weekly_cache_dir": "./cache"
+  }
+}

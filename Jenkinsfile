@@ -1,81 +1,116 @@
 #!groovy
 
-// import shared library: https://github.com/cmu-delphi/jenkins-shared-library
+// Import shared lib.
 @Library('jenkins-shared-library') _
 
+/*
+   Declare variables.
+   - indicator_list should contain all the indicators to handle in the pipeline.
+   - Keep in sync with '.github/workflows/python-ci.yml'.
+   - TODO: #527 Get this list automatically from python-ci.yml at runtime.
+ */
+
+def indicator_list = ['backfill_corrections', 'changehc', 'claims_hosp', 'google_symptoms', 'hhs_hosp', 'nchs_mortality', 'quidel_covidtest', 'sir_complainsalot', 'doctor_visits', 'nwss_wastewater', 'nssp', 'nhsn']
+def build_package_main = [:]
+def build_package_prod = [:]
+def deploy_staging = [:]
+def deploy_production = [:]
+
 pipeline {
-
     agent any
-
+    environment {
+        // Set the PATH variable to include the pyenv shims directory.
+        PATH = "/var/lib/jenkins/.pyenv/shims:${env.PATH}"
+    }
     stages {
-
-        stage ("Environment") {            
-            when {
-                anyOf {
-                    branch "deploy-*";
-                    changeRequest target: "deploy-*", comparator: "GLOB"
+        stage('Build dev/feature branch') {
+            when  {
+                not {
+                    anyOf {
+                        branch 'main'
+                        branch 'prod'
+                    }
                 }
             }
             steps {
                 script {
-                    // Get the indicator name from the pipeline env.
-                    if ( env.CHANGE_TARGET ) {
-                        INDICATOR = env.CHANGE_TARGET.replaceAll("deploy-", "")
+                    indicator_list.each { indicator ->
+                        stage("Build ${indicator}") {
+                            sh "jenkins/build-indicator.sh ${indicator}"
+                        }
                     }
-                    else if ( env.BRANCH_NAME ) {
-                        INDICATOR = env.BRANCH_NAME.replaceAll("deploy-", "")
+                }
+            }
+        }
+        stage('Build and Package main branch') {
+            when {
+                branch 'main'
+            }
+            steps {
+                script {
+                    indicator_list.each { indicator ->
+                        stage("Build ${indicator}") {
+                            sh "jenkins/build-indicator.sh ${indicator}"
+                        }
+                        stage("Package ${indicator}") {
+                            sh "jenkins/package-indicator.sh ${indicator} main"
+                        }
                     }
-                    else {
-                        INDICATOR = ""
+                }
+            }
+        }
+        stage('Build and Package prod branch') {
+            when {
+                branch 'prod'
+            }
+            steps {
+                script {
+                    indicator_list.each { indicator ->
+                        stage("Build ${indicator}") {
+                            sh "jenkins/build-indicator.sh ${indicator}"
+                        }
+                        stage("Package ${indicator}") {
+                            sh "jenkins/package-indicator.sh ${indicator} prod"
+                        }
                     }
-                } 
+                }
             }
         }
-
-        stage('Build') {
+        stage('Deploy main branch to staging env') {
             when {
-                changeRequest target: "deploy-*", comparator: "GLOB"
+                branch 'main'
             }
             steps {
-                sh "jenkins/${INDICATOR}-jenkins-build.sh"
+                script {
+                    indicator_list.each { indicator ->
+                        deploy_staging[indicator] = {
+                            sh "jenkins/deploy-staging.sh ${indicator}"
+                        }
+                    }
+                    parallel deploy_staging
+                }
             }
         }
-
-        stage('Test') {
+        stage('Deploy prod branch to production env') {
             when {
-                changeRequest target: "deploy-*", comparator: "GLOB"
+                branch 'prod'
             }
             steps {
-                sh "jenkins/${INDICATOR}-jenkins-test.sh"
-            }
-        }
-        
-        stage('Package') {
-            when {
-                changeRequest target: "deploy-*", comparator: "GLOB"
-            }
-            steps {
-                sh "jenkins/${INDICATOR}-jenkins-package.sh"
-            }
-        }
-
-        stage('Deploy') {
-            when {
-                branch "deploy-*"
-            }
-            steps {
-                sh "jenkins/${INDICATOR}-jenkins-deploy.sh"
+                script {
+                    indicator_list.each { indicator ->
+                        deploy_production[indicator] = {
+                            sh "jenkins/deploy-production.sh ${indicator}"
+                        }
+                    }
+                    parallel deploy_production
+                }
             }
         }
     }
-
     post {
         always {
             script {
-                /*
-                Use slackNotifier.groovy from shared library and provide current
-                build result as parameter.
-                */   
+                // Use slackNotifier.groovy from shared lib.
                 slackNotifier(currentBuild.currentResult)
             }
         }

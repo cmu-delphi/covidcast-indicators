@@ -1,56 +1,57 @@
-# DELPHI Common Utility Functions (Python)
+# Delphi Python Utilities
 
-This director contains the Python module `delphi_utils`. It includes a number of
-common functions that are useful across multiple indicators.
+This package provides various utilities used by the [Delphi group](https://delphi.cmu.edu/) at [Carnegie Mellon
+University](https://www.cmu.edu) for its data pipelines and analyses.
 
-## Installing the Module
+Submodules:
+- `archive`: Diffing and archiving CSV files.
+- `export`: DataFrame to CSV export.
+- `geomap`: Mappings between geographic resolutions.
+- `logger`: Structured JSON logger.
+- `nancodes`: Enum constants encoding not-a-number cases.
+- `runner`: Orchestrator for running an indicator pipeline.
+- `signal`: Indicator (signal) naming.
+- `slack_notifier`:  Slack notification integration.
+- `smooth`: Data smoothing functions.
+- `utils`: JSON parameter interactions.
+- `validator`: Data sanity checks and anomaly detection.
 
-To install the module in your default version of Python, run the
-following from this directory:
 
-```
-pip install .
-```
+Source code can be found here:
+[https://github.com/cmu-delphi/covidcast-indicators/](https://github.com/cmu-delphi/covidcast-indicators/)
 
-As described in each of the indicator code directories, you will want to install
-this module within a virtual environment when testing the various code bases.
+## Logger Usage
 
-### Testing the code
+To make our structured logging as useful as it can be, particularly within the context of how we use logs in Elastic, the `event` argument (typically the first unnamed arg) should be a static string (to make filtering easier), and each dynamic/varying value should be specified in an individual meaningfully- and consistently-named argument to the logger call (for use in filtering, thresholding, grouping, visualization, etc).
 
-To do a static test of the code style, it is recommended to run **pylint** on
-the module. To do this, run the following from the main module directory:
+### Commonly used argument names:
+- data_source
+- geo_type
+- signal
+- issue_date
+- filename
 
-```
-pylint delphi_utils
-```
+Single-thread usage.
 
-The most aggressive checks are turned off; only relatively important issues
-should be raised and they should be manually checked (or better, fixed).
+```py
+from delphi_utils.logger import get_structured_logger
 
-Unit tests are also included in the module. These should be run by first
-installing the module into a virtual environment:
-
-```
-python -m venv env
-source env/bin/activate
-pip install .
-```
-
-And then running the unit tests with:
-
-```
-(cd tests && ../env/bin/pytest --cov=delphi_utils --cov-report=term-missing)
+logger = get_structured_logger('my_logger')
+logger.info('Hello', name='World')
 ```
 
-The output will show the number of unit tests that passed and failed, along
-with the percentage of code covered by the tests. None of the tests should
-fail and the code lines that are not covered by unit tests should be small and
-should not include critical sub-routines.
+Multi-thread usage.
 
-When you are finished, the virtual environment can be deactivated and
-(optionally) removed.
+```py
+from delphi_utils.logger import get_structured_logger, pool_and_threadedlogger
 
-```
-deactivate
-rm -r env
+def f(x, threaded_logger):
+    threaded_logger.info(f'x={x}')
+    return x*x
+
+logger = get_structured_logger('my_logger')
+logger.info('Hello, world!')
+with pool_and_threadedlogger(logger, n_cpu) as (pool, threaded_logger):
+    for i in range(10):
+        pool.apply_async(f, args=(i, threaded_logger))
 ```

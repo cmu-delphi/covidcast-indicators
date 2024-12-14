@@ -1,0 +1,20 @@
+Region 1 - Boston
+Connecticut, Maine, Massachusetts, New Hampshire, Rhode Island, and Vermont
+Region 2 - New York
+New Jersey, New York, Puerto Rico, and the Virgin Islands
+Region 3 - Philadelphia
+Delaware, District of Columbia, Maryland, Pennsylvania, Virginia, and West Virginia
+Region 4 - Atlanta
+Alabama, Florida, Georgia, Kentucky, Mississippi, North Carolina, South Carolina, and Tennessee
+Region 5 - Chicago
+Illinois, Indiana, Michigan, Minnesota, Ohio, and Wisconsin
+Region 6 - Dallas
+Arkansas, Louisiana, New Mexico, Oklahoma, and Texas
+Region 7 - Kansas City
+Iowa, Kansas, Missouri, and Nebraska
+Region 8 - Denver
+Colorado, Montana, North Dakota, South Dakota, Utah, and Wyoming
+Region 9 - San Francisco
+Arizona, California, Hawaii, Nevada, American Samoa, Commonwealth of the Northern Mariana Islands, Federated States of Micronesia, Guam, Marshall Islands, and Republic of Palau
+Region 10 - Seattle
+Alaska, Idaho, Oregon, and Washington

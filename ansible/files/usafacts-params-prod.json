@@ -1,7 +1,0 @@
-{
-  "export_start_date": "latest",
-  "static_file_dir": "./static",
-  "export_dir": "/common/covidcast/receiving/usa-facts",
-  "cache_dir": "./cache",
-  "base_url": "https://usafactsstatic.blob.core.windows.net/public/data/covid-19/covid_{metric}_usafacts.csv"
-}

@@ -94,3 +94,9 @@ We conduct temporal and spatial pooling for the smoothed signal. The spatial poo
 There are 89 special zip codes that are included in Quidel Flu raw data but are not included in our reports temporarily since we do not have enough mapping information for them to assign them as belonging to particular parent geographic regions. 
 
 For data through 08-05-2020, 133,000 tests out of 7,519,726 tests were reported for those zip codes. 
+
+The zip codes are: 603, 622, 627, 674, 676, 683, 717, 726, 728, 732, 733, 736, 738, 754, 780, 792, 795, 907, 912, 919, 953, 957, 959, 2572, 2781, 15705, 20174, 27412, 27460, 28793, 28823, 29019, 29484, 29486, 29871, 30597, 30997, 32163, 32214, 32306, 32313,
+32611, 32761, 33551, 33574, 33652, 35642, 37232, 47782, 48483, 48670, 48824, 48902, 50410, 60944, 68179, 72053,
+75033, 75072, 75222, 75322, 75429, 75546, 75606, 76094, 76803, 76909, 76992, 76993, 77370, 77399, 78086, 78776,
+79430, 80630, 84129, 85378, 86123, 86746, 89557, 91315, 92094, 92152, 92521, 92697, 93077,
+95929, 99094, 99623

@@ -51,12 +51,19 @@ def run_module(params):
         export_start_date = date.today() - timedelta(days=date.today().weekday() + 2)
         export_start_date = export_start_date.strftime("%Y-%m-%d")
 
-    nhsn_df = pull_nhsn_data(socrata_token, backup_dir, custom_run=custom_run, logger=logger)
-    preliminary_nhsn_df = pull_preliminary_nhsn_data(socrata_token, backup_dir, custom_run=custom_run, logger=logger)
+    signal_df_dict = {}
+
+    # preliminary data generally updates on Wednesday-Thursday
+    if date.today().weekday() in (2, 3) and not custom_run:
+        preliminary_nhsn_df = pull_preliminary_nhsn_data(socrata_token, backup_dir, custom_run, logger)
+        signal_df_dict.update({signal: preliminary_nhsn_df for signal in PRELIM_SIGNALS_MAP})
+
+    # preliminary data generally updates on Friday-Saturday
+    elif date.today().weekday() in (5, 6) and not custom_run:
+        nhsn_df = pull_nhsn_data(socrata_token, backup_dir, custom_run=custom_run, logger=logger)
+        signal_df_dict.update({signal: nhsn_df for signal in SIGNALS_MAP})
 
     geo_mapper = GeoMapper()
-    signal_df_dict = {signal: nhsn_df for signal in SIGNALS_MAP}
-    signal_df_dict.update({signal: preliminary_nhsn_df for signal in PRELIM_SIGNALS_MAP})
 
     for signal, df_pull in signal_df_dict.items():
         for geo in GEOS:

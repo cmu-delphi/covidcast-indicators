@@ -33,8 +33,9 @@ class TestPullNHSNData:
         mock_client = MagicMock()
         mock_socrata.return_value = mock_client
         mock_client.get.side_effect = [[]]
+        logger = get_structured_logger()
 
-        pull_data(test_token, dataset["id"])
+        pull_data(test_token, dataset["id"], logger)
 
         # Check that Socrata client was initialized with correct arguments
         mock_socrata.assert_called_once_with("data.cdc.gov", test_token)
@@ -52,6 +53,8 @@ class TestPullNHSNData:
             logger = get_structured_logger()
 
             result = pull_nhsn_data(test_token, backup_dir, custom_run, logger)
+
+            assert "Pulling main dataset" in caplog.text and "Pulling preliminary dataset" not in caplog.text
 
             # Check result
             assert result["timestamp"].notnull().all(), "timestamp has rogue NaN"
@@ -104,6 +107,8 @@ class TestPullNHSNData:
             logger = get_structured_logger()
 
             result = pull_preliminary_nhsn_data(test_token, backup_dir, custom_run, logger)
+
+            assert "Pulling preliminary dataset" in caplog.text and "Pulling main dataset" not in caplog.text
 
             # Check result
             assert result["timestamp"].notnull().all(), "timestamp has rogue NaN"

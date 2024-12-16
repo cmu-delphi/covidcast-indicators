@@ -5,6 +5,8 @@ from unittest.mock import patch
 import pytest
 from pathlib import Path
 
+from freezegun import freeze_time
+
 from delphi_nhsn.run import run_module
 
 TEST_DIR = Path(__file__).parent
@@ -58,16 +60,23 @@ def params_w_patch(params):
     return params_copy
 
 @pytest.fixture(scope="function")
-def run_as_module(params):
-    with patch('sodapy.Socrata.get') as mock_get:
-        def side_effect(*args, **kwargs):
-            if kwargs['offset'] == 0:
-                if "ua7e-t2fy" in args[0]:
-                    return TEST_DATA
-                if "mpgq-jmmr" in args[0]:
-                    return PRELIM_TEST_DATA
-            else:
-                return []
-        mock_get.side_effect = side_effect
-        run_module(params)
+def run_as_module(params, run_type):
+    issue_date = ""
+    if run_type == "prelim_run":
+        issue_date = "2021-10-21"
+    elif run_type == "regular_run":
+        issue_date = "2021-10-23"
+
+    with freeze_time(issue_date):
+        with patch('sodapy.Socrata.get') as mock_get:
+            def side_effect(*args, **kwargs):
+                if kwargs['offset'] == 0:
+                    if "ua7e-t2fy" in args[0]:
+                        return TEST_DATA
+                    if "mpgq-jmmr" in args[0]:
+                        return PRELIM_TEST_DATA
+                else:
+                    return []
+            mock_get.side_effect = side_effect
+            run_module(params)
 

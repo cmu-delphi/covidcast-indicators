@@ -38,8 +38,7 @@ class TestFixData:
                                             datetime(2020, 6, 11), datetime(2020, 7, 2)])
 
 class TestingPullData:
-    def test_pull_quidel_covidtest(self):
-
+    def test_pull_quidel_covidtest(self, mock_get_from_s3):
         df, _ = pull_quidel_covidtest({
             "static_file_dir": "../static",
             "input_cache_dir": "./cache",

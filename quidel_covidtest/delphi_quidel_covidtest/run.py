@@ -92,7 +92,7 @@ def generate_and_export_for_parent_geo(geo_groups, geo_data, res_key, smooth, de
                               remove_null_samples=True) # for parent geo, remove null sample size
     return dates
 
-def run_module(params: Dict[str, Any]):
+def run_module(params: Dict[str, Any], logger=None):
     """Run the quidel_covidtest indicator.
 
     The `params` argument is expected to have the following structure:
@@ -117,9 +117,10 @@ def run_module(params: Dict[str, Any]):
         - "test_mode": bool, whether we are running in test mode
     """
     start_time = time.time()
-    logger = get_structured_logger(
-        __name__, filename=params["common"].get("log_filename"),
-        log_exceptions=params["common"].get("log_exceptions", True))
+    if logger is None:
+        logger = get_structured_logger(
+            __name__, filename=params["common"].get("log_filename"),
+            log_exceptions=params["common"].get("log_exceptions", True))
     stats = []
     # Log at program exit in case of an exception, otherwise after successful completion
     atexit.register(log_exit, start_time, stats, logger)
@@ -136,17 +137,14 @@ def run_module(params: Dict[str, Any]):
     # (generate files).
     if params["indicator"].get("generate_backfill_files", True):
         backfill_dir = params["indicator"]["backfill_dir"]
-        backfill_merge_day = params["indicator"]["backfill_merge_day"]
 
-        # Merge 4 weeks' data into one file to save runtime
-        # Notice that here we don't check the _end_date(receive date)
-        # since we always want such merging happens on a certain day of a week
-        merge_backfill_file(backfill_dir, backfill_merge_day, datetime.today())
+        # Merge a month's data into one file to save runtime
+        merge_backfill_file(backfill_dir, datetime.today(), logger)
         if _end_date is None:
             logger.info("The data is up-to-date. Currently, no new data to be ingested.")
             return
         # Store the backfill intermediate file
-        store_backfill_file(df, _end_date, backfill_dir)
+        store_backfill_file(df, _end_date, backfill_dir, logger)
 
     export_end_date = check_export_end_date(
         export_end_date, _end_date, END_FROM_TODAY_MINUS)
@@ -224,7 +222,8 @@ def run_module(params: Dict[str, Any]):
 
     # Export the cache file if the pipeline runs successfully.
     # Otherwise, don't update the cache file
-    update_cache_file(df, _end_date, cache_dir, logger)
+    if not params["common"].get("custom_run", False):
+        update_cache_file(df, _end_date, cache_dir, logger)
     # Log stats now instead of at program exit
     atexit.unregister(log_exit)
     log_exit(start_time, stats, logger)

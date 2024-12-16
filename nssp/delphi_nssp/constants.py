@@ -41,3 +41,29 @@ TYPE_DICT.update(
         "fips": str,
     }
 )
+
+SECONDARY_COLS_MAP = {
+    "week_end": "timestamp",
+    "geography": "geo_value",
+    "percent_visits": "val",
+    "pathogen": "signal",
+}
+
+SECONDARY_SIGNALS_MAP = {
+    "COVID-19": "pct_ed_visits_covid_2023RVR",
+    "Influenza": "pct_ed_visits_influenza_2023RVR",
+    "RSV": "pct_ed_visits_rsv_2023RVR",
+    "Combined": "pct_ed_visits_combined_2023RVR",
+}
+
+SECONDARY_SIGNALS = [val for (key, val) in SECONDARY_SIGNALS_MAP.items()]
+SECONDARY_GEOS = ["state", "nation", "hhs"]
+
+SECONDARY_TYPE_DICT = {
+    "timestamp": "datetime64[ns]",
+    "geo_value": str,
+    "val": float,
+    "geo_type": str,
+    "signal": str,
+}
+SECONDARY_KEEP_COLS = [key for (key, val) in SECONDARY_TYPE_DICT.items()]

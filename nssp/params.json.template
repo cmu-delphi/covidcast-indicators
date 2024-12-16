@@ -1,6 +1,7 @@
 {
   "common": {
     "export_dir": "./receiving",
+    "backup_dir": "./raw_data_backups",
     "log_filename": "./nssp.log",
     "log_exceptions": false
   },

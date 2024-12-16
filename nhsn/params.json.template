@@ -1,0 +1,30 @@
+{
+  "common": {
+    "export_dir": "./receiving",
+    "log_filename": "nhsn.log",
+    "backup_dir": "./raw_data_backups"
+
+  },
+    "indicator": {
+    "wip_signal": true,
+    "export_start_date": "2020-08-01",
+    "static_file_dir": "./static",
+    "socrata_token": ""
+  },
+  "validation": {
+    "common": {
+      "data_source": "nhsn",
+      "span_length": 14,
+      "min_expected_lag": {"all": "1"},
+      "max_expected_lag": {"all": "3"},
+      "dry_run": true,
+      "suppressed_errors": []
+    },
+    "static": {
+      "minimum_sample_size": 0,
+      "missing_se_allowed": true,
+      "missing_sample_size_allowed": true
+    },
+    "dynamic": {}
+  }
+}

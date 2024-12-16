@@ -39,6 +39,8 @@ jobs:
             dir: "delphi_quidel_covidtest"
           - package: "sir_complainsalot"
             dir: "delphi_sir_complainsalot"
+          - package: "nhsn"
+            dir: "delphi_nhsn"
     defaults:
       run:
         working-directory: ${{ matrix.package }}

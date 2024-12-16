@@ -59,7 +59,7 @@ def download(ftp_credentials, out_path, logger, issue_date=None):
     else:
         current_time = datetime.datetime.strptime(issue_date, "%Y-%m-%d").replace(hour=23, minute=59, second=59)
 
-    logger.info("starting download", time=current_time)
+    logger.info("Starting download")
     seconds_in_day = 24 * 60 * 60
 
     # open client

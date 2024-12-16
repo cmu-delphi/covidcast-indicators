@@ -1,11 +1,14 @@
 """Retrieve data and wrangle into appropriate format."""
 # -*- coding: utf-8 -*-
+import random
 import re
+import time
 from datetime import date, datetime  # pylint: disable=unused-import
 
 import numpy as np
 import pandas as pd
 import pandas_gbq
+from google.api_core.exceptions import BadRequest, InternalServerError, ServerError
 from google.oauth2 import service_account
 
 from .constants import COMBINED_METRIC, DC_FIPS, DTYPE_CONVERSIONS, METRICS, SYMPTOM_SETS
@@ -155,7 +158,7 @@ def produce_query(level, date_range):
     return query
 
 
-def pull_gs_data_one_geolevel(level, date_range):
+def pull_gs_data_one_geolevel(level, date_range, logger):
     """Pull latest data for a single geo level.
 
     Fetch data and transform it into the appropriate format, as described in
@@ -184,16 +187,33 @@ def pull_gs_data_one_geolevel(level, date_range):
     pd.DataFrame
     """
     query = produce_query(level, date_range)
+    df = None
 
-    df = pandas_gbq.read_gbq(query, progress_bar_type=None, dtypes = DTYPE_CONVERSIONS)
+    # recommends to only try once for 500/503 error
+    try:
+        df = pandas_gbq.read_gbq(query, progress_bar_type=None, dtypes=DTYPE_CONVERSIONS)
+    # pylint: disable=W0703
+    except Exception as e:
+        # sometimes google throws out 400 error when it's 500
+        # https://github.com/googleapis/python-bigquery/issues/23
+        if (
+            # pylint: disable=E1101
+            (isinstance(e, BadRequest) and e.reason == "backendError")
+            or isinstance(e, (ServerError, InternalServerError))
+        ):
+            time.sleep(2 + random.randint(0, 1000) / 1000.0)
+        else:
+            raise e
+    if df is None:
+        df = pandas_gbq.read_gbq(query, progress_bar_type=None, dtypes=DTYPE_CONVERSIONS)
+
     if len(df) == 0:
-        df = pd.DataFrame(
-            columns=["open_covid_region_code", "date"] +
-            list(colname_map.keys())
+        df = pd.DataFrame(columns=["open_covid_region_code", "date"] + list(colname_map.keys()))
+        logger.info(
+            "No data available for date range", geo_level=level, start_date=date_range[0], end_date=date_range[1]
         )
 
     df = preprocess(df, level)
-
     return df
 
 
@@ -215,7 +235,7 @@ def initialize_credentials(credentials):
     pandas_gbq.context.project = credentials.project_id
 
 
-def pull_gs_data(credentials, export_start_date, export_end_date, num_export_days, custom_run_flag):
+def pull_gs_data(credentials, export_start_date, export_end_date, num_export_days, custom_run_flag, logger):
     """Pull latest dataset for each geo level and combine.
 
     PS:  No information for PR
@@ -247,10 +267,9 @@ def pull_gs_data(credentials, export_start_date, export_end_date, num_export_day
     dfs = {}
 
     # For state level data
-    dfs["state"] = pull_gs_data_one_geolevel("state", retrieve_dates)
+    dfs["state"] = pull_gs_data_one_geolevel("state", retrieve_dates, logger)
     # For county level data
-    dfs["county"] = pull_gs_data_one_geolevel("county", retrieve_dates)
-
+    dfs["county"] = pull_gs_data_one_geolevel("county", retrieve_dates, logger)
 
     # Add District of Columbia as county
     try:

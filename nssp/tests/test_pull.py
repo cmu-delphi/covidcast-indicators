@@ -2,10 +2,14 @@ import glob
 import json
 from unittest.mock import patch, MagicMock
 import os
-
+import shutil
+import time
+from datetime import datetime
+import pdb
 import pandas as pd
 
 from delphi_nssp.pull import (
+    get_source_data,
     pull_nssp_data,
     secondary_pull_nssp_data,
     pull_with_socrata_api,
@@ -60,6 +64,11 @@ class TestPullNSSPData:
             else:
                 actual_data = pd.read_parquet(backup_file)
             pd.testing.assert_frame_equal(expected_data, actual_data)
+
+        # Check that loggger was called with correct info
+        mock_logger.info.assert_called_with("Number of records grabbed from Socrata API",
+                                            num_records=len(result),
+                                            source="Socrata API")
 
         # Check that Socrata client was initialized with correct arguments
         mock_socrata.assert_called_once_with("data.cdc.gov", test_token)

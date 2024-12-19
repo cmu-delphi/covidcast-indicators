@@ -39,6 +39,8 @@ jobs:
             dir: "delphi_quidel_covidtest"
           - package: "sir_complainsalot"
             dir: "delphi_sir_complainsalot"
+          - package: "nhsn"
+            dir: "delphi_nhsn"
     defaults:
       run:
         working-directory: ${{ matrix.package }}
@@ -51,7 +53,7 @@ jobs:
         with:
           python-version: 3.8
           cache: "pip"
-          cache-dependency-path: "setup.py"
+          cache-dependency-path: "pyproject.toml"
       - name: Install testing dependencies
         run: |
           python -m pip install --upgrade pip

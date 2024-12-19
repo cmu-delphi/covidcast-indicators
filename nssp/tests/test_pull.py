@@ -1,87 +1,39 @@
-from datetime import datetime, date
+import glob
 import json
-import unittest
 from unittest.mock import patch, MagicMock
-import tempfile
 import os
 import shutil
 import time
 from datetime import datetime
 import pdb
 import pandas as pd
-import pandas.api.types as ptypes
 
 from delphi_nssp.pull import (
     get_source_data,
     pull_nssp_data,
+    secondary_pull_nssp_data,
+    pull_with_socrata_api,
 )
+
 from delphi_nssp.constants import (
-    SIGNALS,
     NEWLINE,
+    SECONDARY_COLS_MAP,
+    SECONDARY_KEEP_COLS,
+    SECONDARY_SIGNALS_MAP,
+    SECONDARY_TYPE_DICT,
+    SIGNALS,
     SIGNALS_MAP,
     TYPE_DICT,
 )
 
+from delphi_utils import get_structured_logger
 
-class TestPullNSSPData(unittest.TestCase):
-    @patch('paramiko.SSHClient')
-    def test_get_source_data(self,mock_ssh):
-        mock_sftp = MagicMock()
-        mock_ssh.return_value.open_sftp.return_value = mock_sftp
-
-        params = {
-            "patch": {
-                "source_backup_credentials": {
-                    "host": "hostname",
-                    "user": "user",
-                    "path": "/path/to/remote/dir"
-                },
-                "start_issue": "2021-01-01",
-                "end_issue": "2021-01-03",
-                "source_dir": "./source_data"
-            }
-        }
-        logger = MagicMock()
-
-        get_source_data(params, logger)
-
-        # Check that the SSH client was used correctly
-        mock_ssh.return_value.connect.assert_called_once_with(params["patch"]["source_backup_credentials"]["host"], username=params["patch"]["source_backup_credentials"]["user"])
-        mock_ssh.return_value.close.assert_called_once()
-
-        # Check that the SFTP client was used correctly
-        mock_sftp.chdir.assert_called_once_with(params["patch"]["source_backup_credentials"]["path"])
-        assert mock_sftp.get.call_count == 3  # one call for each date in the range
-
-        shutil.rmtree(params['patch']['source_dir'])
-
+class TestPullNSSPData:
     @patch("delphi_nssp.pull.Socrata")
-    def test_pull_nssp_data_for_patch(self, mock_socrata):
-        params = {
-            "common": {
-                "custom_run": True,
-            },
-            "patch": {
-                "current_issue": "2021-01-02",
-                "source_dir": "source_dir"
-            }
-        }
-        mock_logger = MagicMock()
-        mock_logger.name = "delphi_nssp.patch"
-        result = pull_nssp_data("test_token", params, mock_logger)
+    def test_pull_nssp_data(self, mock_socrata, caplog):
+        today = pd.Timestamp.today().strftime("%Y%m%d")
+        backup_dir = 'test_raw_data_backups'
 
-        # Check that loggger was called with correct info
-        mock_logger.info.assert_called_with("Number of records grabbed from source_dir/issue_date.csv",
-                                            num_records=len(result),
-                                            source="source_dir/2021-01-02.csv")
-
-        test_source_data = pd.read_csv("source_dir/2021-01-02.csv")
-        assert test_source_data.shape[0] == result.shape[0] # Check if the number of rows are the same
-        mock_socrata.assert_not_called()
-
-
-    @patch("delphi_nssp.pull.Socrata")
-    def test_pull_nssp_data(self, mock_socrata):
         # Load test data
         with open("test_data/page.txt", "r") as f:
             test_data = json.load(f)
@@ -91,13 +43,27 @@ class TestPullNSSPData(unittest.TestCase):
         mock_client.get.side_effect = [test_data, []]  # Return test data on first call, empty list on second call
         mock_socrata.return_value = mock_client
 
-        mock_logger = MagicMock()
-        params = { "common": { "custom_run": False } }
-
+        custom_run = False
+        logger = get_structured_logger()
         # Call function with test token
         test_token = "test_token"
-        result = pull_nssp_data(test_token, params, mock_logger)
-        print(result)
+        result = pull_nssp_data(test_token, backup_dir, custom_run, logger)
+
+        # Check logger used:
+        assert "Backup file created" in caplog.text
+
+        # Check that backup file was created
+        backup_files = glob.glob(f"{backup_dir}/{today}*")
+        assert len(backup_files) == 2, "Backup file was not created"
+
+        expected_data = pd.DataFrame(test_data)
+        for backup_file in backup_files:
+            if backup_file.endswith(".csv.gz"):
+                dtypes = expected_data.dtypes.to_dict()
+                actual_data = pd.read_csv(backup_file, dtype=dtypes)
+            else:
+                actual_data = pd.read_parquet(backup_file)
+            pd.testing.assert_frame_equal(expected_data, actual_data)
 
         # Check that loggger was called with correct info
         mock_logger.info.assert_called_with("Number of records grabbed from Socrata API",
@@ -121,6 +87,47 @@ class TestPullNSSPData(unittest.TestCase):
         for signal in SIGNALS:
             assert result[signal].notnull().all(), f"{signal} has rogue NaN"
 
+        for file in backup_files:
+            os.remove(file)
+
+    @patch("delphi_nssp.pull.Socrata")
+    def test_secondary_pull_nssp_data(self, mock_socrata):
+        today = pd.Timestamp.today().strftime("%Y%m%d")
+        backup_dir = 'test_raw_data_backups'
+
+        # Load test data
+        with open("test_data/secondary_page.txt", "r") as f:
+            test_data = json.load(f)
+
+        # Mock Socrata client and its get method
+        mock_client = MagicMock()
+        mock_client.get.side_effect = [test_data, []]  # Return test data on first call, empty list on second call
+        mock_socrata.return_value = mock_client
+
+        custom_run = False
+        logger = get_structured_logger()
+        # Call function with test token
+        test_token = "test_token"
+        result = secondary_pull_nssp_data(test_token, backup_dir, custom_run, logger)
+        # print(result)
+
+        # Check that Socrata client was initialized with correct arguments
+        mock_socrata.assert_called_once_with("data.cdc.gov", test_token)
+
+        # Check that get method was called with correct arguments
+        mock_client.get.assert_any_call("7mra-9cq9", limit=50000, offset=0)
+
+        for col in SECONDARY_KEEP_COLS:
+            assert result[col].notnull().all(), f"{col} has rogue NaN"
+
+        assert result[result['geo_value'].str.startswith('Region') ].empty, "'Region ' need to be removed from geo_value for geo_type 'hhs'"
+        assert (result[result['geo_type'] == 'nation']['geo_value'] == 'National').all(), "All rows with geo_type 'nation' must have geo_value 'National'"
+
+        # Check that backup file was created
+        backup_files = glob.glob(f"{backup_dir}/{today}*")
+        assert len(backup_files) == 2, "Backup file was not created"
+        for file in backup_files:
+            os.remove(file)
 
 if __name__ == "__main__":
     unittest.main()

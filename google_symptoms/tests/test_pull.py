@@ -1,23 +1,27 @@
 import pytest
 import mock
-import db_dtypes
 from freezegun import freeze_time
 from datetime import date, datetime
+from google.api_core.exceptions import BadRequest, ServerError
+
 import pandas as pd
+from google.rpc import error_details_pb2
 from pandas.testing import assert_frame_equal
 
 from delphi_google_symptoms.pull import (
-    pull_gs_data, preprocess, format_dates_for_query, pull_gs_data_one_geolevel, get_date_range)
+    pull_gs_data, preprocess, format_dates_for_query, pull_gs_data_one_geolevel)
 from delphi_google_symptoms.constants import METRICS, COMBINED_METRIC
+from conftest import TEST_DIR
+from delphi_utils import get_structured_logger
 
 good_input = {
-    "state": "test_data/small_states_daily.csv",
-    "county": "test_data/small_counties_daily.csv"
+    "state": f"{TEST_DIR}/test_data/small_states_daily.csv",
+    "county": f"{TEST_DIR}/test_data/small_counties_daily.csv"
 }
 
 bad_input = {
-    "missing_cols": "test_data/bad_state_missing_cols.csv",
-    "invalid_fips": "test_data/bad_county_invalid_fips.csv"
+    "missing_cols": f"{TEST_DIR}/test_data/bad_state_missing_cols.csv",
+    "invalid_fips": f"{TEST_DIR}/test_data/bad_county_invalid_fips.csv"
 }
 
 symptom_names = ["symptom_" +
@@ -27,6 +31,7 @@ new_keep_cols = ["geo_id", "timestamp"] + METRICS + COMBINED_METRIC
 
 
 class TestPullGoogleSymptoms:
+    logger = get_structured_logger()
     @freeze_time("2021-01-05")
     @mock.patch("pandas_gbq.read_gbq")
     @mock.patch("delphi_google_symptoms.pull.initialize_credentials")
@@ -41,8 +46,14 @@ class TestPullGoogleSymptoms:
         mock_read_gbq.side_effect = [state_data, county_data]
         mock_credentials.return_value = None
 
+        start_date = datetime.strptime(
+            "20201230", "%Y%m%d")
+        end_date = datetime.combine(date.today(), datetime.min.time())
+
         dfs = pull_gs_data("", datetime.strptime(
-            "20201230", "%Y%m%d"), datetime.combine(date.today(), datetime.min.time()), 0)
+            "20201230", "%Y%m%d"),
+                           datetime.combine(date.today(), datetime.min.time()),
+                           0, False, self.logger)
 
         for level in ["county", "state"]:
             df = dfs[level]
@@ -102,32 +113,6 @@ class TestPullGoogleSymptoms:
         out = preprocess(df, "state")
         assert df.shape[0] == out[~out.Cough.isna()].shape[0]
 
-
-class TestPullHelperFuncs:
-    @freeze_time("2021-01-05")
-    def test_get_date_range_recent_export_start_date(self):
-        output = get_date_range(
-            datetime.strptime("20201230", "%Y%m%d"),
-            datetime.combine(date.today(), datetime.min.time()),
-            14
-        )
-
-        expected = [datetime(2020, 12, 24),
-                    datetime(2021, 1, 5)]
-        assert set(output) == set(expected)
-
-    @freeze_time("2021-01-05")
-    def test_get_date_range(self):
-        output = get_date_range(
-            datetime.strptime("20200201", "%Y%m%d"),
-            datetime.combine(date.today(), datetime.min.time()),
-            14
-        )
-
-        expected = [datetime(2020, 12, 16),
-                    datetime(2021, 1, 5)]
-        assert set(output) == set(expected)
-
     def test_format_dates_for_query(self):
         date_list = [datetime(2016, 12, 30), datetime(2021, 1, 5)]
         output = format_dates_for_query(date_list)
@@ -138,9 +123,44 @@ class TestPullHelperFuncs:
     def test_pull_one_gs_no_dates(self, mock_read_gbq):
         mock_read_gbq.return_value = pd.DataFrame()
 
-        output = pull_gs_data_one_geolevel("state", ["", ""])
+        output = pull_gs_data_one_geolevel("state", ["", ""], self.logger)
         expected = pd.DataFrame(columns=new_keep_cols)
         assert_frame_equal(output, expected, check_dtype = False)
+
+    def test_pull_one_gs_retry_success(self):
+        info = error_details_pb2.ErrorInfo(
+            reason="backendError",
+        )
+        badRequestException = BadRequest(message="message", error_info=info)
+        serverErrorException = ServerError(message="message")
+
+        with mock.patch("pandas_gbq.read_gbq") as mock_read_gbq:
+            mock_read_gbq.side_effect = [badRequestException, pd.DataFrame()]
+
+            output = pull_gs_data_one_geolevel("state", ["", ""], self.logger)
+            expected = pd.DataFrame(columns=new_keep_cols)
+            assert_frame_equal(output, expected, check_dtype = False)
+            assert mock_read_gbq.call_count == 2
+
+    def test_pull_one_gs_retry_too_many(self):
+        info = error_details_pb2.ErrorInfo(
+            reason="backendError",
+        )
+        badRequestException = BadRequest(message="message", error_info=info)
+
+        with mock.patch("pandas_gbq.read_gbq") as mock_read_gbq:
+            with pytest.raises(BadRequest):
+                mock_read_gbq.side_effect = [badRequestException, badRequestException, pd.DataFrame()]
+                pull_gs_data_one_geolevel("state", ["", ""], self.logger)
+
+
+    def test_pull_one_gs_retry_bad(self):
+        badRequestException = BadRequest(message="message", )
+
+        with mock.patch("pandas_gbq.read_gbq") as mock_read_gbq:
+            with pytest.raises(BadRequest):
+                mock_read_gbq.side_effect = [badRequestException,pd.DataFrame()]
+                pull_gs_data_one_geolevel("state", ["", ""], self.logger)
 
     def test_preprocess_no_data(self):
         output = preprocess(pd.DataFrame(columns=keep_cols), "state")

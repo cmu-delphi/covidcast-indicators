@@ -1,5 +1,6 @@
 """Registry for constants."""
-from datetime import timedelta
+
+from datetime import datetime, timedelta
 
 from delphi_utils import Smoother
 
@@ -29,14 +30,15 @@ for combmetric in COMBINED_METRIC:
     METRICS = METRICS + SYMPTOM_SETS[combmetric]
 
 SMOOTHERS = ["raw", "smoothed"]
-GEO_RESOLUTIONS = [
-    "state",
-    "county",
-    "msa",
-    "hrr",
-    "hhs",
-    "nation"
-]
+
+GEO_RESOLUTIONS = {
+    "state": "state",
+    "county": "county",
+    "msa": "county",
+    "hrr": "county",
+    "hhs": "state",
+    "nation": "state",
+}
 
 SMOOTHERS_MAP = {
     "raw":               (Smoother("identity", impute_method=None),
@@ -108,3 +110,7 @@ STATE_TO_ABBREV = {'Alabama': 'al',
                    'Wyoming': 'wy'}
 
 DC_FIPS = "11001"
+
+FULL_BKFILL_START_DATE = datetime.strptime("2020-02-20", "%Y-%m-%d")
+
+PAD_DAYS = 7

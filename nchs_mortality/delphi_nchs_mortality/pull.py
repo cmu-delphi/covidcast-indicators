@@ -1,15 +1,17 @@
 # -*- coding: utf-8 -*-
 """Functions for pulling NCHS mortality data API."""
 
+import logging
 from typing import Optional
 
 import numpy as np
 import pandas as pd
+from delphi_utils import create_backup_csv
+from delphi_utils.geomap import GeoMapper
 from sodapy import Socrata
 
-from delphi_utils.geomap import GeoMapper
+from .constants import METRICS, NEWLINE, RENAME
 
-from .constants import METRICS, RENAME, NEWLINE
 
 def standardize_columns(df):
     """Rename columns to comply with a standard set.
@@ -22,7 +24,13 @@ def standardize_columns(df):
     return df.rename(columns=dict(rename_pairs))
 
 
-def pull_nchs_mortality_data(socrata_token: str, test_file: Optional[str] = None):
+def pull_nchs_mortality_data(
+    socrata_token: str,
+    backup_dir: str,
+    custom_run: bool,
+    logger: Optional[logging.Logger] = None,
+    test_file: Optional[str] = None,
+):
     """Pull the latest NCHS Mortality data, and conforms it into a dataset.
 
     The output dataset has:
@@ -40,6 +48,10 @@ def pull_nchs_mortality_data(socrata_token: str, test_file: Optional[str] = None
     ----------
     socrata_token: str
         My App Token for pulling the NCHS mortality data
+    backup_dir: str
+        Directory to which to save raw backup data
+    custom_run: bool
+        Flag indicating if the current run is a patch. If so, don't save any data to disk
     test_file: Optional[str]
         When not null, name of file from which to read test data
 
@@ -60,6 +72,10 @@ def pull_nchs_mortality_data(socrata_token: str, test_file: Optional[str] = None
         client = Socrata("data.cdc.gov", socrata_token)
         results = client.get("r8kw-7aab", limit=10**10)
         df = pd.DataFrame.from_records(results)
+
+    create_backup_csv(df, backup_dir, custom_run=custom_run, logger=logger)
+
+    if not test_file:
         # drop "By Total" rows
         df = df[df["group"].transform(str.lower) == "by week"]
 

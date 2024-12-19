@@ -1,14 +1,18 @@
 """Retrieve data and wrangle into appropriate format."""
 # -*- coding: utf-8 -*-
+import random
 import re
-from datetime import date, datetime, timedelta  # pylint: disable=unused-import
-import pandas_gbq
-from google.oauth2 import service_account
+import time
+from datetime import date, datetime  # pylint: disable=unused-import
+
 import numpy as np
 import pandas as pd
+import pandas_gbq
+from google.api_core.exceptions import BadRequest, InternalServerError, ServerError
+from google.oauth2 import service_account
 
-from .constants import DC_FIPS, METRICS, COMBINED_METRIC, SYMPTOM_SETS, DTYPE_CONVERSIONS
-
+from .constants import COMBINED_METRIC, DC_FIPS, DTYPE_CONVERSIONS, METRICS, SYMPTOM_SETS
+from .date_utils import generate_query_dates
 
 # Create map of BigQuery symptom column names to desired column names.
 colname_map = {"symptom_" +
@@ -95,45 +99,6 @@ def preprocess(df, level):
     return df
 
 
-def get_date_range(export_start_date, export_end_date, num_export_days):
-    """Produce date range to retrieve data for.
-
-    Calculate start of date range as a static offset from the end date.
-    Pad date range by an additional 7 days before the earliest date to
-    produce data for calculating smoothed estimates.
-
-    Parameters
-    ----------
-    export_start_date: date
-        first date to retrieve data for
-    export_end_date: date
-        last date to retrieve data for
-    num_export_days: int
-        number of days before end date to export
-
-    Returns
-    -------
-    list
-    """
-    PAD_DAYS = 7
-
-    if num_export_days == "all":
-        # Get all dates since export_start_date.
-        start_date = export_start_date
-    else:
-        # Don't fetch data before the user-set start date.
-        start_date = max(
-            export_end_date - timedelta(days=num_export_days),
-            export_start_date
-        )
-
-    retrieve_dates = [
-        start_date - timedelta(days=PAD_DAYS - 1),
-        export_end_date]
-
-    return retrieve_dates
-
-
 def format_dates_for_query(date_list):
     """Format list of dates as needed for query.
 
@@ -193,7 +158,7 @@ def produce_query(level, date_range):
     return query
 
 
-def pull_gs_data_one_geolevel(level, date_range):
+def pull_gs_data_one_geolevel(level, date_range, logger):
     """Pull latest data for a single geo level.
 
     Fetch data and transform it into the appropriate format, as described in
@@ -222,17 +187,33 @@ def pull_gs_data_one_geolevel(level, date_range):
     pd.DataFrame
     """
     query = produce_query(level, date_range)
+    df = None
 
-    df = pandas_gbq.read_gbq(query, progress_bar_type=None, dtypes = DTYPE_CONVERSIONS)
+    # recommends to only try once for 500/503 error
+    try:
+        df = pandas_gbq.read_gbq(query, progress_bar_type=None, dtypes=DTYPE_CONVERSIONS)
+    # pylint: disable=W0703
+    except Exception as e:
+        # sometimes google throws out 400 error when it's 500
+        # https://github.com/googleapis/python-bigquery/issues/23
+        if (
+            # pylint: disable=E1101
+            (isinstance(e, BadRequest) and e.reason == "backendError")
+            or isinstance(e, (ServerError, InternalServerError))
+        ):
+            time.sleep(2 + random.randint(0, 1000) / 1000.0)
+        else:
+            raise e
+    if df is None:
+        df = pandas_gbq.read_gbq(query, progress_bar_type=None, dtypes=DTYPE_CONVERSIONS)
 
     if len(df) == 0:
-        df = pd.DataFrame(
-            columns=["open_covid_region_code", "date"] +
-            list(colname_map.keys())
+        df = pd.DataFrame(columns=["open_covid_region_code", "date"] + list(colname_map.keys()))
+        logger.info(
+            "No data available for date range", geo_level=level, start_date=date_range[0], end_date=date_range[1]
         )
 
     df = preprocess(df, level)
-
     return df
 
 
@@ -254,7 +235,7 @@ def initialize_credentials(credentials):
     pandas_gbq.context.project = credentials.project_id
 
 
-def pull_gs_data(credentials, export_start_date, export_end_date, num_export_days):
+def pull_gs_data(credentials, export_start_date, export_end_date, num_export_days, custom_run_flag, logger):
     """Pull latest dataset for each geo level and combine.
 
     PS:  No information for PR
@@ -277,9 +258,8 @@ def pull_gs_data(credentials, export_start_date, export_end_date, num_export_day
     dict: {"county": pd.DataFrame, "state": pd.DataFrame}
     """
     # Fetch and format dates we want to attempt to retrieve
-    retrieve_dates = get_date_range(
-        export_start_date, export_end_date, num_export_days)
-    retrieve_dates = format_dates_for_query(retrieve_dates)
+    export_date_range = generate_query_dates(export_start_date, export_end_date, num_export_days, custom_run_flag)
+    retrieve_dates = format_dates_for_query(export_date_range)
 
     initialize_credentials(credentials)
 
@@ -287,10 +267,9 @@ def pull_gs_data(credentials, export_start_date, export_end_date, num_export_day
     dfs = {}
 
     # For state level data
-    dfs["state"] = pull_gs_data_one_geolevel("state", retrieve_dates)
-
+    dfs["state"] = pull_gs_data_one_geolevel("state", retrieve_dates, logger)
     # For county level data
-    dfs["county"] = pull_gs_data_one_geolevel("county", retrieve_dates)
+    dfs["county"] = pull_gs_data_one_geolevel("county", retrieve_dates, logger)
 
     # Add District of Columbia as county
     try:
@@ -300,5 +279,4 @@ def pull_gs_data(credentials, export_start_date, export_end_date, num_export_day
         dfs["county"] = pd.concat([dfs["county"], df_dc_county])
     except KeyError:
         pass
-
     return dfs

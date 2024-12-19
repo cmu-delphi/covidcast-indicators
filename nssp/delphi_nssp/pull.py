@@ -1,16 +1,28 @@
 # -*- coding: utf-8 -*-
 """Functions for pulling NSSP ER data."""
 
+import logging
 import functools
 import sys
 import textwrap
+from typing import Optional
 from os import makedirs, path
 
 import pandas as pd
 import paramiko
+from delphi_utils import create_backup_csv
 from sodapy import Socrata
 
-from .constants import NEWLINE, SIGNALS, SIGNALS_MAP, TYPE_DICT
+from .constants import (
+    NEWLINE,
+    SECONDARY_COLS_MAP,
+    SECONDARY_KEEP_COLS,
+    SECONDARY_SIGNALS_MAP,
+    SECONDARY_TYPE_DICT,
+    SIGNALS,
+    SIGNALS_MAP,
+    TYPE_DICT,
+)
 
 
 def print_callback(remote_file_name, logger, bytes_so_far, bytes_total, progress_chunks):
@@ -83,52 +95,66 @@ def warn_string(df, type_dict):
     return warn
 
 
-def pull_nssp_data(socrata_token: str, params: dict, logger) -> pd.DataFrame:
-    """Pull the latest NSSP ER visits data, and conforms it into a dataset.
-
-    The output dataset has:
-
-    - Each row corresponds to a single observation
-    - Each row additionally has columns for the signals in SIGNALS
+def pull_with_socrata_api(socrata_token: str, dataset_id: str):
+    """Pull data from Socrata API.
 
     Parameters
     ----------
     socrata_token: str
-        My App Token for pulling the NWSS data (could be the same as the nchs data)
-    params: dict
-        Nested dictionary of parameters, should contain info on run type.
-    logger:
-        Logger object
+        My App Token for pulling the NSSP data (could be the same as the nchs data)
+    dataset_id: str
+        The dataset id to pull data from
+
+
+    Returns
+    -------
+    list of dictionaries, each representing a row in the dataset
+    """
+
+    client = Socrata("data.cdc.gov", socrata_token)
+    results = []
+    offset = 0
+    limit = 50000  # maximum limit allowed by SODA 2.0
+    while True:
+        page = client.get(dataset_id, limit=limit, offset=offset)
+        if not page:
+            break  # exit the loop if no more results
+        results.extend(page)
+        offset += limit
+    return results
+
+
+def pull_nssp_data(socrata_token: str, backup_dir: str, custom_run: bool, issue_date: Optional[str] = None, logger: Optional[logging.Logger] = None):
+    """Pull the latest NSSP ER visits primary dataset.
+
+    https://data.cdc.gov/Public-Health-Surveillance/NSSP-Emergency-Department-Visit-Trajectories-by-St/rdmq-nq56/data_preview
+
+    Parameters
+    ----------
+    socrata_token: str
+        My App Token for pulling the NSSP data (could be the same as the nchs data)
 
     Returns
     -------
     pd.DataFrame
         Dataframe as described above.
     """
-    custom_run = params["common"].get("custom_run", False)
     if not custom_run:
-        # Pull data from Socrata API
-        client = Socrata("data.cdc.gov", socrata_token)
-        results = []
-        offset = 0
-        limit = 50000  # maximum limit allowed by SODA 2.0
-        while True:
-            page = client.get("rdmq-nq56", limit=limit, offset=offset)
-            if not page:
-                break  # exit the loop if no more results
-            results.extend(page)
-            offset += limit
-        df_ervisits = pd.DataFrame.from_records(results)
-        logger.info("Number of records grabbed from Socrata API", num_records=len(df_ervisits), source="Socrata API")
+        socrata_results = pull_with_socrata_api(socrata_token, "rdmq-nq56")
+        df_ervisits = pd.DataFrame.from_records(socrata_results)
+        create_backup_csv(df_ervisits, backup_dir, custom_run, logger=logger)
+        logger.info("Number of records grabbed", num_records=len(df_ervisits), source="Socrata API")
     elif custom_run and logger.name == "delphi_nssp.patch":
-        issue_date = params.get("patch", {}).get("current_issue", None)
-        source_dir = params.get("patch", {}).get("source_dir", None)
-        df_ervisits = pd.read_csv(f"{source_dir}/{issue_date}.csv")
+        if issue_date is None:
+            raise ValueError("Issue date is required for patching")
+        source_filename = f"{backup_dir}/{issue_date}.csv.gz"
+        df_ervisits = pd.read_csv(source_filename)
         logger.info(
-            "Number of records grabbed from source_dir/issue_date.csv",
+            "Number of records grabbed",
             num_records=len(df_ervisits),
-            source=f"{source_dir}/{issue_date}.csv",
+            source=source_filename,
         )
+    
     df_ervisits = df_ervisits.rename(columns={"week_end": "timestamp"})
     df_ervisits = df_ervisits.rename(columns=SIGNALS_MAP)
 
@@ -142,3 +168,69 @@ def pull_nssp_data(socrata_token: str, params: dict, logger) -> pd.DataFrame:
 
     keep_columns = ["timestamp", "geography", "county", "fips"]
     return df_ervisits[SIGNALS + keep_columns]
+
+
+def secondary_pull_nssp_data(
+    socrata_token: str, backup_dir: str, custom_run: bool, issue_date: Optional[str] = None, logger: Optional[logging.Logger] = None
+):
+    """Pull the latest NSSP ER visits secondary dataset.
+
+    https://data.cdc.gov/Public-Health-Surveillance/2023-Respiratory-Virus-Response-NSSP-Emergency-Dep/7mra-9cq9/data_preview
+
+    The output dataset has:
+
+    - Each row corresponds to a single observation
+
+    Parameters
+    ----------
+    socrata_token: str
+        My App Token for pulling the NSSP data (could be the same as the nchs data)
+
+    Returns
+    -------
+    pd.DataFrame
+        Dataframe as described above.
+    """
+    if not custom_run:
+        socrata_results = pull_with_socrata_api(socrata_token, "7mra-9cq9")
+        df_ervisits = pd.DataFrame.from_records(socrata_results)
+        create_backup_csv(df_ervisits, backup_dir, custom_run, sensor="secondary", logger=logger)
+        logger.info("Number of records grabbed",
+                    num_records=len(df_ervisits),
+                    source="secondary Socrata API")
+
+    elif custom_run and logger.name == "delphi_nssp.patch":
+        if issue_date is None:
+            raise ValueError("Issue date is required for patching")
+        source_filename = f"{backup_dir}/secondary_{issue_date}.csv.gz"
+        df_ervisits = pd.read_csv(source_filename)
+        logger.info(
+            "Number of records grabbed",
+            num_records=len(df_ervisits),
+            source=source_filename,
+        )
+
+    df_ervisits = df_ervisits.rename(columns=SECONDARY_COLS_MAP)
+
+    # geo_type is not provided in the dataset, so we infer it from the geo_value
+    # which is either state names, "National" or hhs region numbers
+    df_ervisits["geo_type"] = "state"
+
+    df_ervisits.loc[df_ervisits["geo_value"] == "National", "geo_type"] = "nation"
+
+    hhs_region_mask = df_ervisits["geo_value"].str.lower().str.startswith("region ")
+    df_ervisits.loc[hhs_region_mask, "geo_value"] = df_ervisits.loc[hhs_region_mask, "geo_value"].str.replace(
+        "Region ", ""
+    )
+    df_ervisits.loc[hhs_region_mask, "geo_type"] = "hhs"
+
+    df_ervisits["signal"] = df_ervisits["signal"].map(SECONDARY_SIGNALS_MAP)
+
+    df_ervisits = df_ervisits[SECONDARY_KEEP_COLS]
+
+    try:
+        df_ervisits = df_ervisits.astype(SECONDARY_TYPE_DICT)
+    except KeyError as exc:
+        raise ValueError(warn_string(df_ervisits, SECONDARY_TYPE_DICT)) from exc
+
+    return df_ervisits

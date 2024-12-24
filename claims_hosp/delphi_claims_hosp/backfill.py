@@ -60,7 +60,6 @@ def store_backfill_file(claims_filepath, _end_date, backfill_dir, logger):
     backfilldata = backfilldata.loc[(backfilldata["time_value"] >= _start_date)
                                     & (~backfilldata["fips"].isnull()),
                                     selected_columns]
-    logger.info("Filtering source data", startdate=_start_date, enddate=_end_date)
 
     backfilldata["lag"] = [(_end_date - x).days for x in backfilldata["time_value"]]
     backfilldata["time_value"] = backfilldata.time_value.dt.strftime("%Y-%m-%d")
@@ -73,17 +72,80 @@ def store_backfill_file(claims_filepath, _end_date, backfill_dir, logger):
         "state_id": "string"
     })
 
-    filename = "claims_hosp_as_of_%s.parquet" % datetime.strftime(_end_date, "%Y%m%d")
-    path = f"{backfill_dir}/{filename}"
+    filename = backfill_dir + \
+        "/claims_hosp_as_of_%s.parquet"%datetime.strftime(_end_date, "%Y%m%d")
+    # Store intermediate file into the backfill folder
+    backfilldata.to_parquet(filename, index=False)
 
     # Store intermediate file into the backfill folder
     try:
-        backfilldata.to_parquet(path, index=False)
+        backfilldata.to_parquet(filename, index=False)
         logger.info("Stored source data in parquet", filename=filename)
     except:  # pylint: disable=W0702
         logger.info("Failed to store source data in parquet")
-    return path
+    return filename
 
+
+def merge_backfill_file(backfill_dir, backfill_merge_day, today, logger,
+                        test_mode=False, check_nd=25):
+    """
+    Merge ~4 weeks' backfill data into one file.
+
+    Usually this function should merge 28 days' data into a new file so as to
+    save the reading time when running the backfill pipelines. We set a softer
+    threshold to allow flexibility in data delivery.
+    Parameters
+    ----------
+    today : datetime
+        The most recent date when the raw data is received
+    backfill_dir : str
+        specified path to store backfill files.
+    backfill_merge_day: int
+        The day of a week that we used to merge the backfill files. e.g. 0
+        is Monday.
+    test_mode: bool
+    check_nd: int
+        The criteria of the number of unmerged files. Ideally, we want the
+        number to be 28, but we use a looser criteria from practical
+        considerations
+    """
+    new_files = glob.glob(backfill_dir + "/claims_hosp_as_of_*")
+    if len(new_files) == 0: # if no any daily file is stored
+        return
+
+    def get_date(file_link):
+        # Keep the function here consistent with the backfill path in
+        # function `store_backfill_file`
+        fn = file_link.split("/")[-1].split(".parquet")[0].split("_")[-1]
+        return datetime.strptime(fn, "%Y%m%d")
+
+    date_list = list(map(get_date, new_files))
+    earliest_date = min(date_list)
+    latest_date = max(date_list)
+
+    # Check whether to merge
+    # Check the number of files that are not merged
+    if today.weekday() != backfill_merge_day or (today-earliest_date).days <= check_nd:
+        logger.info("No new files to merge; skipping merging")
+        return
+
+    # Start to merge files
+    logger.info("Merging files", start_date=earliest_date, end_date=latest_date)
+    pdList = []
+    for fn in new_files:
+        df = pd.read_parquet(fn, engine='pyarrow')
+        pdList.append(df)
+    merged_file = pd.concat(pdList).sort_values(["time_value", "fips"])
+    path = backfill_dir + "/claims_hosp_from_%s_to_%s.parquet"%(
+        datetime.strftime(earliest_date, "%Y%m%d"),
+        datetime.strftime(latest_date, "%Y%m%d"))
+    merged_file.to_parquet(path, index=False)
+
+    # Delete daily files once we have the merged one.
+    if not test_mode:
+        for fn in new_files:
+            os.remove(fn)
+    return
 
 def merge_existing_backfill_files(backfill_dir, backfill_file, issue_date, logger):
     """
@@ -101,20 +163,25 @@ def merge_existing_backfill_files(backfill_dir, backfill_file, issue_date, logge
     backfill_file : str
         specific file add to merged backfill file.
     """
-    new_files = glob.glob(backfill_dir + "/claims_hosp_*")
+    new_files = sorted(Path(backfill_dir).glob("claims_hosp_*"))
+    new_files.remove(Path(backfill_file))
 
-    def get_file_with_date(files) -> Union[pathlib.Path, None]:
-        for file_path in files:
-            # need to only match files with 6 digits for merged files
-            pattern = re.findall(r"_(\d{6,6})\.parquet", file_path)
-            if pattern:
-                file_month = datetime.strptime(pattern[0], "%Y%m").replace(day=1)
-                end_date = (file_month + timedelta(days=32)).replace(day=1)
-                if file_month <= issue_date < end_date:
-                    return Path(file_path)
+    def get_file_with_date(files, issue_date) -> Union[pathlib.Path, None]:
+        for filename in files:
+            pattern = re.findall(r"_(\d{8})", filename.name)
+
+            if len(pattern) == 2:
+                start_date = datetime.strptime(pattern[0], "%Y%m%d")
+                end_date = datetime.strptime(pattern[1], "%Y%m%d")
+                if start_date <= issue_date and end_date >= issue_date:
+                    return filename
+            elif len(pattern) == 1:
+                start_date = datetime.strptime(pattern[0], "%Y%m%d")
+                if issue_date >= start_date:
+                    return filename
         return None
 
-    file_path = get_file_with_date(new_files)
+    file_path = get_file_with_date(new_files, issue_date)
 
     if not file_path:
         logger.info("Issue date has no matching merged files", issue_date=issue_date.strftime("%Y-%m-%d"))
@@ -125,7 +192,7 @@ def merge_existing_backfill_files(backfill_dir, backfill_file, issue_date, logge
     )
 
     # Start to merge files
-    file_name = Path(file_path).name
+    file_name = file_path.name
     merge_file = f"{file_path.parent}/{file_name}_after_merge.parquet"
 
     try:
@@ -146,56 +213,3 @@ def merge_existing_backfill_files(backfill_dir, backfill_file, issue_date, logge
     os.rename(merge_file, file_path)
     return
 
-
-def merge_backfill_file(backfill_dir, most_recent, logger, test_mode=False):
-    """
-    Merge a month's source data into one file.
-
-    Parameters
-    ----------
-    most_recent : datetime
-        The most recent date when the raw data is received
-    backfill_dir : str
-        specified path to store backfill files.
-    test_mode: bool
-    """
-    previous_month = (most_recent.replace(day=1) - timedelta(days=1)).strftime("%Y%m")
-    new_files = glob.glob(backfill_dir + f"/claims_hosp_as_of_{previous_month}*")
-    if len(new_files) == 0: # if no any daily file is stored
-        logger.info("No new files to merge; skipping merging")
-        return
-
-    def get_date(file_link):
-        # Keep the function here consistent with the backfill path in
-        # function `store_backfill_file`
-        fn = file_link.split("/")[-1].split(".parquet")[0].split("_")[-1]
-        return datetime.strptime(fn, "%Y%m%d")
-
-    date_list = sorted(map(get_date, new_files))
-    latest_date = max(date_list)
-    num_of_days_in_month = calendar.monthrange(latest_date.year, latest_date.month)[1]
-    if len(date_list) < (num_of_days_in_month * 0.8) and most_recent != latest_date + timedelta(days=1):
-        logger.info("Not enough days, skipping merging", n_file_days=len(date_list))
-        return
-
-    logger.info("Merging files", start_date=date_list[0], end_date=date_list[-1])
-    # Start to merge files
-    pdList = []
-    try:
-        for fn in new_files:
-            df = pd.read_parquet(fn, engine="pyarrow")
-            pdList.append(df)
-        merged_file = pd.concat(pdList).sort_values(["time_value", "fips"])
-        path = f"{backfill_dir}/claims_hosp_{datetime.strftime(latest_date, '%Y%m')}.parquet"
-        merged_file.to_parquet(path, index=False)
-
-    # pylint: disable=W0703
-    except Exception as e:
-        logger.info("Failed to merge backfill files", msg=e)
-        return
-
-    # Delete daily files once we have the merged one.
-    if not test_mode:
-        for fn in new_files:
-            os.remove(fn)
-    return

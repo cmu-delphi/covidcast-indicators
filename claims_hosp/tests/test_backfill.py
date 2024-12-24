@@ -6,6 +6,7 @@ from datetime import datetime
 from pathlib import Path
 
 import pandas as pd
+import pytest
 
 from delphi_utils.logger import get_structured_logger
 from delphi_claims_hosp.config import Config, GeoConstants
@@ -56,14 +57,14 @@ class TestBackfill:
         self.cleanup()
         
     def test_merge_backfill_file(self, caplog, monkeypatch):
-        fn = "claims_hosp_202006.parquet"
+        fn = "claims_hosp_from_20200611_to_20200614.parquet"
         caplog.set_level(logging.INFO)
         logger = get_structured_logger()
 
         # Check when there is no daily file to merge.
         today = datetime(2020, 6, 14)
-        merge_backfill_file(backfill_dir, today, logger,
-                            test_mode=True)
+        merge_backfill_file(backfill_dir, today.weekday(), today, logger,
+                            test_mode=True, check_nd=8)
         assert fn not in os.listdir(backfill_dir)
         assert "No new files to merge; skipping merging" in caplog.text
 
@@ -75,8 +76,8 @@ class TestBackfill:
 
         today = datetime(2020, 7, 1)
         monkeypatch.setattr(calendar, 'monthrange', lambda x, y: (1, 4))
-        merge_backfill_file(backfill_dir, today, logger,
-                            test_mode=True)
+        merge_backfill_file(backfill_dir, today.weekday(), today, logger,
+                            test_mode=True, check_nd=4)
         assert "Merging files" in caplog.text
         assert fn in os.listdir(backfill_dir)
 
@@ -124,43 +125,46 @@ class TestBackfill:
         assert "Not enough days, skipping merging" in caplog.text
         self.cleanup()
 
-    def test_merge_existing_backfill_files(self, caplog, monkeypatch):
-        issue_date = datetime(year=2020, month=6, day=13)
+    @pytest.mark.parametrize("issue_date",
+                         [datetime(year=2020, month=6, day=13),
+                          datetime(year=2020, month=6, day=11),
+                          datetime(year=2020, month=6, day=14)])
+    def test_merge_existing_backfill_files(self, caplog, monkeypatch, issue_date):
         issue_date_str = issue_date.strftime("%Y%m%d")
         caplog.set_level(logging.INFO)
         logger = get_structured_logger()
-        def prep_backfill_data():
+        def prep_backfill_data(start, end, issue_date_str):
             # Generate backfill daily files
-            for d in range(11, 15):
+            for d in range(start, end):
                 dropdate = datetime(2020, 6, d)
                 store_backfill_file(DATA_FILEPATH, dropdate, backfill_dir, logger)
 
             monkeypatch.setattr(calendar, 'monthrange', lambda x, y: (1, 4))
             today = datetime(2020, 7, 1)
             # creating expected file
-            merge_backfill_file(backfill_dir, today, logger,
-                                test_mode=True)
-            original = f"{backfill_dir}/claims_hosp_202006.parquet"
+            merge_backfill_file(backfill_dir, today.weekday(), today, logger,
+                                test_mode=True, check_nd=4)
+            original = f"{backfill_dir}/claims_hosp_from_20200611_to_20200614.parquet"
             os.rename(original, f"{backfill_dir}/expected.parquet")
 
             # creating backfill without issue date
             os.remove(f"{backfill_dir}/claims_hosp_as_of_{issue_date_str}.parquet")
             monkeypatch.setattr(calendar, 'monthrange', lambda x, y: (1, 3))
-            merge_backfill_file(backfill_dir, today, logger,
-                                test_mode=True)
+            merge_backfill_file(backfill_dir, today.weekday(), today, logger,
+                                test_mode=True, check_nd=3)
 
             old_files = glob.glob(backfill_dir + "/claims_hosp_as_of_*")
             for file in old_files:
                 os.remove(file)
 
-        prep_backfill_data()
+        prep_backfill_data(11, 15, issue_date_str)
         file_to_add = store_backfill_file(DATA_FILEPATH, issue_date, backfill_dir, logger)
         merge_existing_backfill_files(backfill_dir, file_to_add, issue_date, logger)
 
         assert "Adding missing date to merged file" in caplog.text
 
         expected = pd.read_parquet(f"{backfill_dir}/expected.parquet")
-        merged = pd.read_parquet(f"{backfill_dir}/claims_hosp_202006.parquet")
+        merged = pd.read_parquet(f"{backfill_dir}/claims_hosp_from_20200611_to_20200614.parquet")
 
         check = pd.concat([merged, expected]).drop_duplicates(keep=False)
 

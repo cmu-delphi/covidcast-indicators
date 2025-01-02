@@ -61,19 +61,6 @@ class TestBackfill:
         caplog.set_level(logging.INFO)
         logger = get_structured_logger()
 
-        # Check when there is no daily file to merge.
-        today = datetime(2020, 6, 14)
-        merge_backfill_file(backfill_dir, today.weekday(), today, logger,
-                            test_mode=True, check_nd=8)
-        assert fn not in os.listdir(backfill_dir)
-        assert "No new files to merge; skipping merging" in caplog.text
-
-
-        # Generate backfill daily files
-        for d in range(11, 15):
-            dropdate = datetime(2020, 6, d)
-            store_backfill_file(DATA_FILEPATH, dropdate, backfill_dir, logger)
-
         today = datetime(2020, 7, 1)
         monkeypatch.setattr(calendar, 'monthrange', lambda x, y: (1, 4))
         merge_backfill_file(backfill_dir, today.weekday(), today, logger,
@@ -103,24 +90,24 @@ class TestBackfill:
         self.cleanup()
 
     def test_merge_backfill_file_no_call(self, caplog):
-        fn = "claims_hosp_202006.parquet"
+        fn = "claims_hosp_from_20200611_to_20200614.parquet"
         caplog.set_level(logging.INFO)
         logger = get_structured_logger()
-
-        # Check when there is no daily file to merge.
-        today = datetime(2020, 6, 14)
-        merge_backfill_file(backfill_dir, today, logger,
-                            test_mode=True)
-        assert fn not in os.listdir(backfill_dir)
-        assert "No new files to merge; skipping merging" in caplog.text
+        today = datetime(2020, 6, 20)
 
         # Generate backfill daily files
         for d in range(11, 15):
             dropdate = datetime(2020, 6, d)
             store_backfill_file(DATA_FILEPATH, dropdate, backfill_dir, logger)
 
+        # Check when there is no daily file to merge.
+        merge_backfill_file(backfill_dir, today.weekday() + 1, today, logger,
+                            test_mode=True, check_nd=8)
+        assert fn not in os.listdir(backfill_dir)
+        assert "No new files to merge; skipping merging" in caplog.text
+
         today = datetime(2020, 7, 1)
-        merge_backfill_file(backfill_dir, today, logger,
+        merge_backfill_file(backfill_dir, today.weekday(), today, logger,
                             test_mode=True)
         assert "Not enough days, skipping merging" in caplog.text
         self.cleanup()

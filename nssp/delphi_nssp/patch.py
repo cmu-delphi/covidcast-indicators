@@ -1,8 +1,10 @@
 """
 This module is used for patching data in the delphi_nssp package.
 
-To use this module, you need to turn on the custom_run flag
-and specify the range of issue dates in params.json, like so:
+The code assume user can use key-based auth to access prod server
+where historical source data is stored.
+
+To use this module, configure params.json like so:
 
 {
   "common": {
@@ -13,20 +15,28 @@ and specify the range of issue dates in params.json, like so:
     ...
   },
   "patch": {
-    "source_backup_credentials": {
-      "host": "bigchunk-dev-02.delphi.cmu.edu",
-      "user": "user",
-      "path": "/common/source_backup/nssp"
-    },
-    "patch_dir": "/Users/minhkhuele/Desktop/delphi/covidcast-indicators/nssp/AprilPatch",
+    "source_dir": "delphi/covidcast-indicators/nssp/source_data",
+    "user": "username",
+    "patch_dir": "delphi/covidcast-indicators/nssp/AprilPatch",
     "start_issue": "2024-04-20",
     "end_issue": "2024-04-21",
-    "source_dir": "/Users/minhkhuele/Desktop/delphi/covidcast-indicators/nssp/source_data"
   }
 }
 
-It will generate data for that range of issue dates, and store them in batch issue format:
-[name-of-patch]/issue_[issue-date]/nssp/actual_data_file.csv
+In this params.json, we
+- Turn on the "custom_run" flag under "common"
+- Add "patch" section, which contains:
+    + "source_dir": the local directory where source data is downloaded to
+    + "user": the username to log in to the remote server where source data is backed up
+    + "patch_dir": the local directory where to write all patch issues output
+    + "start_date": str, YYYY-MM-DD format, first issue date
+    + "end_date": str, YYYY-MM-DD format, last issue date
+
+if "source_dir" doesn't exist locally or has no files in it, we download source data to source_dir
+else, we assume all needed source files are already in source_dir.
+
+This module will generate data for that range of issue dates, and store them in batch issue format in the patch_dir:
+[patch_dir]/issue_[issue-date]/nssp/actual_data_file.csv
 """
 
 import sys
@@ -61,7 +71,7 @@ def good_patch_config(params, logger):
         logger.error("Custom flag is on, but patch section is missing.")
         valid_config = False
     else:
-        required_patch_keys = ["start_issue", "end_issue", "patch_dir", "source_dir"]
+        required_patch_keys = ["start_issue", "end_issue", "patch_dir", "source_dir", "user"]
         missing_keys = [key for key in required_patch_keys if key not in patch_config]
         if missing_keys:
             logger.error("Patch section is missing required key(s)", missing_keys=missing_keys)
@@ -87,20 +97,6 @@ def good_patch_config(params, logger):
 def patch():
     """
     Run the nssp indicator for a range of issue dates.
-
-    The range of issue dates is specified in params.json using the following keys:
-    - "patch": Only used for patching data
-        - "source_backup_credentials": (optional) dict, credentials to log in to
-        server where historical source data is backed up.
-        if "source_dir" doesn't exist or has no files in it, we download source data to source_dir before running patch.
-        else, we assume all needed source files are already in source_dir.
-            - "host": str, hostname of the server where source data is backed up
-            - "user": str, username to log in to the server
-            - "path": str, path to the directory containing backup csv files
-        - "start_date": str, YYYY-MM-DD format, first issue date
-        - "end_date": str, YYYY-MM-DD format, last issue date
-        - "patch_dir": str, directory to write all issues output
-        - "source_dir": str, directory to read source data from.
     """
     params = read_params()
     logger = get_structured_logger("delphi_nssp.patch", filename=params["common"]["log_filename"])
@@ -108,10 +104,12 @@ def patch():
         sys.exit(1)
 
     source_dir = params["patch"]["source_dir"]
-    downloaded_source = False
-    if not path.isdir(source_dir) or not listdir(source_dir):
+    download_source = False
+    if not path.isdir(source_dir) or not listdir(source_dir): #no source dir or empty source dir
+        download_source = True
         get_source_data(params, logger)
-        downloaded_source = True
+    else:
+        logger.info("Source data already exists locally.")
 
     start_issue = datetime.strptime(params["patch"]["start_issue"], "%Y-%m-%d")
     end_issue = datetime.strptime(params["patch"]["end_issue"], "%Y-%m-%d")
@@ -147,8 +145,8 @@ def patch():
         run_module(params, logger)
         current_issue += timedelta(days=1)
 
-    if downloaded_source:
-        rmtree(source_dir)
+    # if download_source:
+    #     rmtree(source_dir)
 
 
 if __name__ == "__main__":

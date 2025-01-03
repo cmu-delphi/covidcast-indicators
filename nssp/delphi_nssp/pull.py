@@ -37,40 +37,51 @@ def print_callback(remote_file_name, logger, bytes_so_far, bytes_total, progress
 def get_source_data(params, logger):
     """
     Download historical source data from a backup server.
+    This function is typically used in patching only. Normal runs grab latest data from SODA API.
 
-    This function uses 'source_backup_credentials' configuration in params to connect
-    to a server where backup nssp source data is stored.
+    This function uses "user" configuration under "patch" section in params.json to specify
+    a username with local key-based access to connect to server where backup nssp source data is stored.
+    It uses "backup_dir" config under "common" section to locate backup files on remote server.
     It then searches for CSV files that match the inclusive range of issue dates
-    and location specified by 'path', 'start_issue', and 'end_issue'.
-    These CSV files are then downloaded and stored in the 'source_dir' directory.
-    Note: This function is typically used in patching only. Normal runs grab latest data from SODA API.
+    specified by 'start_issue', and 'end_issue' config.
+
+    These CSV files are then downloaded and stored in the local 'source_dir' directory.
     """
     makedirs(params["patch"]["source_dir"], exist_ok=True)
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    host = params["patch"]["source_backup_credentials"]["host"]
-    user = params["patch"]["source_backup_credentials"]["user"]
+    host = "delphi-master-prod-01.delphi.cmu.edu"
+    user = params["patch"]["user"]
     ssh.connect(host, username=user)
 
     # Generate file names of source files to download
     dates = pd.date_range(start=params["patch"]["start_issue"], end=params["patch"]["end_issue"])
-    csv_file_names = [date.strftime("%Y-%m-%d") + ".csv" for date in dates]
+    primary_source_files = [f"{date.strftime("%Y%m%d")}.csv.gz" for date in dates]
+    secondary_source_files = [f"{date.strftime('%Y%m%d')}_secondary.csv.gz" for date in dates]
+    remote_source_files = primary_source_files + secondary_source_files
 
     # Download source files
     sftp = ssh.open_sftp()
-    sftp.chdir(params["patch"]["source_backup_credentials"]["path"])
+    try:
+        sftp.stat(params["common"]["backup_dir"])
+    except:
+        logger.error("Source backup directory does not exist on the remote server.")
+
+    sftp.chdir(params["common"]["backup_dir"])
+
     num_files_transferred = 0
-    for remote_file_name in csv_file_names:
+    for remote_file_name in remote_source_files:
         callback_for_filename = functools.partial(print_callback, remote_file_name, logger, progress_chunks=[0, 50])
         local_file_path = path.join(params["patch"]["source_dir"], remote_file_name)
         try:
-            sftp.get(remote_file_name, local_file_path, callback=callback_for_filename)
-            logger.info("Transfer finished", remote_file_name=remote_file_name, local_file_path=local_file_path)
-            num_files_transferred += 1
-        except IOError:
+            sftp.stat(remote_file_name)
+        except:
             logger.warning(
                 "Source backup for this date does not exist on the remote server.", missing_filename=remote_file_name
             )
+        sftp.get(remote_file_name, local_file_path, callback=callback_for_filename)
+        logger.info("Transfer finished", remote_file_name=remote_file_name, local_file_path=local_file_path)
+        num_files_transferred += 1
     ssh.close()
 
     if num_files_transferred == 0:

@@ -82,7 +82,10 @@ def run_module(params, logger=None):
             logger.warning("custom_run flag is on despite direct indicator run call. Normal indicator run continues.")
             custom_run = False
     export_dir = params["common"]["export_dir"]
-    backup_dir = params["common"]["backup_dir"]
+    if custom_run and logger.name == "delphi_nssp.patch":
+        backup_dir = params["patch"]["source_dir"]
+    else:
+        backup_dir = params["common"]["backup_dir"]
     custom_run = params["common"].get("custom_run", False)
     issue_date = params.get("patch", {}).get("current_issue", None)
     socrata_token = params["indicator"]["socrata_token"]
@@ -92,7 +95,7 @@ def run_module(params, logger=None):
     ## build the base version of the signal at the most detailed geo level you can get.
     ## compute stuff here or farm out to another function or file
 
-
+    # breakpoint()
     df_pull = pull_nssp_data(socrata_token, backup_dir, custom_run=custom_run, issue_date=issue_date, logger=logger)
 
     ## aggregate

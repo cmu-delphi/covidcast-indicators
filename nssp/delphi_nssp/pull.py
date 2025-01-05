@@ -56,7 +56,7 @@ def get_source_data(params, logger):
 
     # Generate file names of source files to download
     dates = pd.date_range(start=params["patch"]["start_issue"], end=params["patch"]["end_issue"])
-    primary_source_files = [f"{date.strftime("%Y%m%d")}.csv.gz" for date in dates]
+    primary_source_files = [f"{date.strftime('%Y%m%d')}.csv.gz" for date in dates]
     secondary_source_files = [f"{date.strftime('%Y%m%d')}_secondary.csv.gz" for date in dates]
     remote_source_files = primary_source_files + secondary_source_files
 
@@ -79,6 +79,7 @@ def get_source_data(params, logger):
             logger.warning(
                 "Source backup for this date does not exist on the remote server.", missing_filename=remote_file_name
             )
+            continue
         sftp.get(remote_file_name, local_file_path, callback=callback_for_filename)
         logger.info("Transfer finished", remote_file_name=remote_file_name, local_file_path=local_file_path)
         num_files_transferred += 1
@@ -136,7 +137,7 @@ def pull_with_socrata_api(socrata_token: str, dataset_id: str):
 
 
 def pull_nssp_data(socrata_token: str, backup_dir: str, custom_run: bool, issue_date: Optional[str] = None, logger: Optional[logging.Logger] = None):
-    """Pull the latest NSSP ER visits primary dataset.
+    """Pull the NSSP ER visits primary dataset.
 
     https://data.cdc.gov/Public-Health-Surveillance/NSSP-Emergency-Department-Visit-Trajectories-by-St/rdmq-nq56/data_preview
 
@@ -213,7 +214,7 @@ def secondary_pull_nssp_data(
     elif custom_run and logger.name == "delphi_nssp.patch":
         if issue_date is None:
             raise ValueError("Issue date is required for patching")
-        source_filename = f"{backup_dir}/secondary_{issue_date}.csv.gz"
+        source_filename = f"{backup_dir}/{issue_date}_secondary.csv.gz"
         df_ervisits = pd.read_csv(source_filename)
         logger.info(
             "Number of records grabbed",

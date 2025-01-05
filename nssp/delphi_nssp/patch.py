@@ -41,7 +41,7 @@ This module will generate data for that range of issue dates, and store them in 
 
 import sys
 from datetime import datetime, timedelta
-from os import listdir, makedirs, path
+from os import listdir, makedirs, path, getcwd
 from shutil import rmtree
 
 from delphi_utils import get_structured_logger, read_params
@@ -123,15 +123,15 @@ def patch():
 
     current_issue = start_issue
     while current_issue <= end_issue:
-        logger.info("patching issue", issue_date=current_issue.strftime("%Y-%m-%d"))
+        logger.info("patching issue", issue_date=current_issue.strftime("%Y%m%d"))
 
-        current_issue_source_csv = f"""{source_dir}/{current_issue.strftime("%Y-%m-%d")}.csv"""
+        current_issue_source_csv = f"""{source_dir}/{current_issue.strftime("%Y%m%d")}.csv.gz"""
         if not path.isfile(current_issue_source_csv):
             logger.info("No source data at this path", current_issue_source_csv=current_issue_source_csv)
             current_issue += timedelta(days=1)
             continue
 
-        params["patch"]["current_issue"] = current_issue.strftime("%Y-%m-%d")
+        params["patch"]["current_issue"] = current_issue.strftime("%Y%m%d")
 
         # current_issue_date can be different from params["patch"]["current_issue"]
         # due to weekly cadence of nssp data. For weekly sources, issue dates in our

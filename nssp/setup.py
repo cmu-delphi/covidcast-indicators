@@ -14,6 +14,7 @@ required = [
     "freezegun",
     "us",
     "paramiko",
+    "darker",
 ]
 
 setup(

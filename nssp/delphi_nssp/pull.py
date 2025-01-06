@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 """Functions for pulling NSSP ER data."""
 
-import logging
 import functools
+import logging
 import sys
 import textwrap
-from typing import Optional
 from os import makedirs, path
+from typing import Optional
 
 import pandas as pd
 import paramiko
@@ -136,7 +136,13 @@ def pull_with_socrata_api(socrata_token: str, dataset_id: str):
     return results
 
 
-def pull_nssp_data(socrata_token: str, backup_dir: str, custom_run: bool, issue_date: Optional[str] = None, logger: Optional[logging.Logger] = None):
+def pull_nssp_data(
+    socrata_token: str,
+    backup_dir: str,
+    custom_run: bool,
+    issue_date: Optional[str] = None,
+    logger: Optional[logging.Logger] = None,
+):
     """Pull the NSSP ER visits primary dataset.
 
     https://data.cdc.gov/Public-Health-Surveillance/NSSP-Emergency-Department-Visit-Trajectories-by-St/rdmq-nq56/data_preview
@@ -166,7 +172,7 @@ def pull_nssp_data(socrata_token: str, backup_dir: str, custom_run: bool, issue_
             num_records=len(df_ervisits),
             source=source_filename,
         )
-    
+
     df_ervisits = df_ervisits.rename(columns={"week_end": "timestamp"})
     df_ervisits = df_ervisits.rename(columns=SIGNALS_MAP)
 
@@ -183,7 +189,11 @@ def pull_nssp_data(socrata_token: str, backup_dir: str, custom_run: bool, issue_
 
 
 def secondary_pull_nssp_data(
-    socrata_token: str, backup_dir: str, custom_run: bool, issue_date: Optional[str] = None, logger: Optional[logging.Logger] = None
+    socrata_token: str,
+    backup_dir: str,
+    custom_run: bool,
+    issue_date: Optional[str] = None,
+    logger: Optional[logging.Logger] = None,
 ):
     """Pull the latest NSSP ER visits secondary dataset.
 
@@ -207,9 +217,7 @@ def secondary_pull_nssp_data(
         socrata_results = pull_with_socrata_api(socrata_token, "7mra-9cq9")
         df_ervisits = pd.DataFrame.from_records(socrata_results)
         create_backup_csv(df_ervisits, backup_dir, custom_run, sensor="secondary", logger=logger)
-        logger.info("Number of records grabbed",
-                    num_records=len(df_ervisits),
-                    source="secondary Socrata API")
+        logger.info("Number of records grabbed", num_records=len(df_ervisits), source="secondary Socrata API")
 
     elif custom_run and logger.name == "delphi_nssp.patch":
         if issue_date is None:

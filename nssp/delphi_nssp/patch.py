@@ -41,7 +41,7 @@ This module will generate data for that range of issue dates, and store them in 
 
 import sys
 from datetime import datetime, timedelta
-from os import listdir, makedirs, path, getcwd
+from os import listdir, makedirs, path
 from shutil import rmtree
 
 from delphi_utils import get_structured_logger, read_params
@@ -105,7 +105,7 @@ def patch():
 
     source_dir = params["patch"]["source_dir"]
     download_source = False
-    if not path.isdir(source_dir) or not listdir(source_dir): #no source dir or empty source dir
+    if not path.isdir(source_dir) or not listdir(source_dir):  # no source dir or empty source dir
         download_source = True
         get_source_data(params, logger)
     else:
@@ -145,8 +145,8 @@ def patch():
         run_module(params, logger)
         current_issue += timedelta(days=1)
 
-    # if download_source:
-    #     rmtree(source_dir)
+    if download_source:
+        rmtree(source_dir)
 
 
 if __name__ == "__main__":

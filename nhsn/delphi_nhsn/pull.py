@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Functions for pulling NSSP ER data."""
 import logging
+from pathlib import Path
 from typing import Optional
 
 import pandas as pd
@@ -26,8 +27,17 @@ def pull_data(socrata_token: str, dataset_id: str):
     df = pd.DataFrame.from_records(results)
     return df
 
+def pull_data_from_file(filepath: str, issue_date:str, logger, prelim_flag=False):
+    filename = f"{issue_date}_prelim.csv.gz" if prelim_flag else f"{issue_date}.csv.gz"
+    logger.info(f"Pulling data from file", file=filename)
+    backup_file = Path(filepath, filename)
+    df = pd.DataFrame()
+    if backup_file.exists():
+        df = pd.read_csv(backup_file, compression="gzip")
+    return df
 
-def pull_nhsn_data(socrata_token: str, backup_dir: str, custom_run: bool, logger: Optional[logging.Logger] = None):
+
+def pull_nhsn_data(socrata_token: str, backup_dir: str, custom_run: bool, issue_date: Optional[str], logger: Optional[logging.Logger] = None):
     """Pull the latest NHSN hospital admission data, and conforms it into a dataset.
 
     The output dataset has:
@@ -52,7 +62,8 @@ def pull_nhsn_data(socrata_token: str, backup_dir: str, custom_run: bool, logger
         Dataframe as described above.
     """
     # Pull data from Socrata API
-    df = pull_data(socrata_token, dataset_id="ua7e-t2fy")
+    df = pull_data_from_file(backup_dir, issue_date, logger, prelim_flag=False) if custom_run \
+        else pull_data(socrata_token, dataset_id="ua7e-t2fy")
 
     keep_columns = list(TYPE_DICT.keys())
 
@@ -75,7 +86,7 @@ def pull_nhsn_data(socrata_token: str, backup_dir: str, custom_run: bool, logger
 
 
 def pull_preliminary_nhsn_data(
-    socrata_token: str, backup_dir: str, custom_run: bool, logger: Optional[logging.Logger] = None
+    socrata_token: str, backup_dir: str, custom_run: bool, issue_date: Optional[str], logger: Optional[logging.Logger] = None
 ):
     """Pull the latest preliminary NHSN hospital admission data, and conforms it into a dataset.
 
@@ -100,8 +111,8 @@ def pull_preliminary_nhsn_data(
     pd.DataFrame
         Dataframe as described above.
     """
-    # Pull data from Socrata API
-    df = pull_data(socrata_token, dataset_id="mpgq-jmmr")
+    df = pull_data_from_file(backup_dir, issue_date, logger, prelim_flag=True) if custom_run \
+        else pull_data(socrata_token, dataset_id="mpgq-jmmr")
 
     keep_columns = list(PRELIM_TYPE_DICT.keys())
 

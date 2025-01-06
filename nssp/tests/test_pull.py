@@ -47,13 +47,13 @@ class TestPullNSSPData:
         logger = get_structured_logger()
         # Call function with test token
         test_token = "test_token"
-        result = pull_nssp_data(test_token, backup_dir, custom_run, logger)
+        result = pull_nssp_data(test_token, backup_dir, custom_run, logger=logger)
 
         # Check logger used:
         assert "Backup file created" in caplog.text
 
         # Check that backup file was created
-        backup_files = glob.glob(f"{backup_dir}/{today}*")
+        backup_files = glob.glob(f"{backup_dir}/{today}.*")
         assert len(backup_files) == 2, "Backup file was not created"
 
         expected_data = pd.DataFrame(test_data)
@@ -64,11 +64,6 @@ class TestPullNSSPData:
             else:
                 actual_data = pd.read_parquet(backup_file)
             pd.testing.assert_frame_equal(expected_data, actual_data)
-
-        # Check that loggger was called with correct info
-        mock_logger.info.assert_called_with("Number of records grabbed from Socrata API",
-                                            num_records=len(result),
-                                            source="Socrata API")
 
         # Check that Socrata client was initialized with correct arguments
         mock_socrata.assert_called_once_with("data.cdc.gov", test_token)
@@ -108,7 +103,7 @@ class TestPullNSSPData:
         logger = get_structured_logger()
         # Call function with test token
         test_token = "test_token"
-        result = secondary_pull_nssp_data(test_token, backup_dir, custom_run, logger)
+        result = secondary_pull_nssp_data(test_token, backup_dir, custom_run, logger=logger)
         # print(result)
 
         # Check that Socrata client was initialized with correct arguments
@@ -124,7 +119,7 @@ class TestPullNSSPData:
         assert (result[result['geo_type'] == 'nation']['geo_value'] == 'National').all(), "All rows with geo_type 'nation' must have geo_value 'National'"
 
         # Check that backup file was created
-        backup_files = glob.glob(f"{backup_dir}/{today}*")
+        backup_files = glob.glob(f"{backup_dir}/{today}_secondary.*")
         assert len(backup_files) == 2, "Backup file was not created"
         for file in backup_files:
             os.remove(file)

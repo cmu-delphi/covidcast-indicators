@@ -64,7 +64,7 @@ def get_source_data(params, logger):
     sftp = ssh.open_sftp()
     try:
         sftp.stat(params["common"]["backup_dir"])
-    except:
+    except IOError:
         logger.error("Source backup directory does not exist on the remote server.")
 
     sftp.chdir(params["common"]["backup_dir"])
@@ -75,7 +75,7 @@ def get_source_data(params, logger):
         local_file_path = path.join(params["patch"]["source_dir"], remote_file_name)
         try:
             sftp.stat(remote_file_name)
-        except:
+        except IOError:
             logger.warning(
                 "Source backup for this date does not exist on the remote server.", missing_filename=remote_file_name
             )

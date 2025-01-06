@@ -21,7 +21,6 @@ It will generate data for that range of issue dates, and store them in batch iss
 [name-of-patch]/issue_[issue-date]/doctor-visits/actual_data_file.csv
 """
 
-from collections import defaultdict, Counter
 from datetime import datetime
 from os import makedirs
 from pathlib import Path
@@ -35,7 +34,11 @@ def group_source_files(source_files):
     '''
     Group patch files such that each lists contains unique epiweek issue date.
 
-    This allows for acquisitions to upsert
+    This allows for acquisitions break down patches files per unique epiweek
+    NHSN has not been updating their data in a consistent fashion
+    and in order to properly capture all the changes that happened, the patch files needs
+
+
     Parameters
     ----------
     source_files
@@ -44,28 +47,14 @@ def group_source_files(source_files):
     -------
 
     '''
-    ew_list = list()
-    for file in source_files:
-        if "prelim" not in file.name:
-            current_issue = datetime.strptime(file.name.split(".")[0], "%Y%m%d")
-            current_issue_ew = Week.fromdate(current_issue)
-            ew_list.append(current_issue_ew)
+    days_in_week = 7
+    patch_list = [[] for _ in range(days_in_week)]
 
-    counter = Counter(ew_list)
-
-    highest_count = max(counter.values())
-    patch_list = [[] for _ in range(highest_count)]
-
-    idx = 0
     for file in source_files:
         if "prelim" not in file.stem:
             current_issue_date = datetime.strptime(file.name.split(".")[0], "%Y%m%d")
-
-            if len(patch_list[idx]) == 0:
-                patch_list[idx].append(current_issue_date)
-            else:
-                idx = (idx + 1) % highest_count
-                patch_list[idx].append(current_issue_date)
+            weekday = current_issue_date.weekday()
+            patch_list[weekday].append(current_issue_date)
 
     return patch_list
 

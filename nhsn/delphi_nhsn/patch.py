@@ -56,7 +56,8 @@ def group_source_files(source_files):
             weekday = current_issue_date.weekday()
             patch_list[weekday].append(current_issue_date)
 
-    return patch_list
+    filtered_patch_list = [lst for lst in patch_list if lst]
+    return filtered_patch_list
 
 
 def patch():

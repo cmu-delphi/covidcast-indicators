@@ -1,13 +1,13 @@
 import glob
+import os
 import tempfile
 from pathlib import Path
+import shutil
 from unittest.mock import patch as mock_patch
 
 import pandas as pd
-import pytest
 from datetime import datetime, timedelta
 
-from delphi_utils import get_structured_logger
 from epiweeks import Week
 
 from delphi_nhsn.patch import group_source_files, patch
@@ -83,9 +83,11 @@ class TestPatch:
             test_prelim_data[TOTAL_ADMISSION_COVID_API] = int(date)
             test_prelim_data[TOTAL_ADMISSION_FLU_API] = int(date)
 
+            test_data = test_data.head(2)
             test_data.to_csv(
                 f"{TEST_DIR}/backups/{date}.csv.gz", index=False, na_rep="NA", compression="gzip"
             )
+            test_prelim_data = test_data.head(2)
             test_prelim_data.to_csv(
                 f"{TEST_DIR}/backups/{date}_prelim.csv.gz", index=False, na_rep="NA", compression="gzip"
             )
@@ -96,5 +98,25 @@ class TestPatch:
         with mock_patch("delphi_nhsn.patch.read_params", return_value=params_w_patch):
             self.generate_test_source_files()
             patch()
+
+        for idx in range(7):
+            patch_paths = [Path(dir) for dir in glob.glob(f"{TEST_DIR}/patch_dir_{idx}/*")]
+            for patch_path in patch_paths:
+                # epiweek + the index of the patch files should equal the issue date (which is set as the value of the csv)
+                issue_dt = Week.fromstring(patch_path.name.replace("issue_", "")).daydate(idx).strftime("%Y%m%d")
+                for patch_file in Path(patch_path / "nhsn").iterdir():
+                    df = pd.read_csv(str(patch_file))
+                    val = str(int(df["val"][0]))
+                    assert issue_dt == val
+
+        # clean up
+        for idx in range(7):
+            shutil.rmtree(f"{TEST_DIR}/patch_dir_{idx}")
+
+        for file in glob.glob(f"{TEST_DIR}/backups/*.csv"):
+            os.remove(file)
+
+
+
 
 

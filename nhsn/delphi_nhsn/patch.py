@@ -11,14 +11,15 @@ To use this module, you need to specify the range of issue dates in params.json,
     ...
   },
   "patch": {
-    "patch_dir": "/Users/minhkhuele/Desktop/delphi/covidcast-indicators/nhsn/AprilPatch",
+    "patch_dir": "/Users/minhkhuele/Desktop/delphi/covidcast-indicators/nhsn/patch",
+
     "start_issue": "2024-04-20",
     "end_issue": "2024-04-21"
   }
 }
 
 It will generate data for that range of issue dates, and store them in batch issue format:
-[name-of-patch]/issue_[issue-date]/doctor-visits/actual_data_file.csv
+[name-of-patch]/issue_[issue-date]/nhsn/actual_data_file.csv
 """
 
 from datetime import datetime
@@ -30,8 +31,9 @@ from epiweeks import Week
 
 from .run import run_module
 
+
 def group_source_files(source_files):
-    '''
+    """
     Group patch files such that each lists contains unique epiweek issue date.
 
     This allows for acquisitions break down patches files per unique epiweek
@@ -45,8 +47,17 @@ def group_source_files(source_files):
 
     Returns
     -------
+    list of list of dates where the inner list represents issue dates with a corresponding weekday
+    the content of list contains issue date with the corresponding weekday
 
-    '''
+    ie:
+    [
+    [datetime.datetime(2024, 9, 9, 0, 0), datetime.datetime(2024, 11, 18, 0, 0)], # (weekday = 0)
+    [datetime.datetime(2024, 11, 20, 0, 0)] # (weekday = 2)
+    ]
+
+    the index may not represent the weekday integer if the sources files does not have issues dates for all 7 days
+    """
     days_in_week = 7
     patch_list = [[] for _ in range(days_in_week)]
 
@@ -60,7 +71,7 @@ def group_source_files(source_files):
     return filtered_patch_list
 
 
-def patch():
+def patch(params):
     """
     Run the doctor visits indicator for a range of issue dates.
 
@@ -70,19 +81,18 @@ def patch():
         - "end_date": str, YYYY-MM-DD format, last issue date
         - "patch_dir": str, directory to write all issues output
     """
-    params = read_params()
     logger = get_structured_logger("delphi_nhsn.patch", filename=params["common"]["log_filename"])
 
     source_files = sorted(Path(params["common"]["backup_dir"]).glob("*.csv.gz"))
 
     patch_directory_prefix = params["patch"]["patch_dir"]
     patch_list = group_source_files(source_files)
-    for idx, patch in enumerate(patch_list):
-        start_issue = patch[0]
-        end_issue = patch[-1]
+    for idx, patch_dates in enumerate(patch_list):
+        start_issue = patch_dates[0]
+        end_issue = patch_dates[-1]
 
         patch_directory = f"{patch_directory_prefix}_{idx}"
-        params['patch']['patch_dir'] = patch_directory
+        params["patch"]["patch_dir"] = patch_directory
 
         logger.info(
             "Starting patching",
@@ -93,7 +103,7 @@ def patch():
 
         makedirs(patch_directory, exist_ok=True)
 
-        for issue_date in patch:
+        for issue_date in patch_dates:
             current_issue_ew = Week.fromdate(issue_date)
             logger.info("Running issue", issue_date=issue_date.strftime("%Y-%m-%d"))
             params["patch"]["issue_date"] = issue_date.strftime("%Y%m%d")
@@ -105,4 +115,4 @@ def patch():
 
 
 if __name__ == "__main__":
-    patch()
+    patch(read_params())

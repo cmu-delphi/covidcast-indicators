@@ -97,7 +97,7 @@ class TestPatch:
     def test_patch(self, params_w_patch):
         with mock_patch("delphi_nhsn.patch.read_params", return_value=params_w_patch):
             self.generate_test_source_files()
-            patch()
+            patch(params_w_patch)
 
         for idx in range(7):
             patch_paths = [Path(dir) for dir in glob.glob(f"{TEST_DIR}/patch_dir_{idx}/*")]

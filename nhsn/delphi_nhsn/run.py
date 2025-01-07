@@ -54,7 +54,9 @@ def run_module(params, logger=None):
         export_start_date = export_start_date.strftime("%Y-%m-%d")
 
     nhsn_df = pull_nhsn_data(socrata_token, backup_dir, custom_run=custom_run, issue_date=issue_date, logger=logger)
-    preliminary_nhsn_df = pull_preliminary_nhsn_data(socrata_token, backup_dir, custom_run=custom_run, issue_date=issue_date, logger=logger)
+    preliminary_nhsn_df = pull_preliminary_nhsn_data(
+        socrata_token, backup_dir, custom_run=custom_run, issue_date=issue_date, logger=logger
+    )
 
     geo_mapper = GeoMapper()
     signal_df_dict = {signal: nhsn_df for signal in SIGNALS_MAP}

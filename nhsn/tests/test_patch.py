@@ -74,8 +74,10 @@ class TestPatch:
         date_list = date_list_part1 + date_list_part2 + date_list_part4
 
         file_list = []
+        prelim_file_list = []
         for date in date_list:
-            custom_filename = Path(f"/tmp/{date}.csv.gz")
+            custom_filename = f"{TEST_DIR}/backups/{date}.csv.gz"
+            custom_filename_prelim = f"{TEST_DIR}/backups/{date}_prelim.csv.gz"
             test_data = pd.DataFrame(TEST_DATA)
             test_data[TOTAL_ADMISSION_COVID_API] = int(date)
             test_data[TOTAL_ADMISSION_FLU_API] = int(date)
@@ -85,18 +87,19 @@ class TestPatch:
 
             test_data = test_data.head(2)
             test_data.to_csv(
-                f"{TEST_DIR}/backups/{date}.csv.gz", index=False, na_rep="NA", compression="gzip"
+                custom_filename, index=False, na_rep="NA", compression="gzip"
             )
             test_prelim_data = test_data.head(2)
             test_prelim_data.to_csv(
-                f"{TEST_DIR}/backups/{date}_prelim.csv.gz", index=False, na_rep="NA", compression="gzip"
+                custom_filename_prelim, index=False, na_rep="NA", compression="gzip"
             )
             file_list.append(custom_filename)
-        return file_list
+            prelim_file_list.append(custom_filename_prelim)
+        return file_list, prelim_file_list
 
     def test_patch(self, params_w_patch):
         with mock_patch("delphi_nhsn.patch.read_params", return_value=params_w_patch):
-            self.generate_test_source_files()
+            file_list, prelim_file_list = self.generate_test_source_files()
             patch(params_w_patch)
 
         for idx in range(7):
@@ -113,7 +116,10 @@ class TestPatch:
         for idx in range(7):
             shutil.rmtree(f"{TEST_DIR}/patch_dir_{idx}")
 
-        for file in glob.glob(f"{TEST_DIR}/backups/*.csv"):
+        for file in file_list:
+            os.remove(file)
+
+        for file in prelim_file_list:
             os.remove(file)
 
 

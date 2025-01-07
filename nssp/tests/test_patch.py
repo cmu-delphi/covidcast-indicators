@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import patch as mock_patch, call, MagicMock
-from delphi_nssp.patch import patch, good_patch_config, get_source_data
+from delphi_nssp.patch import patch, good_patch_config, get_source_data, get_patch_dates
 import os
 import shutil
 from datetime import datetime, timedelta
@@ -27,6 +27,8 @@ class TestPatchModule:
                 "custom_run": True,
             },
             "patch": {
+                "source_dir": "./source_data",
+                "user": "user",
                 "patch_dir": "dir",
                 "start_issue": "2024-04-21",
                 "source_dir": "source_dir"
@@ -45,6 +47,8 @@ class TestPatchModule:
                 "custom_run": True,
             },
             "patch": {
+                "source_dir": "./source_data",
+                "user": "user",
                 "patch_dir": "dir",
                 "start_issue": "01-01-2024",
                 "end_issue": "2024-04-22",
@@ -64,6 +68,7 @@ class TestPatchModule:
                 "custom_run": True,
             },
             "patch": {
+                "user": "user",
                 "patch_dir": "dir",
                 "start_issue": "2024-04-22",
                 "end_issue": "2024-04-21",
@@ -81,6 +86,7 @@ class TestPatchModule:
                 "custom_run": True,
             },
             "patch": {
+                "user": "user",
                 "patch_dir": "dir",
                 "start_issue": "2024-04-21",
                 "end_issue": "2024-04-22",
@@ -89,6 +95,21 @@ class TestPatchModule:
         }
         assert good_patch_config(patch_config, mock_logger)
         mock_logger.info.assert_called_once_with("Good patch configuration.")
+
+    def test_get_patch_dates(self):
+        start_issue = datetime(2021, 1, 1)
+        end_issue = datetime(2021, 1, 16)
+        source_dir = "./source_dir"
+        patch_dates = get_patch_dates(start_issue, end_issue, source_dir)
+        expected_dates = [
+            datetime(2021, 1, 2),
+            datetime(2021, 1, 9),
+            datetime(2021, 1, 12)
+        ]
+        print(patch_dates)
+        for date in expected_dates:
+            assert date in patch_dates
+
 
     @mock_patch('delphi_nssp.patch.run_module')
     @mock_patch('delphi_nssp.patch.get_structured_logger')
@@ -100,13 +121,13 @@ class TestPatchModule:
                 "custom_run": True
             },
             "patch": {
+                "user": "user",
                 "start_issue": "2021-01-01",
                 "end_issue": "2021-01-16",
                 "patch_dir": "./patch_dir",
                 "source_dir": "./source_dir"
             }
         }
-
         patch()
 
         # Only Sundays should be issue dirs.
@@ -138,6 +159,7 @@ class TestPatchModule:
                 "socrata_token": "test_token"
                 },
             "patch": {
+                "user": "user",
                 "start_issue": "2021-01-01",
                 "end_issue": "2021-01-16",
                 "patch_dir": "./patch_dir",
@@ -148,9 +170,9 @@ class TestPatchModule:
         patch()
 
         # Make sure issue_20210103 has latest weekly data (data from 20210109 instead of 20210108)
-        df_20210108 = pd.read_csv('source_dir/2021-01-08.csv')
+        df_20210108 = pd.read_csv('source_dir/20210108.csv.gz')
         df_20210108_nation_combined = df_20210108['percent_visits_combined'].iloc[0]
-        df_20210109 = pd.read_csv('source_dir/2021-01-09.csv')
+        df_20210109 = pd.read_csv('source_dir/20210109.csv.gz')
         df_20210109_nation_combined = df_20210109['percent_visits_combined'].iloc[0]
         assert df_20210108_nation_combined != df_20210109_nation_combined
 

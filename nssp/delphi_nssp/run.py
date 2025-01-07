@@ -95,12 +95,15 @@ def run_module(params, logger=None):
     ## build the base version of the signal at the most detailed geo level you can get.
     ## compute stuff here or farm out to another function or file
 
-    # breakpoint()
     df_pull = pull_nssp_data(socrata_token, backup_dir, custom_run=custom_run, issue_date=issue_date, logger=logger)
 
     ## aggregate
     geo_mapper = GeoMapper()
     for signal in SIGNALS:
+        if df_pull is None and custom_run and \
+                    logger.name == "delphi_nssp.patch":
+            logger.warning("No primary source data pulled", issue_date=issue_date)
+            break
         for geo in GEOS:
             df = df_pull.copy()
             df["val"] = df[signal]
@@ -155,14 +158,21 @@ def run_module(params, logger=None):
     secondary_df_pull = secondary_pull_nssp_data(
         socrata_token, backup_dir, custom_run=custom_run, issue_date=issue_date, logger=logger
     )
+    if custom_run and logger.name == "delphi_nssp.patch" and secondary_df_pull is None:
+        logger.warning("No secondary source data pulled", issue_date=issue_date)
+        logging(start_time, run_stats, logger)
+        return
+
     for signal in SECONDARY_SIGNALS:
         secondary_df_pull_signal = secondary_df_pull[secondary_df_pull["signal"] == signal]
         if secondary_df_pull_signal.empty:
             logger.warning("No data found for signal", signal=signal)
             continue
+
         for geo in SECONDARY_GEOS:
             df = secondary_df_pull_signal.copy()
             logger.info("Generating signal and exporting to CSV", geo_type=geo, signal=signal)
+
             if geo == "state":
                 df = df[(df["geo_type"] == "state")]
                 df["geo_id"] = df["geo_value"].apply(
@@ -179,16 +189,20 @@ def run_module(params, logger=None):
                         unexpected_state_names=unexpected_state_names["geo_value"].unique(),
                     )
                     raise RuntimeError
+
             elif geo == "nation":
                 df = df[(df["geo_type"] == "nation")]
                 df["geo_id"] = "us"
+
             elif geo == "hhs":
                 df = df[(df["geo_type"] == "hhs")]
                 df["geo_id"] = df["geo_value"]
+
             # add se, sample_size, and na codes
             missing_cols = set(CSV_COLS) - set(df.columns)
             df = add_needed_columns(df, col_names=list(missing_cols))
             df_csv = df[CSV_COLS + ["timestamp"]]
+
             # actual export
             dates = create_export_csv(
                 df_csv,

@@ -166,6 +166,9 @@ def pull_nssp_data(
         if issue_date is None:
             raise ValueError("Issue date is required for patching")
         source_filename = f"{backup_dir}/{issue_date}.csv.gz"
+        if not path.isfile(source_filename):
+            logger.warning("No primary source data found", source=source_filename, issue_date=issue_date)
+            return None
         df_ervisits = pd.read_csv(source_filename)
         logger.info(
             "Number of records grabbed",
@@ -195,7 +198,7 @@ def secondary_pull_nssp_data(
     issue_date: Optional[str] = None,
     logger: Optional[logging.Logger] = None,
 ):
-    """Pull the latest NSSP ER visits secondary dataset.
+    """Pull the NSSP ER visits secondary dataset.
 
     https://data.cdc.gov/Public-Health-Surveillance/2023-Respiratory-Virus-Response-NSSP-Emergency-Dep/7mra-9cq9/data_preview
 
@@ -223,6 +226,9 @@ def secondary_pull_nssp_data(
         if issue_date is None:
             raise ValueError("Issue date is required for patching")
         source_filename = f"{backup_dir}/{issue_date}_secondary.csv.gz"
+        if not path.isfile(source_filename):
+            logger.warning("No secondary source data found", source=source_filename, issue_date=issue_date)
+            return None
         df_ervisits = pd.read_csv(source_filename)
         logger.info(
             "Number of records grabbed",

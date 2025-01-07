@@ -1,4 +1,0 @@
-week_end,geography,county,percent_visits_combined,percent_visits_covid,percent_visits_influenza,percent_visits_rsv,percent_visits_smoothed,percent_visits_smoothed_covid,percent_visits_smoothed_1,percent_visits_smoothed_rsv,ed_trends_covid,ed_trends_influenza,ed_trends_rsv,hsa,hsa_counties,hsa_nci_id,fips,trend_source
-2020-10-01T00:00:00.000,United States,All,1,1,1,1,1,1,1,1,Decreasing,Decreasing,Decreasing,All,All,All,0,United States
-2020-06-29T00:00:00.000,Oklahoma,All,1.01,0.85,0.17,0.0,0.89,0.66,0.22,0.03,Increasing,Decreasing,No Change,All,All,All,1000,State
-2020-02-25T00:00:00.000,Alabama,Blount,,,,,,,,,Data Unavailable,Data Unavailable,Data Unavailable,"Jefferson (Birmingham), AL - Shelby, AL","Bibb, Blount, Chilton, Cullman, Jefferson, Shelby, St. Clair, Walker",150,1009,HSA

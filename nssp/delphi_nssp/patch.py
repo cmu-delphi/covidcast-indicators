@@ -44,6 +44,7 @@ from datetime import datetime, timedelta
 from os import listdir, makedirs, path
 from shutil import rmtree
 
+import pandas as pd
 from delphi_utils import get_structured_logger, read_params
 from epiweeks import Week
 
@@ -94,6 +95,38 @@ def good_patch_config(params, logger):
     return False
 
 
+def get_patch_dates(start_issue, end_issue, source_dir):
+    """
+    Get the dates to run patch on given a range of issue dates.
+
+    Due to weekly cadence of nssp data, dates to run patch on are not necessarily the same as issue dates.
+    We use the latest date with source data per epiweek as reporting date for patching of that week's data.
+
+    Note that primary source files are available for all dates where secondary source files are available but not vice versa.
+
+    start_issue: datetime object
+    end_issue: datetime object
+    """
+    patch_dates = []
+    date_range = pd.date_range(start=start_issue, end=end_issue)
+    dates_with_source_data = [
+        date
+        for date in date_range
+        if path.isfile(f"""{source_dir}/{date.strftime("%Y%m%d")}.csv.gz""")
+        or path.isfile(f"""{source_dir}/{date.strftime("%Y%m%d")}_secondary.csv.gz""")
+    ]
+    epiweek_start_dates = sorted(list(set([Week.fromdate(date).startdate() for date in date_range])))
+    for epiweek_start_date in epiweek_start_dates:
+        epiweek = Week.fromdate(epiweek_start_date)
+        dates_with_data_in_epiweek = [date for date in dates_with_source_data if date.date() in epiweek.iterdates()]
+        if dates_with_data_in_epiweek == []:
+            continue
+        latest_date_with_data = max(dates_with_data_in_epiweek)
+        patch_dates.append(latest_date_with_data)
+    patch_dates.sort()
+    return patch_dates
+
+
 def patch():
     """
     Run the nssp indicator for a range of issue dates.
@@ -118,11 +151,11 @@ def patch():
     logger.info(end_issue=end_issue.strftime("%Y-%m-%d"))
     logger.info(source_dir=source_dir)
     logger.info(patch_dir=params["patch"]["patch_dir"])
-
     makedirs(params["patch"]["patch_dir"], exist_ok=True)
 
-    current_issue = start_issue
-    while current_issue <= end_issue:
+    patch_dates = get_patch_dates(start_issue, end_issue, source_dir)
+
+    for current_issue in patch_dates:
         logger.info("patching issue", issue_date=current_issue.strftime("%Y%m%d"))
 
         current_issue_source_csv = f"""{source_dir}/{current_issue.strftime("%Y%m%d")}.csv.gz"""
@@ -143,7 +176,6 @@ def patch():
         params["common"]["export_dir"] = f"""{current_issue_dir}"""
 
         run_module(params, logger)
-        current_issue += timedelta(days=1)
 
     if download_source:
         rmtree(source_dir)

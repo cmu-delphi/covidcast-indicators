@@ -81,7 +81,7 @@ class TestPullNHSNData:
 
             logger = get_structured_logger()
 
-            result = pull_nhsn_data(test_token, backup_dir, custom_run, logger)
+            result = pull_nhsn_data(test_token, backup_dir, custom_run, issue_date=None, logger=logger)
 
             # Check result
             assert result["timestamp"].notnull().all(), "timestamp has rogue NaN"
@@ -104,7 +104,7 @@ class TestPullNHSNData:
 
             logger = get_structured_logger()
             # Call function with test token
-            pull_nhsn_data(test_token, backup_dir, custom_run, logger)
+            pull_nhsn_data(test_token, backup_dir, custom_run, issue_date=None, logger=logger)
 
             # Check logger used:
             assert "Backup file created" in caplog.text
@@ -121,9 +121,9 @@ class TestPullNHSNData:
                     actual_data = pd.read_parquet(backup_file)
                 pd.testing.assert_frame_equal(expected_data, actual_data)
 
-            # # clean up
-            # for file in backup_files:
-            #     os.remove(file)
+            # clean up
+            for file in backup_files:
+                os.remove(file)
     def test_pull_prelim_nhsn_data_output(self, caplog, params):
         with patch('sodapy.Socrata.get') as mock_get:
             mock_get.side_effect = [PRELIM_TEST_DATA, []]
@@ -173,6 +173,6 @@ class TestPullNHSNData:
                     actual_data = pd.read_parquet(backup_file)
                 pd.testing.assert_frame_equal(expected_data, actual_data)
 
-            # # clean up
-            # for file in backup_files:
-            #     os.remove(file)
+            # clean up
+            for file in backup_files:
+                os.remove(file)

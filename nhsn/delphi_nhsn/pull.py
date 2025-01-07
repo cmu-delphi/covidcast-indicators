@@ -45,12 +45,14 @@ def pull_data_from_file(filepath: str, issue_date: str, logger, prelim_flag=Fals
     pd.DataFrame
         Dataframe as described above.
     """
+    issue_date = issue_date.replace("-", "")
     filename = f"{issue_date}_prelim.csv.gz" if prelim_flag else f"{issue_date}.csv.gz"
-    logger.info("Pulling data from file", file=filename)
     backup_file = Path(filepath, filename)
     df = pd.DataFrame()
     if backup_file.exists():
         df = pd.read_csv(backup_file, compression="gzip")
+        logger.info("Pulling data from file", file=filename, num_rows=len(df))
+
     return df
 
 

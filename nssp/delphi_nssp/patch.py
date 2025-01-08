@@ -116,7 +116,7 @@ def get_patch_dates(start_issue, end_issue, source_dir):
         if path.isfile(f"""{source_dir}/{date.strftime("%Y%m%d")}.csv.gz""")
         or path.isfile(f"""{source_dir}/{date.strftime("%Y%m%d")}_secondary.csv.gz""")
     }
-    epiweek_start_dates = set([Week.fromdate(date).startdate() for date in date_range])
+    epiweek_start_dates = {Week.fromdate(date).startdate() for date in date_range}
     for epiweek_start_date in epiweek_start_dates:
         epiweek = Week.fromdate(epiweek_start_date)
         dates_with_data_in_epiweek = [date for date in dates_with_source_data if date.date() in epiweek.iterdates()]

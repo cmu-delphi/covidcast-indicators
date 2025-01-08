@@ -50,7 +50,7 @@ def params():
 @pytest.fixture
 def params_w_patch(params):
     params_copy = copy.deepcopy(params)
-    params["common"]["custom_run"] = True
+    params_copy["common"]["custom_run"] = True
     params_copy["patch"] = {
             "patch_dir": f"{TEST_DIR}/patch_dir",
             "issue_date": "2024-12-12",

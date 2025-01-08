@@ -134,7 +134,7 @@ def get_patch_dates(start_issue, end_issue, source_dir):
 
 
 def patch():
-    """ Run nssp indicator for a range of issue dates."""
+    """Run nssp indicator for a range of issue dates."""
     params = read_params()
     logger = get_structured_logger("delphi_nssp.patch", filename=params["common"]["log_filename"])
     if not good_patch_config(params, logger):

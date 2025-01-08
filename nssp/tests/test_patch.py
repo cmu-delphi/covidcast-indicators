@@ -27,11 +27,10 @@ class TestPatchModule:
                 "custom_run": True,
             },
             "patch": {
-                "source_dir": "./source_data",
+                "source_dir": "./does_not_exist",
                 "user": "user",
                 "patch_dir": "dir",
                 "start_issue": "2024-04-21",
-                "source_dir": "source_dir"
             }
         }
         assert not good_patch_config(patch_config, mock_logger)
@@ -47,12 +46,11 @@ class TestPatchModule:
                 "custom_run": True,
             },
             "patch": {
-                "source_dir": "./source_data",
+                "source_dir": "./does_not_exist",
                 "user": "user",
                 "patch_dir": "dir",
                 "start_issue": "01-01-2024",
                 "end_issue": "2024-04-22",
-                "source_dir": "source_dir"
             }
         }
         assert not good_patch_config(patch_config, mock_logger)
@@ -72,7 +70,7 @@ class TestPatchModule:
                 "patch_dir": "dir",
                 "start_issue": "2024-04-22",
                 "end_issue": "2024-04-21",
-                "source_dir": "source_dir"
+                "source_dir": "./does_not_exist",
             }
         }
         assert not good_patch_config(patch_config, mock_logger)
@@ -90,11 +88,45 @@ class TestPatchModule:
                 "patch_dir": "dir",
                 "start_issue": "2024-04-21",
                 "end_issue": "2024-04-22",
-                "source_dir": "source_dir"
+                "source_dir": "./does_not_exist"
             }
         }
         assert good_patch_config(patch_config, mock_logger)
         mock_logger.info.assert_called_once_with("Good patch configuration.")
+
+    @mock_patch('logging.Logger')
+    def test_config_user_param(self, mock_logger):
+        # Case 6.1: pre-existing local source data,
+        # so no "user" param in patch section needed
+        patch_config = {
+            "common": {
+                "custom_run": True,
+            },
+            "patch": {
+                "patch_dir": "dir",
+                "start_issue": "2024-04-21",
+                "end_issue": "2024-04-22",
+                "source_dir": "./source_dir"
+            }
+        }
+        assert good_patch_config(patch_config, mock_logger)
+
+        # Case 6.2: source_dir does not exist, so "user" param is needed
+        patch_config = {
+            "common": {
+                "custom_run": True,
+            },
+            "patch": {
+                "patch_dir": "dir",
+                "start_issue": "2024-04-21",
+                "end_issue": "2024-04-22",
+                "source_dir": "./does_not_exist",
+            }
+        }
+        assert not good_patch_config(patch_config, mock_logger)
+        mock_logger.error.assert_has_calls([
+            call("Patch section is missing required key(s)", missing_keys=["user"]),
+        ])
 
     def test_get_patch_dates(self):
         start_issue = datetime(2021, 1, 1)

@@ -72,7 +72,12 @@ def good_patch_config(params, logger):
         logger.error("Custom flag is on, but patch section is missing.")
         valid_config = False
     else:
-        required_patch_keys = ["start_issue", "end_issue", "patch_dir", "source_dir", "user"]
+        required_patch_keys = ["start_issue", "end_issue", "patch_dir", "source_dir"]
+
+        source_dir = params["patch"]["source_dir"]
+        if not path.isdir(source_dir) or not listdir(source_dir):
+            required_patch_keys.append("user")
+
         missing_keys = [key for key in required_patch_keys if key not in patch_config]
         if missing_keys:
             logger.error("Patch section is missing required key(s)", missing_keys=missing_keys)
@@ -129,9 +134,7 @@ def get_patch_dates(start_issue, end_issue, source_dir):
 
 
 def patch():
-    """
-    Run the nssp indicator for a range of issue dates.
-    """
+    """ Run nssp indicator for a range of issue dates."""
     params = read_params()
     logger = get_structured_logger("delphi_nssp.patch", filename=params["common"]["log_filename"])
     if not good_patch_config(params, logger):

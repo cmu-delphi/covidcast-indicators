@@ -100,8 +100,7 @@ def run_module(params, logger=None):
     ## aggregate
     geo_mapper = GeoMapper()
     for signal in SIGNALS:
-        if df_pull is None and custom_run and \
-                    logger.name == "delphi_nssp.patch":
+        if df_pull is None and custom_run and logger.name == "delphi_nssp.patch":
             logger.warning("No primary source data pulled", issue_date=issue_date)
             break
         for geo in GEOS:

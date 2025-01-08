@@ -37,6 +37,7 @@ def print_callback(remote_file_name, logger, bytes_so_far, bytes_total, progress
 def get_source_data(params, logger):
     """
     Download historical source data from a backup server.
+
     This function is typically used in patching only. Normal runs grab latest data from SODA API.
 
     This function uses "user" configuration under "patch" section in params.json to specify
@@ -122,7 +123,6 @@ def pull_with_socrata_api(socrata_token: str, dataset_id: str):
     -------
     list of dictionaries, each representing a row in the dataset
     """
-
     client = Socrata("data.cdc.gov", socrata_token)
     results = []
     offset = 0

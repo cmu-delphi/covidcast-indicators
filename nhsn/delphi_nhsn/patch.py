@@ -11,14 +11,11 @@ To use this module, you need to specify the range of issue dates in params.json,
     ...
   },
   "patch": {
-    "patch_dir": "/Users/minhkhuele/Desktop/delphi/covidcast-indicators/nhsn/patch",
-
-    "start_issue": "2024-04-20",
-    "end_issue": "2024-04-21"
+    "patch_dir": "/Users/minhkhuele/Desktop/delphi/covidcast-indicators/nhsn/patch"
   }
 }
 
-It will generate data for that range of issue dates, and store them in batch issue format:
+It will generate data for the range of issue dates corresponding to source data files available in "backup_dir" specified under "common", and store them in batch issue format under "patch_dir":
 [name-of-patch]/issue_[issue-date]/nhsn/actual_data_file.csv
 """
 

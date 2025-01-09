@@ -1,6 +1,6 @@
 import glob
 import os
-import tempfile
+from collections import defaultdict
 from pathlib import Path
 import shutil
 from unittest.mock import patch as mock_patch
@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 
 from epiweeks import Week
 
-from delphi_nhsn.patch import group_source_files, patch
+from delphi_nhsn.patch import filter_source_files, patch
 from delphi_nhsn.constants import TOTAL_ADMISSION_COVID_API, TOTAL_ADMISSION_FLU_API
 from conftest import TEST_DATA, PRELIM_TEST_DATA, TEST_DIR
 
@@ -51,12 +51,18 @@ class TestPatch:
             file_list.append(custom_filename)
         return file_list
 
-    def test_group_source_files(self):
+    def test_filter_source_files(self):
         filelist = self.generate_dummy_file_names()
-        processed_file_list = group_source_files(filelist)
-        for file_list in processed_file_list:
-            converted_file_list = [Week.fromdate(date) for date in file_list]
-            assert len(converted_file_list) == len(set(converted_file_list))
+        epiweek_dict = defaultdict(list)
+        for file in filelist:
+            issue_dt = datetime.strptime(file.name.split(".")[0], "%Y%m%d")
+            issue_epiweek = Week.fromdate(issue_dt)
+            epiweek_dict[issue_epiweek].append(issue_dt)
+        patch_issue_list = filter_source_files(filelist)
+        for file in patch_issue_list:
+            issue_dt = datetime.strptime(file.name.split(".")[0], "%Y%m%d")
+            issue_epiweek = Week.fromdate(issue_dt)
+            assert max(epiweek_dict[issue_epiweek]) == issue_dt
 
     def generate_test_source_files(self):
         start_date = datetime(2024, 8, 1)
@@ -102,19 +108,15 @@ class TestPatch:
             file_list, prelim_file_list = self.generate_test_source_files()
             patch(params_w_patch)
 
-        for idx in range(7):
-            patch_paths = [Path(dir) for dir in glob.glob(f"{TEST_DIR}/patch_dir_{idx}/*")]
-            for patch_path in patch_paths:
-                # epiweek + the index of the patch files should equal the issue date (which is set as the value of the csv)
-                issue_dt = Week.fromstring(patch_path.name.replace("issue_", "")).daydate(idx).strftime("%Y%m%d")
-                for patch_file in Path(patch_path / "nhsn").iterdir():
-                    df = pd.read_csv(str(patch_file))
-                    val = str(int(df["val"][0]))
-                    assert issue_dt == val
+            for issue_path in Path(f"{TEST_DIR}/patch_dir").glob("*"):
+                issue_dt_str = issue_path.name.replace("issue_", "")
+                for file in Path(issue_path / "nhsn").iterdir():
+                    df = pd.read_csv(file)
+                    val = Week.fromdate(datetime.strptime(str(int(df["val"][0])), "%Y%m%d"))
+                    assert issue_dt_str == str(val)
 
         # clean up
-        for idx in range(7):
-            shutil.rmtree(f"{TEST_DIR}/patch_dir_{idx}")
+        shutil.rmtree(f"{TEST_DIR}/patch_dir")
 
         for file in file_list:
             os.remove(file)

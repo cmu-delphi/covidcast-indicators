@@ -8,8 +8,7 @@ import pandas as pd
 from delphi_utils import create_backup_csv
 from sodapy import Socrata
 
-from .constants import PRELIM_SIGNALS_MAP, PRELIM_TYPE_DICT, SIGNALS_MAP, TYPE_DICT, \
-    MAIN_DATASET_ID, PRELIM_DATASET_ID
+from .constants import MAIN_DATASET_ID, PRELIM_DATASET_ID, PRELIM_SIGNALS_MAP, PRELIM_TYPE_DICT, SIGNALS_MAP, TYPE_DICT
 
 
 def pull_data(socrata_token: str, dataset_id: str):

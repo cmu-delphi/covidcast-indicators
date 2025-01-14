@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 """Functions for pulling NSSP ER data."""
 import logging
+from pathlib import Path
 from typing import Optional
 
 import pandas as pd
 from delphi_utils import create_backup_csv
 from sodapy import Socrata
 
-from .constants import PRELIM_SIGNALS_MAP, PRELIM_TYPE_DICT, SIGNALS_MAP, TYPE_DICT
+from .constants import MAIN_DATASET_ID, PRELIM_DATASET_ID, PRELIM_SIGNALS_MAP, PRELIM_TYPE_DICT, SIGNALS_MAP, TYPE_DICT
 
 
 def pull_data(socrata_token: str, dataset_id: str):
@@ -27,7 +28,42 @@ def pull_data(socrata_token: str, dataset_id: str):
     return df
 
 
-def pull_nhsn_data(socrata_token: str, backup_dir: str, custom_run: bool, logger: Optional[logging.Logger] = None):
+def pull_data_from_file(filepath: str, issue_date: str, logger, prelim_flag=False) -> pd.DataFrame:
+    """
+    Pull data from source file.
+
+    The source file is generated from delphi_utils.create_backup_csv
+    Parameters
+    ----------
+    filepath: full path where the source file is located
+    issue_date: date when the file was pulled / generated
+    logger
+    prelim_flag: boolean to indicate which dataset to grab
+
+    Returns
+    -------
+    pd.DataFrame
+        Dataframe as described above.
+    """
+    df = pd.DataFrame()
+    if issue_date:
+        issue_date = issue_date.replace("-", "")
+        filename = f"{issue_date}_prelim.csv.gz" if prelim_flag else f"{issue_date}.csv.gz"
+        backup_file = Path(filepath, filename)
+
+        if backup_file.exists():
+            df = pd.read_csv(backup_file, compression="gzip")
+            logger.info("Pulling data from file", file=filename, num_rows=len(df))
+    return df
+
+
+def pull_nhsn_data(
+    socrata_token: str,
+    backup_dir: str,
+    custom_run: bool,
+    issue_date: Optional[str],
+    logger: Optional[logging.Logger] = None,
+):
     """Pull the latest NHSN hospital admission data, and conforms it into a dataset.
 
     The output dataset has:
@@ -52,7 +88,11 @@ def pull_nhsn_data(socrata_token: str, backup_dir: str, custom_run: bool, logger
         Dataframe as described above.
     """
     # Pull data from Socrata API
-    df = pull_data(socrata_token, dataset_id="ua7e-t2fy")
+    df = (
+        pull_data(socrata_token, dataset_id=MAIN_DATASET_ID)
+        if not custom_run
+        else pull_data_from_file(backup_dir, issue_date, logger, prelim_flag=False)
+    )
 
     keep_columns = list(TYPE_DICT.keys())
 
@@ -75,7 +115,11 @@ def pull_nhsn_data(socrata_token: str, backup_dir: str, custom_run: bool, logger
 
 
 def pull_preliminary_nhsn_data(
-    socrata_token: str, backup_dir: str, custom_run: bool, logger: Optional[logging.Logger] = None
+    socrata_token: str,
+    backup_dir: str,
+    custom_run: bool,
+    issue_date: Optional[str],
+    logger: Optional[logging.Logger] = None,
 ):
     """Pull the latest preliminary NHSN hospital admission data, and conforms it into a dataset.
 
@@ -100,8 +144,11 @@ def pull_preliminary_nhsn_data(
     pd.DataFrame
         Dataframe as described above.
     """
-    # Pull data from Socrata API
-    df = pull_data(socrata_token, dataset_id="mpgq-jmmr")
+    df = (
+        pull_data(socrata_token, dataset_id=PRELIM_DATASET_ID)
+        if not custom_run
+        else pull_data_from_file(backup_dir, issue_date, logger, prelim_flag=True)
+    )
 
     keep_columns = list(PRELIM_TYPE_DICT.keys())
 

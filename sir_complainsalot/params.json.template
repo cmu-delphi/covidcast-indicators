@@ -49,8 +49,8 @@
         "pct_ed_visits_combined_2023rvr",
         "pct_ed_visits_covid_2023rvr",
         "pct_ed_visits_influenza_2023rvr",
-        "pct_ed_visits_rsv_2023rvr",
-      ],
+        "pct_ed_visits_rsv_2023rvr"
+      ]
     }
   }
 }

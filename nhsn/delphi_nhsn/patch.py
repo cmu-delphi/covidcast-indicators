@@ -78,12 +78,12 @@ def patch(params):
 
     patch_list = filter_source_files(source_files)
     for file in patch_list:
-        issue_date = datetime.strptime(file.name.split(".")[0], "%Y%m%d")
-        logger.info("Running issue", issue_date=issue_date.strftime("%Y-%m-%d"))
-        params["patch"]["issue_date"] = issue_date.strftime("%Y%m%d")
-        # regardless of week date type or not the directory name must be issue_date_yyyymmdd
+        issue_date_str = file.name.split(".")[0]
+        logger.info("Running issue", issue_date=datetime.strptime(issue_date_str, "%Y%m%d").strftime("%Y-%m-%d"))
+        params["patch"]["issue_date"] = issue_date_str
+        # regardless of week date type or not the directory name must be issue_date_YYYYMMDD
         # conversion in done in acquisition
-        current_issue_dir = f"{params['patch']['patch_dir']}/issue_{issue_date.strftime('%Y%m%d')}/nhsn"
+        current_issue_dir = f"{params['patch']['patch_dir']}/issue_{issue_date_str}/nhsn"
         makedirs(current_issue_dir, exist_ok=True)
         params["common"]["export_dir"] = current_issue_dir
         params["common"]["custom_run"] = True

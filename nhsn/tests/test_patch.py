@@ -112,8 +112,7 @@ class TestPatch:
                 issue_dt_str = issue_path.name.replace("issue_", "")
                 for file in Path(issue_path / "nhsn").iterdir():
                     df = pd.read_csv(file)
-                    val = Week.fromdate(datetime.strptime(str(int(df["val"][0])), "%Y%m%d"))
-                    assert issue_dt_str == str(val)
+                    assert issue_dt_str == str(int(df["val"][0]))
 
         # clean up
         shutil.rmtree(f"{TEST_DIR}/patch_dir")

@@ -7,7 +7,7 @@ import pandas as pd
 from delphi_utils import create_backup_csv
 from sodapy import Socrata
 
-from .constants import PRELIM_SIGNALS_MAP, PRELIM_TYPE_DICT, SIGNALS_MAP, TYPE_DICT
+from .constants import PRELIM_TYPE_DICT, TYPE_DICT
 
 
 def pull_data(socrata_token: str, dataset_id: str):
@@ -58,12 +58,7 @@ def pull_nhsn_data(socrata_token: str, backup_dir: str, custom_run: bool, logger
 
     if not df.empty:
         create_backup_csv(df, backup_dir, custom_run, logger=logger)
-
         df = df.rename(columns={"weekendingdate": "timestamp", "jurisdiction": "geo_id"})
-
-        for signal, col_name in SIGNALS_MAP.items():
-            df[signal] = df[col_name]
-
         df = df[keep_columns]
         df["geo_id"] = df["geo_id"].str.lower()
         df.loc[df["geo_id"] == "usa", "geo_id"] = "us"
@@ -107,12 +102,7 @@ def pull_preliminary_nhsn_data(
 
     if not df.empty:
         create_backup_csv(df, backup_dir, custom_run, sensor="prelim", logger=logger)
-
         df = df.rename(columns={"weekendingdate": "timestamp", "jurisdiction": "geo_id"})
-
-        for signal, col_name in PRELIM_SIGNALS_MAP.items():
-            df[signal] = df[col_name]
-
         df = df[keep_columns]
         df = df.astype(PRELIM_TYPE_DICT)
         df["geo_id"] = df["geo_id"].str.lower()

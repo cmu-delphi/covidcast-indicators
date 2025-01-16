@@ -16,6 +16,7 @@ the following structure:
 """
 import time
 from datetime import date, datetime, timedelta
+from itertools import product
 
 import numpy as np
 from delphi_utils import GeoMapper, get_structured_logger
@@ -58,11 +59,17 @@ def run_module(params):
     signal_df_dict = {signal: nhsn_df for signal in SIGNALS_MAP}
     signal_df_dict.update({signal: preliminary_nhsn_df for signal in PRELIM_SIGNALS_MAP})
 
-    for signal, df_pull in signal_df_dict.items():
-        for geo in GEOS:
+    for signal_map, df_pull in [(SIGNALS_MAP, nhsn_df), (PRELIM_SIGNALS_MAP, preliminary_nhsn_df)]:
+        for geo, signal in product(GEOS, signal_map.keys()):
             df = df_pull.copy()
+            columns = signal_map.get(signal)
+            if "prop" in signal:
+                df[signal] = df[columns[0]] / df[columns[1]]
+            else:
+                df[signal] = df[columns[0]]
             df = df[["timestamp", "geo_id", signal]]
             df.rename({signal: "val"}, axis=1, inplace=True)
+
             if geo == "nation":
                 df = df[df["geo_id"] == "us"]
             elif geo == "hhs":

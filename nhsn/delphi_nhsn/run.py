@@ -79,8 +79,10 @@ def run_module(params, logger=None):
                 df = geo_mapper.replace_geocode(
                     df, from_col="state_code", from_code="state_code", new_col="geo_id", new_code="hhs"
                 )
-            else:
+            elif geo == "state":
                 df = df[df_pull["geo_id"] != "us"]
+                df = df[df['geo_id'].str.len() == 2] # hhs region is a value in geo_id column
+
             df["se"] = np.nan
             df["sample_size"] = np.nan
             dates = create_export_csv(

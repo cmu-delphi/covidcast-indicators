@@ -10,7 +10,7 @@ from delphi_nhsn.pull import (
     pull_data,
     pull_preliminary_nhsn_data
 )
-from delphi_nhsn.constants import SIGNALS_MAP, PRELIM_SIGNALS_MAP
+from delphi_nhsn.constants import TYPE_DICT, PRELIM_TYPE_DICT
 
 from delphi_utils import get_structured_logger
 from conftest import TEST_DATA, PRELIM_TEST_DATA
@@ -53,13 +53,12 @@ class TestPullNHSNData:
 
             result = pull_nhsn_data(test_token, backup_dir, custom_run, logger)
 
-            # Check result
-            assert result["timestamp"].notnull().all(), "timestamp has rogue NaN"
-            assert result["geo_id"].notnull().all(), "geography has rogue NaN"
+            expected_columns = set(TYPE_DICT.keys())
+            assert set(result.columns) == expected_columns
 
-            # Check for each signal in SIGNALS
-            for signal in SIGNALS_MAP.keys():
-                assert result[signal].notnull().all(), f"{signal} has rogue NaN"
+            for column in list(result.columns):
+                assert result[column].notnull().all(), f"{column} has rogue NaN"
+
     def test_pull_nhsn_data_backup(self, caplog, params):
         with patch('sodapy.Socrata.get') as mock_get:
             mock_get.side_effect = [TEST_DATA, []]
@@ -105,13 +104,11 @@ class TestPullNHSNData:
 
             result = pull_preliminary_nhsn_data(test_token, backup_dir, custom_run, logger)
 
-            # Check result
-            assert result["timestamp"].notnull().all(), "timestamp has rogue NaN"
-            assert result["geo_id"].notnull().all(), "geography has rogue NaN"
+            expected_columns = set(PRELIM_TYPE_DICT.keys())
+            assert set(result.columns) == expected_columns
 
-            # Check for each signal in SIGNALS
-            for signal in PRELIM_SIGNALS_MAP.keys():
-                assert result[signal].notnull().all(), f"{signal} has rogue NaN"
+            for column in list(result.columns):
+                assert result[column].notnull().all(), f"{column} has rogue NaN"
     def test_pull_prelim_nhsn_data_backup(self, caplog, params):
         with patch('sodapy.Socrata.get') as mock_get:
             mock_get.side_effect = [PRELIM_TEST_DATA, []]

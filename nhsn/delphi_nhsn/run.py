@@ -73,7 +73,7 @@ def run_module(params, logger=None):
                 df = df[df["geo_id"] == "us"]
             elif geo == "hhs":
                 df = df[df["geo_id"] != "us"]
-                df = df[df['geo_id'].str.len() == 2]
+                df = df[df["geo_id"].str.len() == 2]
                 df.rename(columns={"geo_id": "state_id"}, inplace=True)
                 df = geo_mapper.add_geocode(df, "state_id", "state_code", from_col="state_id")
                 df = geo_mapper.add_geocode(df, "state_code", "hhs", from_col="state_code", new_col="hhs")
@@ -82,7 +82,7 @@ def run_module(params, logger=None):
                 )
             elif geo == "state":
                 df = df[df_pull["geo_id"] != "us"]
-                df = df[df['geo_id'].str.len() == 2] # hhs region is a value in geo_id column
+                df = df[df["geo_id"].str.len() == 2]  # hhs region is a value in geo_id column
 
             df["se"] = np.nan
             df["sample_size"] = np.nan

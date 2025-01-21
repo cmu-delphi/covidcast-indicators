@@ -2,12 +2,20 @@
 """Functions for pulling NSSP ER data."""
 import logging
 from typing import Optional
+from datetime import datetime
 
 import pandas as pd
 from delphi_utils import create_backup_csv
 from sodapy import Socrata
 
 from .constants import PRELIM_TYPE_DICT, TYPE_DICT
+
+def check_update(socrata_token: str, dataset_id: str):
+    client = Socrata("data.cdc.gov", socrata_token)
+    response = client.get_metadata(dataset_id)
+    updated_timestamp = datetime.utcfromtimestamp(int(response["rowsUpdatedAt"]))
+    print("bob")
+
 
 
 def pull_data(socrata_token: str, dataset_id: str):
@@ -52,6 +60,7 @@ def pull_nhsn_data(socrata_token: str, backup_dir: str, custom_run: bool, logger
         Dataframe as described above.
     """
     # Pull data from Socrata API
+    check_update(socrata_token, "ua7e-t2fy")
     df = pull_data(socrata_token, dataset_id="ua7e-t2fy")
 
     keep_columns = list(TYPE_DICT.keys())
@@ -96,6 +105,7 @@ def pull_preliminary_nhsn_data(
         Dataframe as described above.
     """
     # Pull data from Socrata API
+    check_update(socrata_token, "mpgq-jmmr")
     df = pull_data(socrata_token, dataset_id="mpgq-jmmr")
 
     keep_columns = list(PRELIM_TYPE_DICT.keys())

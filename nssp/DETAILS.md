@@ -6,7 +6,6 @@ NSSP source data: https://data.cdc.gov/Public-Health-Surveillance/NSSP-Emergency
 
 
 ## Geographical Levels
-Primary source:
 * `state`: reported from source using two-letter postal code
 * `county`: reported from source using fips code
 * `national`: just `us` for now, reported from source

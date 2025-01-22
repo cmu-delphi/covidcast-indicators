@@ -4,7 +4,6 @@ We import the NSSP Emergency Department Visit data, including percentage and smo
 
 NSSP source data: https://data.cdc.gov/Public-Health-Surveillance/NSSP-Emergency-Department-Visit-Trajectories-by-St/rdmq-nq56/data_preview
 
-
 ## Geographical Levels
 * `state`: reported from source using two-letter postal code
 * `county`: reported from source using fips code

@@ -16,10 +16,10 @@ TEST_DIR = Path(__file__).parent
 # queries the nhsn data with timestamp (2021-08-19, 2021-10-19) with CO and USA data
 
 
-with open("test_data/page.json", "r") as f:
+with open(f"{TEST_DIR}/test_data/page.json", "r") as f:
     TEST_DATA = json.load(f)
 
-with open("test_data/prelim_page.json", "r") as f:
+with open(f"{TEST_DIR}/test_data/prelim_page.json", "r") as f:
     PRELIM_TEST_DATA = json.load(f)
 
 @pytest.fixture(scope="session")
@@ -50,11 +50,12 @@ def params():
 @pytest.fixture
 def params_w_patch(params):
     params_copy = copy.deepcopy(params)
+    params_copy["common"]["custom_run"] = True
     params_copy["patch"] = {
-            "start_issue": "2024-06-27",
-            "end_issue": "2024-06-29",
-            "patch_dir": "./patch_dir"
+            "patch_dir": f"{TEST_DIR}/patch_dir",
+            "issue_date": "2024-12-12",
         }
+
     return params_copy
 
 @pytest.fixture(scope="function")

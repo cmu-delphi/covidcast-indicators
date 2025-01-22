@@ -2,6 +2,9 @@
 
 GEOS = ["state", "nation", "hhs"]
 
+MAIN_DATASET_ID = "ua7e-t2fy"
+PRELIM_DATASET_ID = "mpgq-jmmr"
+
 # column name from socrata
 TOTAL_ADMISSION_COVID = "totalconfc19newadm"
 TOTAL_ADMISSION_FLU = "totalconfflunewadm"

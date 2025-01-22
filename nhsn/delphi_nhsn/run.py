@@ -26,7 +26,7 @@ from .constants import GEOS, PRELIM_SIGNALS_MAP, SIGNALS_MAP
 from .pull import pull_nhsn_data, pull_preliminary_nhsn_data
 
 
-def run_module(params):
+def run_module(params, logger=None):
     """
     Run the indicator.
 
@@ -36,14 +36,16 @@ def run_module(params):
         Nested dictionary of parameters.
     """
     start_time = time.time()
-    logger = get_structured_logger(
-        __name__,
-        filename=params["common"].get("log_filename"),
-        log_exceptions=params["common"].get("log_exceptions", True),
-    )
+    if not logger:
+        logger = get_structured_logger(
+            __name__,
+            filename=params["common"].get("log_filename"),
+            log_exceptions=params["common"].get("log_exceptions", True),
+        )
     export_dir = params["common"]["export_dir"]
     backup_dir = params["common"]["backup_dir"]
     custom_run = params["common"].get("custom_run", False)
+    issue_date = params.get("patch", dict()).get("issue_date", None)
     socrata_token = params["indicator"]["socrata_token"]
     export_start_date = params["indicator"]["export_start_date"]
     run_stats = []
@@ -52,12 +54,16 @@ def run_module(params):
         export_start_date = date.today() - timedelta(days=date.today().weekday() + 2)
         export_start_date = export_start_date.strftime("%Y-%m-%d")
 
-    nhsn_df = pull_nhsn_data(socrata_token, backup_dir, custom_run=custom_run, logger=logger)
-    preliminary_nhsn_df = pull_preliminary_nhsn_data(socrata_token, backup_dir, custom_run=custom_run, logger=logger)
+    nhsn_df = pull_nhsn_data(socrata_token, backup_dir, custom_run=custom_run, issue_date=issue_date, logger=logger)
+    preliminary_nhsn_df = pull_preliminary_nhsn_data(
+        socrata_token, backup_dir, custom_run=custom_run, issue_date=issue_date, logger=logger
+    )
 
     geo_mapper = GeoMapper()
     signal_df_dict = {signal: nhsn_df for signal in SIGNALS_MAP}
-    signal_df_dict.update({signal: preliminary_nhsn_df for signal in PRELIM_SIGNALS_MAP})
+    # some of the source backups do not include for preliminary data TODO remove after first patch
+    if not preliminary_nhsn_df.empty:
+        signal_df_dict.update({signal: preliminary_nhsn_df for signal in PRELIM_SIGNALS_MAP})
 
     for signal_map, df_pull in [(SIGNALS_MAP, nhsn_df), (PRELIM_SIGNALS_MAP, preliminary_nhsn_df)]:
         for geo, signal in product(GEOS, signal_map.keys()):
@@ -74,14 +80,17 @@ def run_module(params):
                 df = df[df["geo_id"] == "us"]
             elif geo == "hhs":
                 df = df[df["geo_id"] != "us"]
+                df = df[df["geo_id"].str.len() == 2]
                 df.rename(columns={"geo_id": "state_id"}, inplace=True)
                 df = geo_mapper.add_geocode(df, "state_id", "state_code", from_col="state_id")
                 df = geo_mapper.add_geocode(df, "state_code", "hhs", from_col="state_code", new_col="hhs")
                 df = geo_mapper.replace_geocode(
                     df, from_col="state_code", from_code="state_code", new_col="geo_id", new_code="hhs"
                 )
-            else:
+            elif geo == "state":
                 df = df[df_pull["geo_id"] != "us"]
+                df = df[df["geo_id"].str.len() == 2]  # hhs region is a value in geo_id column
+
             df["se"] = np.nan
             df["sample_size"] = np.nan
             dates = create_export_csv(

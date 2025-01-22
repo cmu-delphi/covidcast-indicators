@@ -8,13 +8,12 @@ import pandas as pd
 from delphi_nhsn.pull import (
     pull_nhsn_data,
     pull_data,
-    pull_preliminary_nhsn_data
+    pull_preliminary_nhsn_data, pull_data_from_file
 )
 from delphi_nhsn.constants import TYPE_DICT, PRELIM_TYPE_DICT
 
 from delphi_utils import get_structured_logger
-from conftest import TEST_DATA, PRELIM_TEST_DATA
-
+from conftest import TEST_DATA, PRELIM_TEST_DATA, TEST_DIR
 
 DATASETS = [{"id":"ua7e-t2fy",
              "test_data": TEST_DATA},
@@ -42,16 +41,46 @@ class TestPullNHSNData:
         # Check that get method was called with correct arguments
         mock_client.get.assert_any_call(dataset["id"], limit=50000, offset=0)
 
+    def test_pull_from_file(self, caplog, params_w_patch):
+        backup_dir = f"{TEST_DIR}/test_data"
+        issue_date = params_w_patch["patch"]["issue_date"]
+        logger = get_structured_logger()
+
+        # Load test data
+        expected_data = pd.DataFrame(TEST_DATA)
+
+        df = pull_data_from_file(backup_dir, issue_date, logger=logger)
+        df = df.astype('str')
+        expected_data = expected_data.astype('str')
+        assert "Pulling data from file" in caplog.text
+
+        pd.testing.assert_frame_equal(expected_data, df)
+
+    def test_pull_from_file_prelim(self, caplog, params_w_patch):
+        backup_dir = f"{TEST_DIR}/test_data"
+        issue_date = params_w_patch["patch"]["issue_date"]
+        logger = get_structured_logger()
+
+        # Load test data
+        expected_data = pd.DataFrame(PRELIM_TEST_DATA)
+
+        df = pull_data_from_file(backup_dir, issue_date, logger=logger, prelim_flag=True)
+        df = df.astype('str')
+        expected_data = expected_data.astype('str')
+
+        assert "Pulling data from file" in caplog.text
+        pd.testing.assert_frame_equal(expected_data, df)
+
     def test_pull_nhsn_data_output(self, caplog, params):
         with patch('sodapy.Socrata.get') as mock_get:
             mock_get.side_effect = [TEST_DATA, []]
             backup_dir = params["common"]["backup_dir"]
             test_token = params["indicator"]["socrata_token"]
-            custom_run = True
+            custom_run = params["common"]["custom_run"]
 
             logger = get_structured_logger()
 
-            result = pull_nhsn_data(test_token, backup_dir, custom_run, logger)
+            result = pull_nhsn_data(test_token, backup_dir, custom_run, issue_date=None, logger=logger)
 
             expected_columns = set(TYPE_DICT.keys())
             assert set(result.columns) == expected_columns
@@ -73,7 +102,7 @@ class TestPullNHSNData:
 
             logger = get_structured_logger()
             # Call function with test token
-            pull_nhsn_data(test_token, backup_dir, custom_run, logger)
+            pull_nhsn_data(test_token, backup_dir, custom_run, issue_date=None, logger=logger)
 
             # Check logger used:
             assert "Backup file created" in caplog.text
@@ -98,11 +127,11 @@ class TestPullNHSNData:
             mock_get.side_effect = [PRELIM_TEST_DATA, []]
             backup_dir = params["common"]["backup_dir"]
             test_token = params["indicator"]["socrata_token"]
-            custom_run = True
+            custom_run = params["common"]["custom_run"]
 
             logger = get_structured_logger()
 
-            result = pull_preliminary_nhsn_data(test_token, backup_dir, custom_run, logger)
+            result = pull_preliminary_nhsn_data(test_token, backup_dir, custom_run, issue_date=None, logger=logger)
 
             expected_columns = set(PRELIM_TYPE_DICT.keys())
             assert set(result.columns) == expected_columns
@@ -123,7 +152,7 @@ class TestPullNHSNData:
 
             logger = get_structured_logger()
             # Call function with test token
-            pull_preliminary_nhsn_data(test_token, backup_dir, custom_run, logger)
+            pull_preliminary_nhsn_data(test_token, backup_dir, custom_run, issue_date=None, logger=logger)
 
             # Check logger used:
             assert "Backup file created" in caplog.text

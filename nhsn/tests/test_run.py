@@ -1,3 +1,4 @@
+import glob
 import os
 from pathlib import Path
 
@@ -44,6 +45,14 @@ class TestRun:
                 "geo_id", "val", "se", "sample_size",
             ]
             assert (df.columns.values == expected_columns).all()
+            if geo == "state":
+                states = list(df["geo_id"].values)
+                assert all(len(state) == 2 for state in states)
 
         for file in Path(export_dir).glob("*.csv"):
+            os.remove(file)
+
+        today = pd.Timestamp.today().strftime("%Y%m%d")
+        backup_dir = glob.glob(f"{Path(params['common']['backup_dir'])}/{today}*")
+        for file in backup_dir:
             os.remove(file)

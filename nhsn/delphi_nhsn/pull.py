@@ -11,13 +11,11 @@ from sodapy import Socrata
 
 from .constants import MAIN_DATASET_ID, PRELIM_DATASET_ID, PRELIM_SIGNALS_MAP, PRELIM_TYPE_DICT, SIGNALS_MAP, TYPE_DICT
 
-def check_update(socrata_token: str, dataset_id: str):
-    client = Socrata("data.cdc.gov", socrata_token)
+def updated_today(client, dataset_id):
     response = client.get_metadata(dataset_id)
     updated_timestamp = datetime.utcfromtimestamp(int(response["rowsUpdatedAt"]))
-    print("bob")
-
-
+    now = datetime.utcnow()
+    return True if now - updated_timestamp < datetime.timedelta(days=1) else False
 
 def pull_data(socrata_token: str, dataset_id: str):
     """Pull data from Socrata API."""
@@ -96,10 +94,10 @@ def pull_nhsn_data(
         Dataframe as described above.
     """
     # Pull data from Socrata API
-    check_update(socrata_token, "ua7e-t2fy")
+    updated_today(socrata_token, "ua7e-t2fy")
     df = (
         pull_data(socrata_token, dataset_id=MAIN_DATASET_ID)
-        if not custom_run
+        if not custom_run and updated_today
         else pull_data_from_file(backup_dir, issue_date, logger, prelim_flag=False)
     )
 
@@ -154,7 +152,6 @@ def pull_preliminary_nhsn_data(
         Dataframe as described above.
     """
     # Pull data from Socrata API
-    check_update(socrata_token, "mpgq-jmmr")
     df = (
         pull_data(socrata_token, dataset_id=PRELIM_DATASET_ID)
         if not custom_run

@@ -14,8 +14,8 @@ NUM_HOSP_REPORTING_FLU = "totalconfflunewadmhosprep"
 SIGNALS_MAP = {
     "confirmed_admissions_covid_ew": [TOTAL_ADMISSION_COVID],
     "confirmed_admissions_flu_ew": [TOTAL_ADMISSION_FLU],
-    "confirmed_admissions_covid_prop_ew": [TOTAL_ADMISSION_COVID, NUM_HOSP_REPORTING_COVID],
-    "confirmed_admissions_flu_prop_ew": [TOTAL_ADMISSION_FLU, NUM_HOSP_REPORTING_FLU]
+    "num_reporting_hospital_covid_ew": [NUM_HOSP_REPORTING_COVID],
+    "num_reporting_hospital_flu_ew": [NUM_HOSP_REPORTING_FLU],
 }
 
 TYPE_DICT = {
@@ -33,8 +33,8 @@ TYPE_DICT = {
 PRELIM_SIGNALS_MAP = {
     "confirmed_admissions_covid_ew_prelim": [TOTAL_ADMISSION_COVID],
     "confirmed_admissions_flu_ew_prelim": [TOTAL_ADMISSION_FLU],
-    "confirmed_admissions_covid_prop_ew_prelim": [TOTAL_ADMISSION_COVID, NUM_HOSP_REPORTING_COVID],
-    "confirmed_admissions_flu_prop_ew_prelim": [TOTAL_ADMISSION_FLU, NUM_HOSP_REPORTING_FLU]
+    "num_reporting_hospital_covid_ew_prelim": [NUM_HOSP_REPORTING_COVID],
+    "num_reporting_hospital_flu_ew_prelim": [NUM_HOSP_REPORTING_FLU],
 }
 
 PRELIM_TYPE_DICT = {

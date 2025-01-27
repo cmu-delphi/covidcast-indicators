@@ -3,7 +3,7 @@
 import logging
 from pathlib import Path
 from typing import Optional
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import pandas as pd
 from delphi_utils import create_backup_csv
@@ -11,26 +11,37 @@ from sodapy import Socrata
 
 from .constants import MAIN_DATASET_ID, PRELIM_DATASET_ID, PRELIM_SIGNALS_MAP, PRELIM_TYPE_DICT, SIGNALS_MAP, TYPE_DICT
 
-def updated_today(client, dataset_id):
+def check_last_updated(client, dataset_id, logger):
     response = client.get_metadata(dataset_id)
     updated_timestamp = datetime.utcfromtimestamp(int(response["rowsUpdatedAt"]))
     now = datetime.utcnow()
-    return True if now - updated_timestamp < datetime.timedelta(days=1) else False
+    recently_updated = True if (now - updated_timestamp) < timedelta(days=1) else False
+    prelim_prefix = "Preliminary " if dataset_id == PRELIM_DATASET_ID else ""
+    if recently_updated:
+        logger.info(f"{prelim_prefix}NHSN data was recently updated; Pulling data", updated_timestamp=updated_timestamp)
+    else:
+        logger.info(f"{prelim_prefix}NHSN data is stale; Skipping", updated_timestamp=updated_timestamp)
+    return recently_updated
 
-def pull_data(socrata_token: str, dataset_id: str):
+
+
+def pull_data(socrata_token: str, dataset_id: str, logger):
     """Pull data from Socrata API."""
     client = Socrata("data.cdc.gov", socrata_token)
-    results = []
-    offset = 0
-    limit = 50000  # maximum limit allowed by SODA 2.0
-    while True:
-        page = client.get(dataset_id, limit=limit, offset=offset)
-        if not page:
-            break  # exit the loop if no more results
-        results.extend(page)
-        offset += limit
+    recently_updated = check_last_updated(client, "ua7e-t2fy", logger)
+    df = pd.DataFrame()
+    if recently_updated:
+        results = []
+        offset = 0
+        limit = 50000  # maximum limit allowed by SODA 2.0
+        while True:
+            page = client.get(dataset_id, limit=limit, offset=offset)
+            if not page:
+                break  # exit the loop if no more results
+            results.extend(page)
+            offset += limit
 
-    df = pd.DataFrame.from_records(results)
+        df = pd.DataFrame.from_records(results)
     return df
 
 
@@ -94,10 +105,9 @@ def pull_nhsn_data(
         Dataframe as described above.
     """
     # Pull data from Socrata API
-    updated_today(socrata_token, "ua7e-t2fy")
     df = (
-        pull_data(socrata_token, dataset_id=MAIN_DATASET_ID)
-        if not custom_run and updated_today
+        pull_data(socrata_token, MAIN_DATASET_ID, logger)
+        if not custom_run
         else pull_data_from_file(backup_dir, issue_date, logger, prelim_flag=False)
     )
 
@@ -153,7 +163,7 @@ def pull_preliminary_nhsn_data(
     """
     # Pull data from Socrata API
     df = (
-        pull_data(socrata_token, dataset_id=PRELIM_DATASET_ID)
+        pull_data(socrata_token, PRELIM_DATASET_ID, logger)
         if not custom_run
         else pull_data_from_file(backup_dir, issue_date, logger, prelim_flag=True)
     )

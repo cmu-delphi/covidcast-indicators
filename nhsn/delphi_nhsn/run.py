@@ -60,12 +60,14 @@ def run_module(params, logger=None):
     )
 
     geo_mapper = GeoMapper()
-    signal_df_dict = {signal: nhsn_df for signal in SIGNALS_MAP}
+    signal_df_dict = dict()
+    if not nhsn_df.empty:
+        signal_df_dict.update({signal: nhsn_df for signal in SIGNALS_MAP})
     # some of the source backups do not include for preliminary data TODO remove after first patch
     if not preliminary_nhsn_df.empty:
         signal_df_dict.update({signal: preliminary_nhsn_df for signal in PRELIM_SIGNALS_MAP})
 
-    for signal_map, df_pull in [(SIGNALS_MAP, nhsn_df), (PRELIM_SIGNALS_MAP, preliminary_nhsn_df)]:
+    for signal_map, df_pull in signal_df_dict.items():
         for geo, signal in product(GEOS, signal_map.keys()):
             df = df_pull.copy()
             columns = signal_map.get(signal)

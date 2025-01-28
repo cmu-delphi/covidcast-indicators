@@ -3,7 +3,7 @@ import time
 from unittest.mock import patch, MagicMock
 import os
 import pytest
-from datetime import datetime, timedelta
+from urllib.error import HTTPError
 import pandas as pd
 
 from delphi_nhsn.pull import (
@@ -213,8 +213,8 @@ class TestPullNHSNData:
     def test_check_last_updated(self, dataset, updatedAt, caplog):
         # Mock Socrata client and its get method
         mock_client = MagicMock()
-
-        mock_client.get_metadata.return_value = {"rowsUpdatedAt": updatedAt }
+        http_error = HTTPError(url="", hdrs="", fp="", msg="Service Temporarily Unavailable",code=503)
+        mock_client.get_metadata.side_effect = [http_error, {"rowsUpdatedAt": updatedAt }]
         logger = get_structured_logger()
 
         check_last_updated(mock_client, dataset["id"], logger)

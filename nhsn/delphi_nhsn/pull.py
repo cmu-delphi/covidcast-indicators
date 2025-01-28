@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
 """Functions for pulling NSSP ER data."""
 import logging
+import time
 from pathlib import Path
+import random
 from typing import Optional
 from datetime import datetime, timedelta
+from urllib.error import HTTPError
 
 import pandas as pd
 from delphi_utils import create_backup_csv
@@ -12,7 +15,16 @@ from sodapy import Socrata
 from .constants import MAIN_DATASET_ID, PRELIM_DATASET_ID, PRELIM_SIGNALS_MAP, PRELIM_TYPE_DICT, SIGNALS_MAP, TYPE_DICT
 
 def check_last_updated(client, dataset_id, logger):
-    response = client.get_metadata(dataset_id)
+    """Check last updated timestamp to determine data should be pulled or not."""
+    try:
+        response = client.get_metadata(dataset_id)
+    except HTTPError as err:
+        if err.code == 503:
+            time.sleep(2 + random.randint(0, 1000) / 1000.0)
+            response = client.get_metadata(dataset_id)
+        else:
+            raise err
+
     updated_timestamp = datetime.utcfromtimestamp(int(response["rowsUpdatedAt"]))
     now = datetime.utcnow()
     recently_updated = True if (now - updated_timestamp) < timedelta(days=1) else False
@@ -22,7 +34,6 @@ def check_last_updated(client, dataset_id, logger):
     else:
         logger.info(f"{prelim_prefix}NHSN data is stale; Skipping", updated_timestamp=updated_timestamp)
     return recently_updated
-
 
 
 def pull_data(socrata_token: str, dataset_id: str, logger):

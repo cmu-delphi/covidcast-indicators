@@ -85,22 +85,20 @@ def generate_num_export_days(params: Dict, logger) -> [int]:
 
         if sensor_names.difference(set(gs_metadata.signal)):
             # If any signal not in metadata yet, we need to backfill its full history.
-            logger.warning("Signals missing in the epidata; backfilling full history")
-            num_export_days = (export_end_date - FULL_BKFILL_START_DATE).days + 1
-        else:
-            latest_date_diff = (datetime.today() - to_datetime(min(gs_metadata.max_time))).days + 1
+            logger.warning("Signals missing in the epidata; need to patch full history")
+        latest_date_diff = (datetime.today() - to_datetime(min(gs_metadata.max_time))).days + 1
 
-            expected_date_diff = params["validation"]["common"].get("span_length", 14)
+        expected_date_diff = params["validation"]["common"].get("span_length", 14)
 
-            # there's an expected lag of 4 days behind if running from today
-            if export_end_date.date() == datetime.today().date():
-                global_max_expected_lag = get_max_lag(params)
-                expected_date_diff += global_max_expected_lag
+        # there's an expected lag of 4 days behind if running from today
+        if export_end_date.date() == datetime.today().date():
+            global_max_expected_lag = get_max_lag(params)
+            expected_date_diff += global_max_expected_lag
 
-            if latest_date_diff > expected_date_diff:
-                logger.info("Lag is more than expected", expected_lag=expected_date_diff, lag=latest_date_diff)
+        if latest_date_diff > expected_date_diff:
+            logger.info("Lag is more than expected", expected_lag=expected_date_diff, lag=latest_date_diff)
 
-            num_export_days = expected_date_diff
+        num_export_days = expected_date_diff
 
     return num_export_days
 

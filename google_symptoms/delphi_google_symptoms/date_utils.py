@@ -8,7 +8,7 @@ import covidcast
 from delphi_utils.validator.utils import lag_converter
 from pandas import to_datetime
 
-from .constants import COMBINED_METRIC, FULL_BKFILL_START_DATE, PAD_DAYS, SMOOTHERS
+from .constants import COMBINED_METRIC, PAD_DAYS, SMOOTHERS
 
 
 def generate_patch_dates(params: Dict) -> Dict[date, Dict[str, Union[date, int]]]:

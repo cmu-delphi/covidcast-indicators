@@ -11,7 +11,8 @@ from datetime import datetime, timedelta
 from epiweeks import Week
 
 from delphi_nhsn.patch import filter_source_files, patch
-from delphi_nhsn.constants import TOTAL_ADMISSION_COVID_API, TOTAL_ADMISSION_FLU_API
+from delphi_nhsn.constants import TOTAL_ADMISSION_COVID_COL, TOTAL_ADMISSION_FLU_COL, \
+    NUM_HOSP_REPORTING_FLU_COL, NUM_HOSP_REPORTING_COVID_COL
 from conftest import TEST_DATA, PRELIM_TEST_DATA, TEST_DIR
 
 class TestPatch:
@@ -85,11 +86,15 @@ class TestPatch:
             custom_filename = f"{TEST_DIR}/backups/{date}.csv.gz"
             custom_filename_prelim = f"{TEST_DIR}/backups/{date}_prelim.csv.gz"
             test_data = pd.DataFrame(TEST_DATA)
-            test_data[TOTAL_ADMISSION_COVID_API] = int(date)
-            test_data[TOTAL_ADMISSION_FLU_API] = int(date)
+            test_data[TOTAL_ADMISSION_COVID_COL] = int(date)
+            test_data[TOTAL_ADMISSION_FLU_COL] = int(date)
+            test_data[NUM_HOSP_REPORTING_COVID_COL] = int(date)
+            test_data[NUM_HOSP_REPORTING_FLU_COL] = int(date)
             test_prelim_data = pd.DataFrame(PRELIM_TEST_DATA)
-            test_prelim_data[TOTAL_ADMISSION_COVID_API] = int(date)
-            test_prelim_data[TOTAL_ADMISSION_FLU_API] = int(date)
+            test_prelim_data[TOTAL_ADMISSION_COVID_COL] = int(date)
+            test_prelim_data[TOTAL_ADMISSION_FLU_COL] = int(date)
+            test_prelim_data[NUM_HOSP_REPORTING_COVID_COL] = int(date)
+            test_prelim_data[NUM_HOSP_REPORTING_FLU_COL] = int(date)
 
             test_data = test_data.head(2)
             test_data.to_csv(

@@ -174,7 +174,7 @@ class TestPullNHSNData:
         # Mock Socrata client and its get method
         mock_client = MagicMock()
         mock_socrata.return_value = mock_client
-        mock_client.get.side_effect = [TEST_DATA, []]
+        mock_client.get.side_effect = [PRELIM_TEST_DATA, []]
 
         mock_client.get_metadata.return_value = {"rowsUpdatedAt": now}
         today = pd.Timestamp.today().strftime("%Y%m%d")

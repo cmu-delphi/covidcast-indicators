@@ -14,8 +14,8 @@ NUM_HOSP_REPORTING_FLU_COL = "totalconfflunewadmhosprep"
 # signal name
 TOTAL_ADMISSION_COVID = "confirmed_admissions_covid_ew"
 TOTAL_ADMISSION_FLU = "confirmed_admissions_flu_ew"
-NUM_HOSP_REPORTING_COVID = "num_reporting_hospital_covid_ew"
-NUM_HOSP_REPORTING_FLU = "num_reporting_hospital_flu_ew"
+NUM_HOSP_REPORTING_COVID = "hosprep_confirmed_admissions_covid_ew"
+NUM_HOSP_REPORTING_FLU = "hosprep_confirmed_admissions_flu_ew"
 
 SIGNALS_MAP = {
     TOTAL_ADMISSION_COVID: TOTAL_ADMISSION_COVID_COL,

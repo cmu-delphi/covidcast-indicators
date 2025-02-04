@@ -14,6 +14,7 @@ the following structure:
             unpublished signals are.  See `delphi_utils.add_prefix()`
         - Any other indicator-specific settings
 """
+import re
 import time
 from datetime import date, datetime, timedelta
 from itertools import product
@@ -63,43 +64,52 @@ def run_module(params, logger=None):
     signal_df_dict = dict()
     if not nhsn_df.empty:
         signal_df_dict.update({signal: nhsn_df for signal in SIGNALS_MAP})
-    # some of the source backups do not include for preliminary data TODO remove after first patch
+    # some of the source backups do not include for preliminary data
     if not preliminary_nhsn_df.empty:
         signal_df_dict.update({signal: preliminary_nhsn_df for signal in PRELIM_SIGNALS_MAP})
 
     for geo, signals_df in product(GEOS, signal_df_dict.items()):
         signal, df_pull = signals_df
         df = df_pull.copy()
-        df = df[["timestamp", "geo_id", signal]]
-        df.rename({signal: "val"}, axis=1, inplace=True)
+        try:
+            df = df[["timestamp", "geo_id", signal]]
+            df.rename({signal: "val"}, axis=1, inplace=True)
 
-        if geo == "nation":
-            df = df[df["geo_id"] == "us"]
-        elif geo == "hhs":
-            df = df[df["geo_id"] != "us"]
-            df = df[df["geo_id"].str.len() == 2]
-            df.rename(columns={"geo_id": "state_id"}, inplace=True)
-            df = geo_mapper.add_geocode(df, "state_id", "state_code", from_col="state_id")
-            df = geo_mapper.add_geocode(df, "state_code", "hhs", from_col="state_code", new_col="hhs")
-            df = geo_mapper.replace_geocode(
-                df, from_col="state_code", from_code="state_code", new_col="geo_id", new_code="hhs"
+            if geo == "nation":
+                df = df[df["geo_id"] == "us"]
+            elif geo == "hhs":
+                df = df[df["geo_id"] != "us"]
+                df = df[df["geo_id"].str.len() == 2]
+                df.rename(columns={"geo_id": "state_id"}, inplace=True)
+                df = geo_mapper.add_geocode(df, "state_id", "state_code", from_col="state_id")
+                df = geo_mapper.add_geocode(df, "state_code", "hhs", from_col="state_code", new_col="hhs")
+                df = geo_mapper.replace_geocode(
+                    df, from_col="state_code", from_code="state_code", new_col="geo_id", new_code="hhs"
+                )
+            elif geo == "state":
+                df = df[df_pull["geo_id"] != "us"]
+                df = df[df["geo_id"].str.len() == 2]  # hhs region is a value in geo_id column
+
+            df["se"] = np.nan
+            df["sample_size"] = np.nan
+            dates = create_export_csv(
+                df,
+                geo_res=geo,
+                export_dir=export_dir,
+                start_date=datetime.strptime(export_start_date, "%Y-%m-%d"),
+                sensor=signal,
+                weekly_dates=True,
             )
-        elif geo == "state":
-            df = df[df_pull["geo_id"] != "us"]
-            df = df[df["geo_id"].str.len() == 2]  # hhs region is a value in geo_id column
-
-        df["se"] = np.nan
-        df["sample_size"] = np.nan
-        dates = create_export_csv(
-            df,
-            geo_res=geo,
-            export_dir=export_dir,
-            start_date=datetime.strptime(export_start_date, "%Y-%m-%d"),
-            sensor=signal,
-            weekly_dates=True,
-        )
-        if len(dates) > 0:
-            run_stats.append((max(dates), len(dates)))
+            if len(dates) > 0:
+                run_stats.append((max(dates), len(dates)))
+        # some signal columns are unavailable for patching
+        except KeyError as e:
+            missing_signal = re.search(r"'([^']*)'", str(e)).group(1)
+            full_signal_list = list(SIGNALS_MAP.keys()) + list(PRELIM_SIGNALS_MAP.keys())
+            if missing_signal in full_signal_list:
+                logger.info("signal not available in data", signal=missing_signal)
+            else:
+                raise RuntimeError("Column(s) that shouldn't be missing is missing") from e
 
     elapsed_time_in_seconds = round(time.time() - start_time, 2)
     min_max_date = run_stats and min(s[0] for s in run_stats)

@@ -1,18 +1,19 @@
-import glob
 import os
 from collections import defaultdict
 from pathlib import Path
 import shutil
 from unittest.mock import patch as mock_patch
-
+import re
 import pandas as pd
 from datetime import datetime, timedelta
 
+import pytest
 from epiweeks import Week
 
 from delphi_nhsn.patch import filter_source_files, patch
 from delphi_nhsn.constants import TOTAL_ADMISSION_COVID_COL, TOTAL_ADMISSION_FLU_COL, \
-    NUM_HOSP_REPORTING_FLU_COL, NUM_HOSP_REPORTING_COVID_COL
+    NUM_HOSP_REPORTING_FLU_COL, NUM_HOSP_REPORTING_COVID_COL, GEOS, TOTAL_ADMISSION_COVID, TOTAL_ADMISSION_FLU, \
+    NUM_HOSP_REPORTING_COVID, NUM_HOSP_REPORTING_FLU
 from conftest import TEST_DATA, PRELIM_TEST_DATA, TEST_DIR
 
 class TestPatch:
@@ -127,6 +128,22 @@ class TestPatch:
 
         for file in prelim_file_list:
             os.remove(file)
+
+    def test_patch_incomplete_file(self, params_w_patch):
+        os.makedirs(params_w_patch["patch"]["patch_dir"], exist_ok=True)
+        issue_date = "20241119"
+        existing_signals = [TOTAL_ADMISSION_COVID, TOTAL_ADMISSION_FLU]
+        backup_dir = params_w_patch.get("common").get("backup_dir")
+        shutil.copy(f"{TEST_DIR}/test_data/{issue_date}.csv.gz", backup_dir)
+
+        with mock_patch("delphi_nhsn.patch.read_params", return_value=params_w_patch):
+            patch(params_w_patch)
+
+            files = list(Path(f"{TEST_DIR}/patch_dir/issue_{issue_date}/nhsn").glob("*.csv"))
+            dates = set([re.search(r"\d{6}", file.name).group() for file in files])
+            assert len(files) == len(GEOS) * len(existing_signals) * len(dates)
+        # clean up
+        shutil.rmtree(f"{TEST_DIR}/patch_dir")
 
 
 

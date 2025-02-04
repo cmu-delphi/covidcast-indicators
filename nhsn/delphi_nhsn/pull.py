@@ -131,12 +131,20 @@ def pull_nhsn_data(
         df = df.rename(columns={"weekendingdate": "timestamp", "jurisdiction": "geo_id"})
 
         for signal, col_name in SIGNALS_MAP.items():
-            df[signal] = df[col_name]
+            # older backups don't have certain columns
+            try:
+                df[signal] = df[col_name]
+            except KeyError:
+                logger.info("column not available in data", col_name=col_name)
+                keep_columns.remove(signal)
 
         df = df[keep_columns]
         df["geo_id"] = df["geo_id"].str.lower()
         df.loc[df["geo_id"] == "usa", "geo_id"] = "us"
-        df = df.astype(TYPE_DICT)
+        try:
+            df = df.astype(TYPE_DICT)
+        except KeyError:
+            pass
     else:
         df = pd.DataFrame(columns=keep_columns)
 
@@ -188,10 +196,17 @@ def pull_preliminary_nhsn_data(
         df = df.rename(columns={"weekendingdate": "timestamp", "jurisdiction": "geo_id"})
 
         for signal, col_name in PRELIM_SIGNALS_MAP.items():
-            df[signal] = df[col_name]
+            try:
+                df[signal] = df[col_name]
+            except KeyError:
+                logger.info("column not available in data", col_name=col_name, signal=signal)
+                keep_columns.remove(signal)
 
         df = df[keep_columns]
-        df = df.astype(PRELIM_TYPE_DICT)
+        try:
+            df = df.astype(PRELIM_TYPE_DICT)
+        except KeyError:
+            pass
         df["geo_id"] = df["geo_id"].str.lower()
         df.loc[df["geo_id"] == "usa", "geo_id"] = "us"
     else:

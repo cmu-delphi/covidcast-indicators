@@ -9,14 +9,31 @@ from typing import Optional
 from urllib.error import HTTPError
 
 import pandas as pd
+from delphi_epidata import Epidata
 from delphi_utils import create_backup_csv
+from epiweeks import Week
 from sodapy import Socrata
 
 from .constants import MAIN_DATASET_ID, PRELIM_DATASET_ID, PRELIM_SIGNALS_MAP, PRELIM_TYPE_DICT, SIGNALS_MAP, TYPE_DICT
 
 
+def get_latest_nhsn_issue_date() -> datetime:
+    """Check the api and return approxiate latest issue date available."""
+    response = Epidata.covidcast_meta()
+    meta_df = pd.DataFrame(response["epidata"])
+    nhsn_df = meta_df[meta_df["data_source"] == "nhsn"]
+    last_updated = datetime.utcfromtimestamp(min(nhsn_df.last_update))
+    max_issue = Week.fromstring(str(min(nhsn_df.max_issue)))
+    # last_updated can be multiple days off from max issue from patching / other processes
+    if max_issue.startdate() <= last_updated.date() <= max_issue.enddate():
+        return last_updated
+    # defaults to start of epiweek if last_update is vastly different from max_issue
+    return datetime.combine(max_issue.startdate(), datetime.min.time())
+
+
 def check_last_updated(client, dataset_id, logger):
     """Check last updated timestamp to determine data should be pulled or not."""
+    # retry logic for 500 error
     try:
         response = client.get_metadata(dataset_id)
     except HTTPError as err:
@@ -28,19 +45,30 @@ def check_last_updated(client, dataset_id, logger):
 
     updated_timestamp = datetime.utcfromtimestamp(int(response["rowsUpdatedAt"]))
     now = datetime.utcnow()
-    recently_updated = (now - updated_timestamp) < timedelta(days=1)
+    recently_updated_source = (now - updated_timestamp) < timedelta(days=1)
+
+    latest_issue_date = get_latest_nhsn_issue_date()
+    # generally expect one issue per week
+    recently_updated_api = (updated_timestamp - latest_issue_date) < timedelta(days=6)
+
     prelim_prefix = "Preliminary " if dataset_id == PRELIM_DATASET_ID else ""
-    if recently_updated:
+    if recently_updated_source:
         logger.info(f"{prelim_prefix}NHSN data was recently updated; Pulling data", updated_timestamp=updated_timestamp)
+    elif not recently_updated_api:
+        logger.info(
+            f"{prelim_prefix}NHSN data is missing issue; Pulling data",
+            updated_timestamp=updated_timestamp,
+            issue=latest_issue_date,
+        )
     else:
         logger.info(f"{prelim_prefix}NHSN data is stale; Skipping", updated_timestamp=updated_timestamp)
-    return recently_updated
+    return recently_updated_source or not recently_updated_api
 
 
 def pull_data(socrata_token: str, dataset_id: str, logger):
     """Pull data from Socrata API."""
     client = Socrata("data.cdc.gov", socrata_token)
-    recently_updated = check_last_updated(client, "ua7e-t2fy", logger)
+    recently_updated = check_last_updated(client, dataset_id, logger)
     df = pd.DataFrame()
     if recently_updated:
         results = []

@@ -60,6 +60,10 @@ class TestBackfill:
         fn = "claims_hosp_from_20200611_to_20200614.parquet"
         caplog.set_level(logging.INFO)
         logger = get_structured_logger()
+        # Generate backfill daily files
+        for d in range(11, 15):
+            dropdate = datetime(2020, 6, d)
+            store_backfill_file(DATA_FILEPATH, dropdate, backfill_dir, logger)
 
         today = datetime(2020, 7, 1)
         monkeypatch.setattr(calendar, 'monthrange', lambda x, y: (1, 4))
@@ -172,7 +176,7 @@ class TestBackfill:
 
             today = datetime(2020, 6, 14)
             # creating expected file
-            merge_backfill_file(backfill_dir, today, logger,
+            merge_backfill_file(backfill_dir, 28, today, logger,
                                 test_mode=True)
 
         prep_backfill_data()

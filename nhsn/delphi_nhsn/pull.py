@@ -74,13 +74,11 @@ def pull_data(socrata_token: str, dataset_id: str, logger):
         results = []
         offset = 0
         limit = 50000  # maximum limit allowed by SODA 2.0
-        while True:
-            page = client.get(dataset_id, limit=limit, offset=offset)
-            if not page:
-                break  # exit the loop if no more results
+        page = client.get(dataset_id, limit=limit, offset=offset)
+        while page:
             results.extend(page)
             offset += limit
-
+            page = client.get(dataset_id, limit=limit, offset=offset)
         df = pd.DataFrame.from_records(results)
     return df
 

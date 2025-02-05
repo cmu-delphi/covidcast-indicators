@@ -114,14 +114,15 @@ class TestPatch:
             file_list, prelim_file_list = self.generate_test_source_files()
             patch(params_w_patch)
 
-            for issue_path in Path(f"{TEST_DIR}/patch_dir").glob("*"):
+            for issue_path in Path(f"{TEST_DIR}/patch_dir").glob("issue*"):
                 issue_dt_str = issue_path.name.replace("issue_", "")
                 for file in Path(issue_path / "nhsn").iterdir():
                     df = pd.read_csv(file)
                     assert issue_dt_str == str(int(df["val"][0]))
 
         # clean up
-        shutil.rmtree(f"{TEST_DIR}/patch_dir")
+        for file in Path(f"{TEST_DIR}/patch_dir").glob("issue*"):
+            shutil.rmtree(file)
 
         for file in file_list:
             os.remove(file)
@@ -143,7 +144,8 @@ class TestPatch:
             dates = set([re.search(r"\d{6}", file.name).group() for file in files])
             assert len(files) == len(GEOS) * len(existing_signals) * len(dates)
         # clean up
-        shutil.rmtree(f"{TEST_DIR}/patch_dir")
+        for file in Path(f"{TEST_DIR}/patch_dir").glob("issue*"):
+            shutil.rmtree(file)
 
 
 

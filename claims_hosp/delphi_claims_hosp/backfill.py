@@ -6,7 +6,6 @@ Created: 2022-08-03
 
 """
 
-import calendar
 import glob
 import os
 import pathlib
@@ -14,7 +13,7 @@ import re
 import shutil
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Union, Tuple
+from typing import Tuple, Union
 
 # third party
 import pandas as pd
@@ -72,8 +71,7 @@ def store_backfill_file(claims_filepath, _end_date, backfill_dir, logger):
         "state_id": "string"
     })
 
-    filename = backfill_dir + \
-        "/claims_hosp_as_of_%s.parquet"%datetime.strftime(_end_date, "%Y%m%d")
+    filename = backfill_dir + "/claims_hosp_as_of_%s.parquet" % datetime.strftime(_end_date, "%Y%m%d")
     # Store intermediate file into the backfill folder
     backfilldata.to_parquet(filename, index=False)
 
@@ -86,8 +84,7 @@ def store_backfill_file(claims_filepath, _end_date, backfill_dir, logger):
     return filename
 
 
-def merge_backfill_file(backfill_dir, backfill_merge_day, today, logger,
-                        test_mode=False, check_nd=25):
+def merge_backfill_file(backfill_dir, backfill_merge_day, today, logger, test_mode=False, check_nd=25):
     """
     Merge ~4 weeks' backfill data into one file.
 
@@ -128,7 +125,7 @@ def merge_backfill_file(backfill_dir, backfill_merge_day, today, logger,
     if today.weekday() != backfill_merge_day:
         logger.info("No new files to merge; skipping merging")
         return
-    elif (today-earliest_date).days <= check_nd:
+    elif (today - earliest_date).days <= check_nd:
         logger.info("Not enough days, skipping merging")
         return
 
@@ -150,6 +147,7 @@ def merge_backfill_file(backfill_dir, backfill_merge_day, today, logger,
             os.remove(fn)
     return
 
+
 def merge_existing_backfill_files(backfill_dir, backfill_file, issue_date, logger):
     """
     Merge existing backfill with the patch data included. This function is specifically run for patching.
@@ -169,7 +167,7 @@ def merge_existing_backfill_files(backfill_dir, backfill_file, issue_date, logge
     new_files = sorted(Path(backfill_dir).glob("claims_hosp_*"))
     new_files.remove(Path(backfill_file))
 
-    def get_file_with_date(files, issue_date, expand_flag=False) -> Union[Tuple[pathlib.Path, pathlib.Path], None]:
+    def get_file_with_date(files, issue_date) -> Union[Tuple[pathlib.Path, pathlib.Path], None]:
         """
         Give file with the missing date.
 
@@ -181,7 +179,9 @@ def merge_existing_backfill_files(backfill_dir, backfill_file, issue_date, logge
 
         Returns
         -------
-        Tuple[pathlib.Path, pathlib.Path] if file is found, along with new filename after the insertion of the missing file
+        Tuple[pathlib.Path, pathlib.Path] if file is found, along with new filename
+        after the insertion of the missing file
+
         None if no file is found
         """
         for filepath in files:
@@ -193,33 +193,37 @@ def merge_existing_backfill_files(backfill_dir, backfill_file, issue_date, logge
                 # if date is in between from and to
                 if start_date <= issue_date and end_date >= issue_date:
                     return filepath, filepath
-                # if date is either replacing a from date or a to date
-                elif expand_flag:
-                    if issue_date == end_date + timedelta(days=1):
-                        new_filename = filepath.name.replace(pattern[1], issue_date.strftime('%Y%m%d'))
-                        new_filepath = Path(f"{filepath.parent}/{new_filename}")
-                        return filepath, new_filepath
-
-                    elif issue_date == start_date - timedelta(days=1):
-                        new_filename = filepath.name.replace(pattern[0], issue_date.strftime('%Y%m%d'))
-                        new_filepath = Path(f"{filepath.parent}/{new_filename}")
-                        return filepath, new_filepath
 
             elif len(pattern) == 1:
                 start_date = datetime.strptime(pattern[0], "%Y%m%d")
                 if issue_date > start_date:
-                    new_filename = filepath.name.replace(pattern[0], issue_date.strftime('%Y%m%d'))
+                    new_filename = filepath.name.replace(pattern[0], issue_date.strftime("%Y%m%d"))
                     new_filepath = Path(f"{filepath.parent}/{new_filename}")
                     return filepath, new_filepath
+
+        for filepath in files:
+            if len(pattern) == 2:
+                start_date = datetime.strptime(pattern[0], "%Y%m%d")
+                end_date = datetime.strptime(pattern[1], "%Y%m%d")
+
+                # if date is either replacing a from date or a to date
+                if issue_date == end_date + timedelta(days=1):
+                    new_filename = filepath.name.replace(pattern[1], issue_date.strftime("%Y%m%d"))
+                    new_filepath = Path(f"{filepath.parent}/{new_filename}")
+                    return filepath, new_filepath
+
+                elif issue_date == start_date - timedelta(days=1):
+                    new_filename = filepath.name.replace(pattern[0], issue_date.strftime("%Y%m%d"))
+                    new_filepath = Path(f"{filepath.parent}/{new_filename}")
+                    return filepath, new_filepath
+
         return None, None
 
     file_path, new_file_path = get_file_with_date(new_files, issue_date)
 
     if file_path is None:
-        file_path = get_file_with_date(new_files, issue_date, True)
-        if not file_path:
-            logger.info("Issue date has no matching merged files", issue_date=issue_date.strftime("%Y-%m-%d"))
-            return
+        logger.info("Issue date has no matching merged files", issue_date=issue_date.strftime("%Y-%m-%d"))
+        return
 
     logger.info(
         "Adding missing date to merged file", issue_date=issue_date, filename=backfill_file, merged_filename=file_path
@@ -245,4 +249,3 @@ def merge_existing_backfill_files(backfill_dir, backfill_file, issue_date, logge
     os.remove(file_path)
     os.rename(merge_file, new_file_path)
     return
-

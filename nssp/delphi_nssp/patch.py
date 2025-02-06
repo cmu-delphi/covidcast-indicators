@@ -107,9 +107,6 @@ def get_patch_dates(start_issue, end_issue, source_dir):
     Due to weekly cadence of nssp data, dates to run patch on are not necessarily the same as issue dates.
     We use the latest date with source data per epiweek as reporting date for patching of that week's data.
 
-    Note that primary source files are available for all dates where
-    secondary source files are available but not vice versa.
-
     start_issue: datetime object
     end_issue: datetime object
     """
@@ -119,7 +116,6 @@ def get_patch_dates(start_issue, end_issue, source_dir):
         date
         for date in date_range
         if path.isfile(f"""{source_dir}/{date.strftime("%Y%m%d")}.csv.gz""")
-        or path.isfile(f"""{source_dir}/{date.strftime("%Y%m%d")}_secondary.csv.gz""")
     }
     epiweek_start_dates = {Week.fromdate(date).startdate() for date in date_range}
     for epiweek_start_date in epiweek_start_dates:

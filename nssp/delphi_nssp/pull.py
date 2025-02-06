@@ -48,9 +48,7 @@ def get_source_data(params, logger):
 
     # Generate file names of source files to download
     dates = pd.date_range(start=params["patch"]["start_issue"], end=params["patch"]["end_issue"])
-    primary_source_files = [f"{date.strftime('%Y%m%d')}.csv.gz" for date in dates]
-    secondary_source_files = [f"{date.strftime('%Y%m%d')}_secondary.csv.gz" for date in dates]
-    remote_source_files = primary_source_files + secondary_source_files
+    remote_source_files = [f"{date.strftime('%Y%m%d')}.csv.gz" for date in dates]
 
     # Download source files
     sftp = ssh.open_sftp()

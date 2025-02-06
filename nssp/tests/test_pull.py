@@ -24,6 +24,36 @@ from delphi_nssp.constants import (
 from delphi_utils import get_structured_logger
 
 class TestPullNSSPData:
+    def test_get_source_data(self):
+        # Define test parameters
+        params = {
+            "patch": {
+                "source_dir": "test_source_dir",
+                "user": "test_user",
+                "start_issue": "2023-01-01",
+                "end_issue": "2023-01-03",
+            },
+            "common": {
+                "backup_dir": "/test_backup_dir",
+            }
+        }
+
+        logger = get_structured_logger()
+
+        # Create a mock SSH client
+        mock_ssh = MagicMock()
+        mock_sftp = MagicMock()
+        mock_sftp.stat = MagicMock()
+        mock_ssh.open_sftp.return_value = mock_sftp
+
+        # Mock the paramiko SSHClient
+        with patch("paramiko.SSHClient", return_value=mock_ssh):
+            get_source_data(params, logger)
+
+        mock_ssh.connect.assert_called_once_with("delphi-master-prod-01.delphi.cmu.edu", username="test_user")
+        mock_sftp.chdir.assert_called_once_with("/test_backup_dir")
+        assert mock_sftp.get.call_count == 3
+
     @patch("delphi_nssp.pull.Socrata")
     def test_pull_nssp_data(self, mock_socrata, caplog):
         today = pd.Timestamp.today().strftime("%Y%m%d")

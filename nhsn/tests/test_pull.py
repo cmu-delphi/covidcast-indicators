@@ -7,7 +7,6 @@ import pytest
 from urllib.error import HTTPError
 import pandas as pd
 
-from delphi_epidata import Epidata
 from delphi_nhsn.pull import (
     pull_nhsn_data,
     pull_data,
@@ -31,22 +30,21 @@ DATASETS = [{"id":MAIN_DATASET_ID,
 
 
 class TestPullNHSNData:
-    with open(f"{TEST_DIR}/test_data/covidcast_metadata.json") as f:
-        metadata_json = json.load(f)
     @patch("delphi_nhsn.pull.Socrata")
     @pytest.mark.parametrize('dataset', DATASETS, ids=["data", "prelim_data"])
     def test_socrata_call(self, mock_socrata, dataset, params):
         test_token = params["indicator"]["socrata_token"]
-        now = time.time()
+        backup_dir = f"{TEST_DIR}/test_data"
+        logger = get_structured_logger()
+
         # Mock Socrata client and its get method
         mock_client = MagicMock()
         mock_socrata.return_value = mock_client
-        mock_client.get.side_effect = [[]]
+        # testing retry behavior
+        http_error = HTTPError(url="", hdrs="", fp="", msg="Service Temporarily Unavailable",code=503)
+        mock_client.get.side_effect = [http_error,[]]
 
-        mock_client.get_metadata.return_value = {"rowsUpdatedAt": now }
-        logger = get_structured_logger()
-
-        pull_data(test_token, dataset["id"], logger)
+        pull_data(test_token, dataset["id"], backup_dir, logger)
 
         # Check that Socrata client was initialized with correct arguments
         mock_socrata.assert_called_once_with("data.cdc.gov", test_token)
@@ -85,13 +83,13 @@ class TestPullNHSNData:
         pd.testing.assert_frame_equal(expected_data, df)
 
     @patch("delphi_nhsn.pull.Socrata")
-    def test_pull_nhsn_data_output(self, mock_socrata, caplog, params, monkeypatch):
+    @patch("delphi_nhsn.pull.create_backup_csv")
+    def test_pull_nhsn_data_output(self, mock_create_backup, mock_socrata, caplog, params):
         now = time.time()
-        monkeypatch.setattr(Epidata, "covidcast_meta", lambda: self.metadata_json)
         # Mock Socrata client and its get method
         mock_client = MagicMock()
         mock_socrata.return_value = mock_client
-        mock_client.get.side_effect = [TEST_DATA, []]
+        mock_client.get.side_effect = [TEST_DATA,[]]
 
         mock_client.get_metadata.return_value = {"rowsUpdatedAt": now}
 
@@ -102,6 +100,7 @@ class TestPullNHSNData:
         logger = get_structured_logger()
 
         result = pull_nhsn_data(test_token, backup_dir, custom_run, issue_date=None, logger=logger)
+        mock_create_backup.assert_called_once()
 
         expected_columns = set(TYPE_DICT.keys())
         assert set(result.columns) == expected_columns
@@ -150,9 +149,10 @@ class TestPullNHSNData:
         # clean up
         for file in backup_files:
             os.remove(file)
+
     @patch("delphi_nhsn.pull.Socrata")
-    def test_pull_prelim_nhsn_data_output(self, mock_socrata, caplog, params, monkeypatch):
-        monkeypatch.setattr(Epidata, "covidcast_meta", lambda: self.metadata_json)
+    @patch("delphi_nhsn.pull.create_backup_csv")
+    def test_pull_prelim_nhsn_data_output(self, mock_create_backup, mock_socrata, caplog, params):
         now = time.time()
         # Mock Socrata client and its get method
         mock_client = MagicMock()
@@ -168,6 +168,7 @@ class TestPullNHSNData:
         logger = get_structured_logger()
 
         result = pull_preliminary_nhsn_data(test_token, backup_dir, custom_run, issue_date=None, logger=logger)
+        mock_create_backup.assert_called_once()
 
         expected_columns = set(PRELIM_TYPE_DICT.keys())
         assert set(result.columns) == expected_columns
@@ -215,13 +216,12 @@ class TestPullNHSNData:
             os.remove(file)
 
     @pytest.mark.parametrize('dataset', DATASETS, ids=["data", "prelim_data"])
-    @pytest.mark.parametrize("updatedAt", [time.time(), time.time() - 172800, time.time()], ids=["updated", "stale", "api_lag"])
-    def test_check_last_updated(self, dataset, updatedAt, caplog, monkeypatch):
-        monkeypatch.setattr(Epidata, "covidcast_meta", lambda: self.metadata_json)
-        # Mock Socrata client and its get method
+    @pytest.mark.parametrize("updatedAt", [time.time(), time.time() - 172800], ids=["updated", "stale"])
+    @patch("delphi_nhsn.pull.Socrata")
+    def test_check_last_updated(self, mock_socrata, dataset, updatedAt, caplog):
         mock_client = MagicMock()
-        http_error = HTTPError(url="", hdrs="", fp="", msg="Service Temporarily Unavailable",code=503)
-        mock_client.get_metadata.side_effect = [http_error, {"rowsUpdatedAt": updatedAt }]
+        mock_socrata.return_value = mock_client
+        mock_client.get_metadata.return_value = {"rowsUpdatedAt": updatedAt }
         logger = get_structured_logger()
 
         check_last_updated(mock_client, dataset["id"], logger)
@@ -232,6 +232,5 @@ class TestPullNHSNData:
             assert f"{dataset['msg_prefix']}NHSN data was recently updated; Pulling data" in caplog.text
         else:
             stale_msg = f"{dataset['msg_prefix']}NHSN data is stale; Skipping"
-            api_lag_msg = f"{dataset['msg_prefix']}NHSN data is missing issue; Pulling data"
-            assert (stale_msg in caplog.text or api_lag_msg in caplog.text)
+            assert stale_msg in caplog.text
 

@@ -78,8 +78,8 @@ None of the linting or unit tests should fail, and the code lines that are not c
 should not include critical sub-routines. 
 
 ## Running Patches:
-A daily backup of source in the form of csv files can be found on `bigchunk-dev-02.delphi.cmu.edu` under `/common/source_backup/nssp`. This data is needed to create patches. Talk to your sysadmin for access.
-When your credentials to the server are working, to create patching data for a specific date range in batch issue format, adjust `params.json` in accordance with instructions in `patch.py`, then run
+A daily backup of source in the form of csv files can be found on prod under `/common/covidcast/source_backup/nssp/`. This data is needed to create patches. Talk to your sysadmin for access.
+When your credentials are working, to create patching data for a specific date range in batch issue format, adjust `params.json` in accordance with instructions in `patch.py`, then run
 ```
 env/bin/python -m delphi_nssp.patch
 ```

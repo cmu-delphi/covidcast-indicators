@@ -32,7 +32,7 @@ def check_last_updated(socrata_token, dataset_id, logger):
     return recently_updated_source
 
 
-def pull_data(socrata_token: str, dataset_id: str, backup_dir:str, logger):
+def pull_data(socrata_token: str, dataset_id: str, backup_dir: str, logger):
     """Pull data from Socrata API."""
     client = Socrata("data.cdc.gov", socrata_token)
     logger.info("Pulling data from Socrata API")

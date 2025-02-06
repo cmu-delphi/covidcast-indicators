@@ -13,12 +13,7 @@ import paramiko
 from delphi_utils import create_backup_csv
 from sodapy import Socrata
 
-from .constants import (
-    NEWLINE,
-    SIGNALS,
-    SIGNALS_MAP,
-    TYPE_DICT,
-)
+from .constants import NEWLINE, SIGNALS, SIGNALS_MAP, TYPE_DICT
 
 
 def print_callback(remote_file_name, logger, bytes_so_far, bytes_total, progress_chunks):

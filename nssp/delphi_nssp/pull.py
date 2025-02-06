@@ -15,10 +15,6 @@ from sodapy import Socrata
 
 from .constants import (
     NEWLINE,
-    SECONDARY_COLS_MAP,
-    SECONDARY_KEEP_COLS,
-    SECONDARY_SIGNALS_MAP,
-    SECONDARY_TYPE_DICT,
     SIGNALS,
     SIGNALS_MAP,
     TYPE_DICT,
@@ -189,74 +185,3 @@ def pull_nssp_data(
 
     keep_columns = ["timestamp", "geography", "county", "fips"]
     return df_ervisits[SIGNALS + keep_columns]
-
-
-def secondary_pull_nssp_data(
-    socrata_token: str,
-    backup_dir: str,
-    custom_run: bool,
-    issue_date: Optional[str] = None,
-    logger: Optional[logging.Logger] = None,
-):
-    """Pull the NSSP ER visits secondary dataset.
-
-    https://data.cdc.gov/Public-Health-Surveillance/2023-Respiratory-Virus-Response-NSSP-Emergency-Dep/7mra-9cq9/data_preview
-
-    The output dataset has:
-
-    - Each row corresponds to a single observation
-
-    Parameters
-    ----------
-    socrata_token: str
-        My App Token for pulling the NSSP data (could be the same as the nchs data)
-
-    Returns
-    -------
-    pd.DataFrame
-        Dataframe as described above.
-    """
-    if not custom_run:
-        socrata_results = pull_with_socrata_api(socrata_token, "7mra-9cq9")
-        df_ervisits = pd.DataFrame.from_records(socrata_results)
-        create_backup_csv(df_ervisits, backup_dir, custom_run, sensor="secondary", logger=logger)
-        logger.info("Number of records grabbed", num_records=len(df_ervisits), source="secondary Socrata API")
-
-    elif custom_run and logger.name == "delphi_nssp.patch":
-        if issue_date is None:
-            raise ValueError("Issue date is required for patching")
-        source_filename = f"{backup_dir}/{issue_date}_secondary.csv.gz"
-        if not path.isfile(source_filename):
-            logger.warning("No secondary source data found", source=source_filename, issue_date=issue_date)
-            return None
-        df_ervisits = pd.read_csv(source_filename)
-        logger.info(
-            "Number of records grabbed",
-            num_records=len(df_ervisits),
-            source=source_filename,
-        )
-
-    df_ervisits = df_ervisits.rename(columns=SECONDARY_COLS_MAP)
-
-    # geo_type is not provided in the dataset, so we infer it from the geo_value
-    # which is either state names, "National" or hhs region numbers
-    df_ervisits["geo_type"] = "state"
-
-    df_ervisits.loc[df_ervisits["geo_value"] == "National", "geo_type"] = "nation"
-
-    hhs_region_mask = df_ervisits["geo_value"].str.lower().str.startswith("region ")
-    df_ervisits.loc[hhs_region_mask, "geo_value"] = df_ervisits.loc[hhs_region_mask, "geo_value"].str.replace(
-        "Region ", ""
-    )
-    df_ervisits.loc[hhs_region_mask, "geo_type"] = "hhs"
-
-    df_ervisits["signal"] = df_ervisits["signal"].map(SECONDARY_SIGNALS_MAP)
-
-    df_ervisits = df_ervisits[SECONDARY_KEEP_COLS]
-
-    try:
-        df_ervisits = df_ervisits.astype(SECONDARY_TYPE_DICT)
-    except KeyError as exc:
-        raise ValueError(warn_string(df_ervisits, SECONDARY_TYPE_DICT)) from exc
-
-    return df_ervisits

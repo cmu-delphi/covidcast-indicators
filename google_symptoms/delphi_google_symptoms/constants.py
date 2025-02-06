@@ -11,14 +11,11 @@ SYMPTOM_SETS = {
     "s02": ["Nasal congestion", "Post nasal drip", "Rhinorrhea", "Sinusitis",
             "Rhinitis", "Common cold"],
     "s03": ["Fever", "Hyperthermia", "Chills", "Shivering", "Low grade fever"],
-    #"s04": ["Fatigue", "Weakness", "Muscle weakness", "Myalgia", "Pain"],
     "s04": ["Shortness of breath", "Wheeze", "Croup", "Pneumonia", "Asthma",
             "Crackles", "Acute bronchitis", "Bronchitis"],
     "s05": ["Anosmia", "Dysgeusia", "Ageusia"],
-    #"s07": ["Nausea", "Vomiting", "Diarrhea", "Indigestion", "Abdominal pain"],
     "s06": ["Laryngitis", "Sore throat", "Throat irritation"],
-    #"s09": ["Headache", "Migraine", "Cluster headache", "Dizziness", "Lightheadedness"],
-    #"s10": ["Night sweats","Perspiration", "hyperhidrosis"],
+    "s07": ["Conjunctivitis", "Red eye", "Epiphora", "Eye pain", "Rheum"],
     "scontrol": ["Type 2 diabetes", "Urinary tract infection", "Hair loss",
                  "Candidiasis", "Weight gain"]
 }

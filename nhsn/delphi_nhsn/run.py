@@ -102,7 +102,7 @@ def run_module(params, logger=None):
             )
             if len(dates) > 0:
                 run_stats.append((max(dates), len(dates)))
-        # some signal columns are unavailable for patching
+        # some signal columns are unavailable for patching.
         except KeyError as e:
             missing_signal = re.search(r"'([^']*)'", str(e)).group(1)
             full_signal_list = list(SIGNALS_MAP.keys()) + list(PRELIM_SIGNALS_MAP.keys())

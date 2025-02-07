@@ -113,9 +113,7 @@ def get_patch_dates(start_issue, end_issue, source_dir):
     patch_dates = []
     date_range = pd.date_range(start=start_issue, end=end_issue)
     dates_with_source_data = {
-        date
-        for date in date_range
-        if path.isfile(f"""{source_dir}/{date.strftime("%Y%m%d")}.csv.gz""")
+        date for date in date_range if path.isfile(f"""{source_dir}/{date.strftime("%Y%m%d")}.csv.gz""")
     }
     epiweek_start_dates = {Week.fromdate(date).startdate() for date in date_range}
     for epiweek_start_date in epiweek_start_dates:

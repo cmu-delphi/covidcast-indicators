@@ -99,7 +99,7 @@ class TestPatchModule:
         mock_logger.info.assert_called_once_with("Good patch configuration.")
 
     @mock_patch('logging.Logger')
-    def test_config_user_param(self, mock_logger):
+    def test_config_user_and_host_param(self, mock_logger):
         # Case 6.1: pre-existing local source data,
         # so no "user" param in patch section needed
         patch_config = {
@@ -110,13 +110,12 @@ class TestPatchModule:
                 "patch_dir": "dir",
                 "start_issue": "2024-04-21",
                 "end_issue": "2024-04-22",
-                "source_dir": "./source_dir",
-                "source_host": "prod.server.edu"
+                "source_dir": "./source_dir"
             }
         }
         assert good_patch_config(patch_config, mock_logger)
 
-        # Case 6.2: source_dir does not exist, so "user" param is needed
+        # Case 6.2: source_dir does not exist, so "user" and "source_host" param is needed
         patch_config = {
             "common": {
                 "custom_run": True,
@@ -130,7 +129,7 @@ class TestPatchModule:
         }
         assert not good_patch_config(patch_config, mock_logger)
         mock_logger.error.assert_has_calls([
-            call("Patch section is missing required key(s)", missing_keys=["user"]),
+            call("Patch section is missing required key(s)", missing_keys=["user", "source_host"]),
         ])
 
     def test_get_patch_dates(self):

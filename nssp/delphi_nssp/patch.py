@@ -74,11 +74,12 @@ def good_patch_config(params, logger):
         logger.error("Custom flag is on, but patch section is missing.")
         valid_config = False
     else:
-        required_patch_keys = ["start_issue", "end_issue", "patch_dir", "source_dir", "source_host"]
+        required_patch_keys = ["start_issue", "end_issue", "patch_dir", "source_dir"]
 
         source_dir = params["patch"]["source_dir"]
         if not path.isdir(source_dir) or not listdir(source_dir):
             required_patch_keys.append("user")
+            required_patch_keys.append("source_host")
 
         missing_keys = [key for key in required_patch_keys if key not in patch_config]
         if missing_keys:

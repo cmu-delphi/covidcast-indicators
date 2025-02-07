@@ -28,6 +28,7 @@ class TestPatchModule:
             },
             "patch": {
                 "source_dir": "./does_not_exist",
+                "source_host": "prod.server.edu",
                 "user": "user",
                 "patch_dir": "dir",
                 "start_issue": "2024-04-21",
@@ -47,6 +48,7 @@ class TestPatchModule:
             },
             "patch": {
                 "source_dir": "./does_not_exist",
+                "source_host": "prod.server.edu",
                 "user": "user",
                 "patch_dir": "dir",
                 "start_issue": "01-01-2024",
@@ -71,6 +73,7 @@ class TestPatchModule:
                 "start_issue": "2024-04-22",
                 "end_issue": "2024-04-21",
                 "source_dir": "./does_not_exist",
+                "source_host": "prod.server.edu"
             }
         }
         assert not good_patch_config(patch_config, mock_logger)
@@ -88,7 +91,8 @@ class TestPatchModule:
                 "patch_dir": "dir",
                 "start_issue": "2024-04-21",
                 "end_issue": "2024-04-22",
-                "source_dir": "./does_not_exist"
+                "source_dir": "./does_not_exist",
+                "source_host": "prod.server.edu"
             }
         }
         assert good_patch_config(patch_config, mock_logger)
@@ -106,7 +110,8 @@ class TestPatchModule:
                 "patch_dir": "dir",
                 "start_issue": "2024-04-21",
                 "end_issue": "2024-04-22",
-                "source_dir": "./source_dir"
+                "source_dir": "./source_dir",
+                "source_host": "prod.server.edu"
             }
         }
         assert good_patch_config(patch_config, mock_logger)
@@ -157,7 +162,8 @@ class TestPatchModule:
                 "start_issue": "2021-01-01",
                 "end_issue": "2021-01-16",
                 "patch_dir": "./patch_dir",
-                "source_dir": "./source_dir"
+                "source_dir": "./source_dir",
+                "source_host": "prod.server.edu"
             }
         }
         patch()
@@ -180,6 +186,7 @@ class TestPatchModule:
                 "start_issue": "2021-01-01",
                 "end_issue": "2021-01-16",
                 "patch_dir": "./patch_dir",
+                "source_host": "prod.server.edu",
                 "source_dir": "./does_not_exist"
             }
         }
@@ -205,7 +212,8 @@ class TestPatchModule:
                 "start_issue": "2021-01-01",
                 "end_issue": "2021-01-16",
                 "patch_dir": "./patch_dir",
-                "source_dir": "./source_dir"
+                "source_dir": "./source_dir",
+                "source_host": "prod.server.edu",
             }
         }
         patch()
@@ -243,7 +251,8 @@ class TestPatchModule:
                 "start_issue": "2021-01-01",
                 "end_issue": "2021-01-16",
                 "patch_dir": "./patch_dir",
-                "source_dir": "./source_dir"
+                "source_dir": "./source_dir",
+                "source_host": "prod.server.edu"
             }
         }
 

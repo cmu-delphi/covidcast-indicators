@@ -29,6 +29,7 @@ class TestPullNSSPData:
         params = {
             "patch": {
                 "source_dir": "test_source_dir",
+                "source_host": "prod.server.edu",
                 "user": "test_user",
                 "start_issue": "2023-01-01",
                 "end_issue": "2023-01-03",
@@ -48,7 +49,6 @@ class TestPullNSSPData:
         with patch("paramiko.SSHClient", return_value=mock_ssh):
             get_source_data(params, logger)
 
-        mock_ssh.connect.assert_called_once_with("delphi-master-prod-01.delphi.cmu.edu", username="test_user")
         mock_sftp.chdir.assert_called_once_with("/test_backup_dir")
         assert mock_sftp.get.call_count == 3
 

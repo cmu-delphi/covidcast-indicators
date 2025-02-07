@@ -42,7 +42,7 @@ def get_source_data(params, logger):
     makedirs(params["patch"]["source_dir"], exist_ok=True)
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    host = "delphi-master-prod-01.delphi.cmu.edu"
+    host = params["patch"]["source_host"]
     user = params["patch"]["user"]
     ssh.connect(host, username=user)
 
@@ -51,29 +51,28 @@ def get_source_data(params, logger):
     remote_source_files = [f"{date.strftime('%Y%m%d')}.csv.gz" for date in dates]
 
     # Download source files
-    sftp = ssh.open_sftp()
-    try:
-        sftp.stat(params["common"]["backup_dir"])
-    except IOError:
-        logger.error("Source backup directory does not exist on the remote server.")
-
-    sftp.chdir(params["common"]["backup_dir"])
-
-    num_files_transferred = 0
-    for remote_file_name in remote_source_files:
-        callback_for_filename = functools.partial(print_callback, remote_file_name, logger, progress_chunks=[0, 50])
-        local_file_path = path.join(params["patch"]["source_dir"], remote_file_name)
+    with ssh.open_sftp() as sftp:
         try:
-            sftp.stat(remote_file_name)
+            sftp.stat(params["common"]["backup_dir"])
         except IOError:
-            logger.warning(
-                "Source backup for this date does not exist on the remote server.", missing_filename=remote_file_name
-            )
-            continue
-        sftp.get(remote_file_name, local_file_path, callback=callback_for_filename)
-        logger.info("Transfer finished", remote_file_name=remote_file_name, local_file_path=local_file_path)
-        num_files_transferred += 1
-    ssh.close()
+            logger.error("Source backup directory does not exist on the remote server.")
+
+        sftp.chdir(params["common"]["backup_dir"])
+
+        num_files_transferred = 0
+        for remote_file_name in remote_source_files:
+            callback_for_filename = functools.partial(print_callback, remote_file_name, logger, progress_chunks=[0, 50])
+            local_file_path = path.join(params["patch"]["source_dir"], remote_file_name)
+            try:
+                sftp.stat(remote_file_name)
+            except IOError:
+                logger.warning(
+                    "Source backup for this date does not exist on the remote server.", missing_filename=remote_file_name
+                )
+                continue
+            sftp.get(remote_file_name, local_file_path, callback=callback_for_filename)
+            logger.info("Transfer finished", remote_file_name=remote_file_name, local_file_path=local_file_path)
+            num_files_transferred += 1
 
     if num_files_transferred == 0:
         logger.error("No source data was transferred. Check the source backup server for potential issues.")

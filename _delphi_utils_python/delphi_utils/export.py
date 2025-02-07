@@ -205,4 +205,5 @@ def create_backup_csv(
                 )
         # pylint: disable=W0703
         except Exception as e:
-            logger.info("Backup file creation failed", msg=e)
+            if logger:
+                logger.info("Backup file creation failed", msg=e)

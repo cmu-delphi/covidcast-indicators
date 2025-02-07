@@ -15,6 +15,7 @@ To use this module, configure params.json like so:
     ...
   },
   "patch": {
+    "source_host": "prod.server.edu",
     "source_dir": "delphi/covidcast-indicators/nssp/source_data",
     "user": "username",
     "patch_dir": "delphi/covidcast-indicators/nssp/AprilPatch",
@@ -26,6 +27,7 @@ To use this module, configure params.json like so:
 In this params.json, we
 - Turn on the "custom_run" flag under "common"
 - Add "patch" section, which contains:
+    + "source_host": the prod server where source data is backed up
     + "source_dir": the local directory where source data is downloaded to
     + "user": the username to log in to the remote server where source data is backed up
     + "patch_dir": the local directory where to write all patch issues output
@@ -72,7 +74,7 @@ def good_patch_config(params, logger):
         logger.error("Custom flag is on, but patch section is missing.")
         valid_config = False
     else:
-        required_patch_keys = ["start_issue", "end_issue", "patch_dir", "source_dir"]
+        required_patch_keys = ["start_issue", "end_issue", "patch_dir", "source_dir", "source_host"]
 
         source_dir = params["patch"]["source_dir"]
         if not path.isdir(source_dir) or not listdir(source_dir):

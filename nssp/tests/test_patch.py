@@ -142,11 +142,59 @@ class TestPatchModule:
         for date in expected_dates:
             assert date in patch_dates
 
-
+    @mock_patch('delphi_nssp.patch.get_source_data')
     @mock_patch('delphi_nssp.patch.run_module')
     @mock_patch('delphi_nssp.patch.get_structured_logger')
     @mock_patch('delphi_nssp.patch.read_params')
-    def test_patch_confirm_dir_structure_created(self, mock_read_params, mock_get_structured_logger, mock_run_module):
+    def test_patch_from_local_source(self, mock_read_params, mock_get_structured_logger, mock_run_module, mock_get_source_data):
+        mock_read_params.return_value = {
+            "common": {
+                "log_filename": "test.log",
+                "custom_run": True
+            },
+            "patch": {
+                "user": "user",
+                "start_issue": "2021-01-01",
+                "end_issue": "2021-01-16",
+                "patch_dir": "./patch_dir",
+                "source_dir": "./source_dir"
+            }
+        }
+        patch()
+
+        mock_get_source_data.assert_not_called()
+
+    @mock_patch('delphi_nssp.patch.get_source_data')
+    @mock_patch('delphi_nssp.patch.rmtree')
+    @mock_patch('delphi_nssp.patch.run_module')
+    @mock_patch('delphi_nssp.patch.get_structured_logger')
+    @mock_patch('delphi_nssp.patch.read_params')
+    def test_patch_download_remote_source(self, mock_read_params, mock_get_structured_logger, mock_run_module, mock_rmtree, mock_get_source_data):
+        mock_read_params.return_value = {
+            "common": {
+                "log_filename": "test.log",
+                "custom_run": True
+            },
+            "patch": {
+                "user": "user",
+                "start_issue": "2021-01-01",
+                "end_issue": "2021-01-16",
+                "patch_dir": "./patch_dir",
+                "source_dir": "./does_not_exist"
+            }
+        }
+        patch()
+        mock_get_source_data.assert_called_once()
+        assert mock_rmtree.call_count == 1
+        shutil.rmtree(mock_read_params.return_value["patch"]["patch_dir"])
+
+
+
+    @mock_patch('delphi_nssp.patch.get_source_data')
+    @mock_patch('delphi_nssp.patch.run_module')
+    @mock_patch('delphi_nssp.patch.get_structured_logger')
+    @mock_patch('delphi_nssp.patch.read_params')
+    def test_patch_confirm_dir_structure_created(self, mock_read_params, mock_get_structured_logger, mock_run_module, mock_get_source_data):
         mock_read_params.return_value = {
             "common": {
                 "log_filename": "test.log",
@@ -180,7 +228,7 @@ class TestPatchModule:
 
     @mock_patch('delphi_nssp.patch.get_structured_logger')
     @mock_patch('delphi_nssp.patch.read_params')
-    def test_patch_confirm_values_generated(self, mock_read_params, mock_get_structured_logger):
+    def test_full_patch_code(self, mock_read_params, mock_get_structured_logger):
         mock_get_structured_logger.return_value.name = "delphi_nssp.patch"
         mock_read_params.return_value = {
             "common": {

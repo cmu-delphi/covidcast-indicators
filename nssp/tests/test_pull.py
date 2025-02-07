@@ -45,8 +45,6 @@ class TestPullNSSPData:
         mock_sftp = MagicMock()
         mock_sftp.stat = MagicMock()
         mock_ssh.open_sftp.return_value = mock_sftp
-
-        # Mock the paramiko SSHClient
         with patch("paramiko.SSHClient", return_value=mock_ssh):
             get_source_data(params, logger)
 
@@ -55,7 +53,7 @@ class TestPullNSSPData:
         assert mock_sftp.get.call_count == 3
 
     @patch("delphi_nssp.pull.Socrata")
-    def test_pull_nssp_data(self, mock_socrata, caplog):
+    def test_normal_pull_nssp_data(self, mock_socrata, caplog):
         today = pd.Timestamp.today().strftime("%Y%m%d")
         backup_dir = 'test_raw_data_backups'
 

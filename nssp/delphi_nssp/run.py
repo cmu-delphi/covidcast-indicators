@@ -34,7 +34,6 @@ from delphi_utils.nancodes import add_default_nancodes
 from .constants import AUXILIARY_COLS, CSV_COLS, GEOS, SIGNALS
 from .pull import pull_nssp_data
 
-
 def add_needed_columns(df, col_names=None):
     """Short util to add expected columns not found in the dataset."""
     if col_names is None:
@@ -44,7 +43,6 @@ def add_needed_columns(df, col_names=None):
         df[col_name] = np.nan
     df = add_default_nancodes(df)
     return df
-
 
 def logging(start_time, run_stats, logger):
     """Boilerplate making logs."""
@@ -62,7 +60,7 @@ def logging(start_time, run_stats, logger):
     )
 
 
-def run_module(params):
+def run_module(params, logger=None):
     """
     Run the indicator.
 
@@ -72,25 +70,39 @@ def run_module(params):
         Nested dictionary of parameters.
     """
     start_time = time.time()
-    logger = get_structured_logger(
-        __name__,
-        filename=params["common"].get("log_filename"),
-        log_exceptions=params["common"].get("log_exceptions", True),
-    )
-    export_dir = params["common"]["export_dir"]
-    backup_dir = params["common"]["backup_dir"]
     custom_run = params["common"].get("custom_run", False)
+    # logger doesn't exist yet means run_module is called from normal indicator run (instead of any custom run)
+    if not logger:
+        logger = get_structured_logger(
+            __name__,
+            filename=params["common"].get("log_filename"),
+            log_exceptions=params["common"].get("log_exceptions", True),
+        )
+        if custom_run:
+            logger.warning("custom_run flag is on despite direct indicator run call. Normal indicator run continues.")
+            custom_run = False
+    export_dir = params["common"]["export_dir"]
+    if custom_run and logger.name == "delphi_nssp.patch":
+        backup_dir = params["patch"]["source_dir"]
+    else:
+        backup_dir = params["common"]["backup_dir"]
+    custom_run = params["common"].get("custom_run", False)
+    issue_date = params.get("patch", {}).get("current_issue", None)
     socrata_token = params["indicator"]["socrata_token"]
-
     run_stats = []
 
     logger.info("Generating primary signals")
     ## build the base version of the signal at the most detailed geo level you can get.
     ## compute stuff here or farm out to another function or file
-    df_pull = pull_nssp_data(socrata_token, backup_dir, custom_run=custom_run, logger=logger)
+
+    df_pull = pull_nssp_data(socrata_token, backup_dir, custom_run=custom_run, issue_date=issue_date, logger=logger)
+
     ## aggregate
     geo_mapper = GeoMapper()
     for signal in SIGNALS:
+        if df_pull is None and custom_run and logger.name == "delphi_nssp.patch":
+            logger.warning("No primary source data pulled", issue_date=issue_date)
+            break
         for geo in GEOS:
             df = df_pull.copy()
             df["val"] = df[signal]

@@ -67,7 +67,8 @@ def get_source_data(params, logger):
                 sftp.stat(remote_file_name)
             except IOError:
                 logger.warning(
-                    "Source backup for this date does not exist on the remote server.", missing_filename=remote_file_name
+                    "Source backup for this date does not exist on the remote server.",
+                    missing_filename=remote_file_name,
                 )
                 continue
             sftp.get(remote_file_name, local_file_path, callback=callback_for_filename)

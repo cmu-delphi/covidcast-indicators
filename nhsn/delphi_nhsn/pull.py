@@ -16,7 +16,22 @@ from .constants import MAIN_DATASET_ID, PRELIM_DATASET_ID, PRELIM_SIGNALS_MAP, P
 
 
 def check_last_updated(socrata_token, dataset_id, logger):
-    """Check last updated timestamp to determine data should be pulled or not."""
+    """
+    Check last updated timestamp to determine data should be pulled or not.
+
+    Note -- the behavior of the api fail is to treat is as stale
+    as having possible duplicate is preferable compared to possible missing data
+
+    Parameters
+    ----------
+    socrata_token
+    dataset_id
+    logger
+
+    Returns
+    -------
+
+    """
     recently_updated_source = True
     try:
         client = Socrata("data.cdc.gov", socrata_token)
@@ -35,7 +50,7 @@ def check_last_updated(socrata_token, dataset_id, logger):
             logger.info(f"{prelim_prefix}NHSN data is stale; Skipping", updated_timestamp=updated_timestamp)
     # pylint: disable=W0703
     except Exception as e:
-        logger.info("error while processing socrata metadata; continuing processing", error=str(e))
+        logger.info("error while processing socrata metadata; treating data as stale", error=str(e))
     return recently_updated_source
 
 

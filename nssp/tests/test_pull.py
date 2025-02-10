@@ -2,10 +2,14 @@ import glob
 import json
 from unittest.mock import patch, MagicMock
 import os
-
+import shutil
+import time
+from datetime import datetime
+import pdb
 import pandas as pd
 
 from delphi_nssp.pull import (
+    get_source_data,
     pull_nssp_data,
     pull_with_socrata_api,
 )
@@ -20,8 +24,36 @@ from delphi_nssp.constants import (
 from delphi_utils import get_structured_logger
 
 class TestPullNSSPData:
+    def test_get_source_data(self):
+        # Define test parameters
+        params = {
+            "patch": {
+                "source_dir": "test_source_dir",
+                "source_host": "prod.server.edu",
+                "user": "test_user",
+                "start_issue": "2023-01-01",
+                "end_issue": "2023-01-03",
+            },
+            "common": {
+                "backup_dir": "/test_backup_dir",
+            }
+        }
+
+        logger = get_structured_logger()
+
+        # Create a mock SSH client
+        mock_ssh = MagicMock()
+        mock_sftp = MagicMock()
+        mock_sftp.stat = MagicMock()
+        mock_ssh.open_sftp.return_value = mock_sftp
+        with patch("paramiko.SSHClient", return_value=mock_ssh):
+            get_source_data(params, logger)
+
+        mock_sftp.chdir.assert_called_once_with("/test_backup_dir")
+        assert mock_sftp.get.call_count == 3
+
     @patch("delphi_nssp.pull.Socrata")
-    def test_pull_nssp_data(self, mock_socrata, caplog):
+    def test_normal_pull_nssp_data(self, mock_socrata, caplog):
         today = pd.Timestamp.today().strftime("%Y%m%d")
         backup_dir = 'test_raw_data_backups'
 
@@ -38,13 +70,13 @@ class TestPullNSSPData:
         logger = get_structured_logger()
         # Call function with test token
         test_token = "test_token"
-        result = pull_nssp_data(test_token, backup_dir, custom_run, logger)
+        result = pull_nssp_data(test_token, backup_dir, custom_run, logger=logger)
 
         # Check logger used:
         assert "Backup file created" in caplog.text
 
         # Check that backup file was created
-        backup_files = glob.glob(f"{backup_dir}/{today}*")
+        backup_files = glob.glob(f"{backup_dir}/{today}.*")
         assert len(backup_files) == 2, "Backup file was not created"
 
         expected_data = pd.DataFrame(test_data)

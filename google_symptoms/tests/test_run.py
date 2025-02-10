@@ -52,7 +52,7 @@ class TestRun:
         geos = ["county", "state", "hhs", "hrr", "nation", "msa"]
         metrics = ["s01", "s02", "s03",
                    "s04", "s05",
-                   "s06",
+                   "s06", "s07",
                    "scontrol"]
         smoother = ["raw", "smoothed"]
 

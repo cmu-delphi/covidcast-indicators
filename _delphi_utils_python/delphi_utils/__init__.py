@@ -14,4 +14,4 @@ from .smooth import Smoother
 from .utils import read_params
 from .weekday import Weekday
 
-__version__ = "0.3.26"
+__version__ = "0.3.27"

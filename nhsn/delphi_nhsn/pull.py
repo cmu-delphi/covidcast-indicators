@@ -54,6 +54,7 @@ def pull_data(socrata_token: str, dataset_id: str, backup_dir: str, logger):
             time.sleep(2 + random.randint(0, 1000) / 1000.0)
             page = client.get(dataset_id, limit=limit, offset=offset)
         else:
+            logger.info("Error pulling data from Socrata API", error=str(err))
             raise err
 
     while len(page) > 0:
@@ -141,6 +142,7 @@ def pull_nhsn_data(
 
     if not df.empty and recently_updated:
         df = df.rename(columns={"weekendingdate": "timestamp", "jurisdiction": "geo_id"})
+        filtered_type_dict = TYPE_DICT.copy(deep=True)
 
         for signal, col_name in SIGNALS_MAP.items():
             # older backups don't have certain columns
@@ -149,14 +151,13 @@ def pull_nhsn_data(
             except KeyError:
                 logger.info("column not available in data", col_name=col_name)
                 keep_columns.remove(signal)
+                del filtered_type_dict[signal]
 
         df = df[keep_columns]
         df["geo_id"] = df["geo_id"].str.lower()
         df.loc[df["geo_id"] == "usa", "geo_id"] = "us"
-        try:
-            df = df.astype(TYPE_DICT)
-        except KeyError:
-            pass
+
+        df = df.astype(filtered_type_dict)
     else:
         df = pd.DataFrame(columns=keep_columns)
 
@@ -205,6 +206,7 @@ def pull_preliminary_nhsn_data(
 
     if not df.empty and recently_updated:
         df = df.rename(columns={"weekendingdate": "timestamp", "jurisdiction": "geo_id"})
+        filtered_type_dict = PRELIM_TYPE_DICT.copy(deep=True)
 
         for signal, col_name in PRELIM_SIGNALS_MAP.items():
             try:
@@ -212,12 +214,11 @@ def pull_preliminary_nhsn_data(
             except KeyError:
                 logger.info("column not available in data", col_name=col_name, signal=signal)
                 keep_columns.remove(signal)
+                del filtered_type_dict[signal]
 
         df = df[keep_columns]
-        try:
-            df = df.astype(PRELIM_TYPE_DICT)
-        except KeyError:
-            pass
+        df = df.astype(filtered_type_dict)
+
         df["geo_id"] = df["geo_id"].str.lower()
         df.loc[df["geo_id"] == "usa", "geo_id"] = "us"
     else:

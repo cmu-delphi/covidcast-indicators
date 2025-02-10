@@ -10,7 +10,8 @@ import pandas as pd
 from delphi_nhsn.pull import (
     pull_nhsn_data,
     pull_data,
-    pull_preliminary_nhsn_data, pull_data_from_file, check_last_updated
+    pull_data_from_file,
+    pull_preliminary_nhsn_data, check_last_updated
 )
 from delphi_nhsn.constants import TYPE_DICT, PRELIM_TYPE_DICT, PRELIM_DATASET_ID, MAIN_DATASET_ID
 
@@ -19,12 +20,14 @@ from conftest import TEST_DATA, PRELIM_TEST_DATA, TEST_DIR
 
 DATASETS = [{"id":MAIN_DATASET_ID,
              "test_data": TEST_DATA,
-             "msg_prefix": ""
+             "msg_prefix": "",
+             "prelim_flag": False,
              },
 
             {"id":PRELIM_DATASET_ID,
              "test_data":PRELIM_TEST_DATA,
-             "msg_prefix": "Preliminary "
+             "msg_prefix": "Preliminary ",
+             "prelim_flag": True,
              }
             ]
 
@@ -52,34 +55,20 @@ class TestPullNHSNData:
         # Check that get method was called with correct arguments
         mock_client.get.assert_any_call(dataset["id"], limit=50000, offset=0)
 
-    def test_pull_from_file(self, caplog, params_w_patch):
+    @pytest.mark.parametrize('dataset', DATASETS, ids=["data", "prelim_data"])
+    def test_pull_from_file(self, caplog, dataset, params_w_patch):
         backup_dir = f"{TEST_DIR}/test_data"
         issue_date = params_w_patch["patch"]["issue_date"]
         logger = get_structured_logger()
-
+        prelim_flag = dataset["prelim_flag"]
         # Load test data
-        expected_data = pd.DataFrame(TEST_DATA)
+        expected_data = pd.DataFrame(dataset["test_data"])
 
-        df = pull_data_from_file(backup_dir, issue_date, logger=logger)
+        df = pull_data_from_file(backup_dir, issue_date, logger=logger, prelim_flag=prelim_flag)
         df = df.astype('str')
         expected_data = expected_data.astype('str')
         assert "Pulling data from file" in caplog.text
 
-        pd.testing.assert_frame_equal(expected_data, df)
-
-    def test_pull_from_file_prelim(self, caplog, params_w_patch):
-        backup_dir = f"{TEST_DIR}/test_data"
-        issue_date = params_w_patch["patch"]["issue_date"]
-        logger = get_structured_logger()
-
-        # Load test data
-        expected_data = pd.DataFrame(PRELIM_TEST_DATA)
-
-        df = pull_data_from_file(backup_dir, issue_date, logger=logger, prelim_flag=True)
-        df = df.astype('str')
-        expected_data = expected_data.astype('str')
-
-        assert "Pulling data from file" in caplog.text
         pd.testing.assert_frame_equal(expected_data, df)
 
     @patch("delphi_nhsn.pull.Socrata")

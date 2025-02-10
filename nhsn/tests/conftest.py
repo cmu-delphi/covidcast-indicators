@@ -1,5 +1,6 @@
 import copy
 import json
+import time
 from unittest.mock import patch
 
 import pytest
@@ -60,7 +61,8 @@ def params_w_patch(params):
 
 @pytest.fixture(scope="function")
 def run_as_module(params):
-    with patch('sodapy.Socrata.get') as mock_get:
+    with patch('sodapy.Socrata.get') as mock_get, \
+         patch('sodapy.Socrata.get_metadata') as mock_get_metadata:
         def side_effect(*args, **kwargs):
             if kwargs['offset'] == 0:
                 if "ua7e-t2fy" in args[0]:
@@ -70,5 +72,6 @@ def run_as_module(params):
             else:
                 return []
         mock_get.side_effect = side_effect
+        mock_get_metadata.return_value = {"rowsUpdatedAt": time.time()}
         run_module(params)
 

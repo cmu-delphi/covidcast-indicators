@@ -14,8 +14,10 @@ the following structure:
             unpublished signals are.  See `delphi_utils.add_prefix()`
         - Any other indicator-specific settings
 """
+import re
 import time
 from datetime import date, datetime, timedelta
+from itertools import product
 
 import numpy as np
 from delphi_utils import GeoMapper, get_structured_logger
@@ -59,16 +61,20 @@ def run_module(params, logger=None):
     )
 
     geo_mapper = GeoMapper()
-    signal_df_dict = {signal: nhsn_df for signal in SIGNALS_MAP}
-    # some of the source backups do not include for preliminary data TODO remove after first patch
+    signal_df_dict = dict()
+    if not nhsn_df.empty:
+        signal_df_dict.update({signal: nhsn_df for signal in SIGNALS_MAP})
+    # some of the source backups do not include for preliminary data
     if not preliminary_nhsn_df.empty:
         signal_df_dict.update({signal: preliminary_nhsn_df for signal in PRELIM_SIGNALS_MAP})
 
-    for signal, df_pull in signal_df_dict.items():
-        for geo in GEOS:
-            df = df_pull.copy()
+    for geo, signals_df in product(GEOS, signal_df_dict.items()):
+        signal, df_pull = signals_df
+        df = df_pull.copy()
+        try:
             df = df[["timestamp", "geo_id", signal]]
             df.rename({signal: "val"}, axis=1, inplace=True)
+
             if geo == "nation":
                 df = df[df["geo_id"] == "us"]
             elif geo == "hhs":
@@ -96,6 +102,14 @@ def run_module(params, logger=None):
             )
             if len(dates) > 0:
                 run_stats.append((max(dates), len(dates)))
+        # some signal columns are unavailable for patching.
+        except KeyError as e:
+            missing_signal = re.search(r"'([^']*)'", str(e)).group(1)
+            full_signal_list = list(SIGNALS_MAP.keys()) + list(PRELIM_SIGNALS_MAP.keys())
+            if missing_signal in full_signal_list:
+                logger.info("signal not available in data", signal=missing_signal)
+            else:
+                raise RuntimeError("Column(s) that shouldn't be missing is missing") from e
 
     elapsed_time_in_seconds = round(time.time() - start_time, 2)
     min_max_date = run_stats and min(s[0] for s in run_stats)

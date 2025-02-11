@@ -3,6 +3,7 @@
 import logging
 import random
 import time
+import copy
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Optional
@@ -157,7 +158,7 @@ def pull_nhsn_data(
 
     if not df.empty and recently_updated:
         df = df.rename(columns={"weekendingdate": "timestamp", "jurisdiction": "geo_id"})
-        filtered_type_dict = TYPE_DICT.copy(deep=True)
+        filtered_type_dict = copy.deepcopy(TYPE_DICT)
 
         for signal, col_name in SIGNALS_MAP.items():
             # older backups don't have certain columns
@@ -221,7 +222,7 @@ def pull_preliminary_nhsn_data(
 
     if not df.empty and recently_updated:
         df = df.rename(columns={"weekendingdate": "timestamp", "jurisdiction": "geo_id"})
-        filtered_type_dict = PRELIM_TYPE_DICT.copy(deep=True)
+        filtered_type_dict = copy.deepcopy(PRELIM_TYPE_DICT)
 
         for signal, col_name in PRELIM_SIGNALS_MAP.items():
             try:

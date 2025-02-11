@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 """Functions for pulling NSSP ER data."""
+import copy
 import logging
 import random
 import time
-import copy
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Optional

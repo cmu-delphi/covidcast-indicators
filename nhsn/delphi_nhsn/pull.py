@@ -18,10 +18,10 @@ from .constants import MAIN_DATASET_ID, PRELIM_DATASET_ID, PRELIM_SIGNALS_MAP, P
 
 def check_last_updated(socrata_token, dataset_id, logger):
     """
-    Check last updated timestamp to determine data should be pulled or not.
+    Check last updated timestamp to determine if data should be pulled or not.
 
-    Note -- the behavior of the api fail is to treat is as stale
-    as having possible duplicate is preferable compared to possible missing data
+    Note -- if the call to the API fails, the behavior is to treat the data as stale,
+    as possibly having duplicate is preferable to missing data
 
     Parameters
     ----------

@@ -28,7 +28,7 @@ def check_last_updated(socrata_token, dataset_id, logger):
     dataset_id
     logger
 
-    Returns
+    Returns bool
     -------
 
     """

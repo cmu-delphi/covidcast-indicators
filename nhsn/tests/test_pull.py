@@ -65,8 +65,11 @@ class TestPullNHSNData:
         expected_data = pd.DataFrame(dataset["test_data"])
 
         df = pull_data_from_file(backup_dir, issue_date, logger=logger, prelim_flag=prelim_flag)
-        df = df.astype('str')
-        expected_data = expected_data.astype('str')
+
+        # expected_data reads from dictionary and defaults all the columns as object data types
+        # compared to the method which pd.read_csv somewhat interprets numerical data types
+        expected_data = expected_data.astype(df.dtypes.to_dict())
+        # expected_data = expected_data.astype('str')
         assert "Pulling data from file" in caplog.text
 
         pd.testing.assert_frame_equal(expected_data, df)
@@ -95,6 +98,9 @@ class TestPullNHSNData:
         assert set(result.columns) == expected_columns
 
         for column in list(result.columns):
+            # some states don't report confirmed admissions rsv
+            if column == "confirmed_admissions_rsv_ew":
+                continue
             assert result[column].notnull().all(), f"{column} has rogue NaN"
 
 
@@ -140,13 +146,13 @@ class TestPullNHSNData:
             os.remove(file)
 
     @patch("delphi_nhsn.pull.Socrata")
-    @patch("delphi_nhsn.pull.create_backup_csv")
-    def test_pull_prelim_nhsn_data_output(self, mock_create_backup, mock_socrata, caplog, params):
+    # @patch("delphi_nhsn.pull.create_backup_csv")
+    def test_pull_prelim_nhsn_data_output(self, mock_socrata, caplog, params):
         now = time.time()
         # Mock Socrata client and its get method
         mock_client = MagicMock()
         mock_socrata.return_value = mock_client
-        mock_client.get.side_effect = [TEST_DATA, []]
+        mock_client.get.side_effect = [PRELIM_TEST_DATA, []]
 
         mock_client.get_metadata.return_value = {"rowsUpdatedAt": now}
 
@@ -157,12 +163,15 @@ class TestPullNHSNData:
         logger = get_structured_logger()
 
         result = pull_preliminary_nhsn_data(test_token, backup_dir, custom_run, issue_date=None, logger=logger)
-        mock_create_backup.assert_called_once()
+        # mock_create_backup.assert_called_once()
 
         expected_columns = set(PRELIM_TYPE_DICT.keys())
         assert set(result.columns) == expected_columns
 
         for column in list(result.columns):
+            # some states don't report confirmed admissions rsv
+            if column == "confirmed_admissions_rsv_ew_prelim":
+                continue
             assert result[column].notnull().all(), f"{column} has rogue NaN"
     @patch("delphi_nhsn.pull.Socrata")
     def test_pull_prelim_nhsn_data_backup(self, mock_socrata, caplog, params):

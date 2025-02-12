@@ -1,5 +1,4 @@
 import glob
-import json
 import time
 from unittest.mock import patch, MagicMock
 import os
@@ -146,8 +145,8 @@ class TestPullNHSNData:
             os.remove(file)
 
     @patch("delphi_nhsn.pull.Socrata")
-    # @patch("delphi_nhsn.pull.create_backup_csv")
-    def test_pull_prelim_nhsn_data_output(self, mock_socrata, caplog, params):
+    @patch("delphi_nhsn.pull.create_backup_csv")
+    def test_pull_prelim_nhsn_data_output(self, mock_create_backup, mock_socrata, caplog, params):
         now = time.time()
         # Mock Socrata client and its get method
         mock_client = MagicMock()
@@ -163,7 +162,7 @@ class TestPullNHSNData:
         logger = get_structured_logger()
 
         result = pull_preliminary_nhsn_data(test_token, backup_dir, custom_run, issue_date=None, logger=logger)
-        # mock_create_backup.assert_called_once()
+        mock_create_backup.assert_called_once()
 
         expected_columns = set(PRELIM_TYPE_DICT.keys())
         assert set(result.columns) == expected_columns

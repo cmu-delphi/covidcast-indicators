@@ -63,11 +63,11 @@ def run_module(params, logger=None):
     geo_mapper = GeoMapper()
     signal_df_dict = dict()
     if not nhsn_df.empty:
-        signal_df_dict.update({signal: nhsn_df for signal in SIGNALS_MAP if signal in nhsn_df.columns})
+        signal_df_dict.update({signal: nhsn_df for signal in SIGNALS_MAP})
     # some of the source backups do not include for preliminary data
     if not preliminary_nhsn_df.empty:
         signal_df_dict.update(
-            {signal: preliminary_nhsn_df for signal in PRELIM_SIGNALS_MAP if signal in preliminary_nhsn_df.columns}
+            {signal: preliminary_nhsn_df for signal in PRELIM_SIGNALS_MAP}
         )
 
     for geo, signals_df in product(GEOS, signal_df_dict.items()):
@@ -94,6 +94,7 @@ def run_module(params, logger=None):
 
             df["se"] = np.nan
             df["sample_size"] = np.nan
+
             dates = create_export_csv(
                 df,
                 geo_res=geo,

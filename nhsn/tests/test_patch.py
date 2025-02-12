@@ -101,11 +101,11 @@ class TestPatch:
             test_prelim_data[NUM_HOSP_REPORTING_FLU_COL] = int(date)
             test_prelim_data[NUM_HOSP_REPORTING_RSV_COL] = int(date)
 
-            test_data = test_data.head(2)
+            test_data = test_data.head(3)
             test_data.to_csv(
                 custom_filename, index=False, na_rep="NA", compression="gzip"
             )
-            test_prelim_data = test_data.head(2)
+            test_prelim_data = test_data.head(3)
             test_prelim_data.to_csv(
                 custom_filename_prelim, index=False, na_rep="NA", compression="gzip"
             )

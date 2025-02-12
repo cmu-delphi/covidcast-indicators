@@ -66,7 +66,9 @@ def run_module(params, logger=None):
         signal_df_dict.update({signal: nhsn_df for signal in SIGNALS_MAP if signal in nhsn_df.columns})
     # some of the source backups do not include for preliminary data
     if not preliminary_nhsn_df.empty:
-        signal_df_dict.update({signal: preliminary_nhsn_df for signal in PRELIM_SIGNALS_MAP if signal in preliminary_nhsn_df.columns})
+        signal_df_dict.update(
+            {signal: preliminary_nhsn_df for signal in PRELIM_SIGNALS_MAP if signal in preliminary_nhsn_df.columns}
+        )
 
     for geo, signals_df in product(GEOS, signal_df_dict.items()):
         signal, df_pull = signals_df

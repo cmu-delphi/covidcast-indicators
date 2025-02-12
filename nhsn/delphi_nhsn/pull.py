@@ -58,7 +58,10 @@ def check_last_updated(socrata_token, dataset_id, logger):
 def pull_data(socrata_token: str, dataset_id: str, backup_dir: str, logger):
     """Pull data from Socrata API."""
     client = Socrata("data.cdc.gov", socrata_token)
-    logger.info("Pulling data from Socrata API")
+    logger.info(
+        f"Pulling {'main' if dataset_id == MAIN_DATASET_ID else 'preliminary'} data from Socrata API",
+        dataset_id=dataset_id,
+    )
     results = []
     offset = 0
     limit = 50000  # maximum limit allowed by SODA 2.0

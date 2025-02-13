@@ -124,8 +124,7 @@ def pull_nhsn_data(
     custom_run: bool,
     issue_date: Optional[str],
     preliminary: bool = False,
-    logger: Optional[logging.Logger] = None,
-
+    logger: Optional[logging.Logger] = None
 ):
     """Pull the latest NHSN hospital admission data, and conforms it into a dataset.
 

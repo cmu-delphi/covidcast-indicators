@@ -83,7 +83,8 @@ def pull_data(socrata_token: str, dataset_id: str, backup_dir: str, logger):
 
     if results:
         df = pd.DataFrame.from_records(results)
-        create_backup_csv(df, backup_dir, False, logger=logger)
+        sensor = "prelim" if dataset_id == PRELIM_DATASET_ID else None
+        create_backup_csv(df, backup_dir, False, sensor=sensor, logger=logger)
     else:
         df = pd.DataFrame()
     return df

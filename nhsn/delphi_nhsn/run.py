@@ -24,7 +24,7 @@ from delphi_utils import GeoMapper, get_structured_logger
 from delphi_utils.export import create_export_csv
 
 from .constants import GEOS, PRELIM_SIGNALS_MAP, SIGNALS_MAP
-from .pull import pull_nhsn_data, pull_preliminary_nhsn_data
+from .pull import pull_nhsn_data
 
 
 def run_module(params, logger=None):
@@ -56,8 +56,8 @@ def run_module(params, logger=None):
         export_start_date = export_start_date.strftime("%Y-%m-%d")
 
     nhsn_df = pull_nhsn_data(socrata_token, backup_dir, custom_run=custom_run, issue_date=issue_date, logger=logger)
-    preliminary_nhsn_df = pull_preliminary_nhsn_data(
-        socrata_token, backup_dir, custom_run=custom_run, issue_date=issue_date, logger=logger
+    preliminary_nhsn_df = pull_nhsn_data(
+        socrata_token, backup_dir, custom_run=custom_run, issue_date=issue_date, logger=logger, preliminary=True
     )
 
     geo_mapper = GeoMapper()

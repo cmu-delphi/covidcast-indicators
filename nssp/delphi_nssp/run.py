@@ -34,6 +34,7 @@ from delphi_utils.nancodes import add_default_nancodes
 from .constants import AUXILIARY_COLS, CSV_COLS, GEOS, SIGNALS
 from .pull import pull_nssp_data
 
+
 def add_needed_columns(df, col_names=None):
     """Short util to add expected columns not found in the dataset."""
     if col_names is None:

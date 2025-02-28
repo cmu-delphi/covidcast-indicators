@@ -118,9 +118,10 @@ def run_module(params, logger=None):
                 )
             elif geo == "hrr":
                 df = df[["fips", "val", "timestamp"]]
-                # fips -> hrr has a weighted version
-                df = geo_mapper.replace_geocode(df, "fips", "hrr")
-                df = df.rename(columns={"hrr": "geo_id"})
+                df = geo_mapper.add_population_column(df, geocode_type="fips", geocode_col="fips")
+                df = geo_mapper.add_geocode(df, "fips", "hrr", from_col="fips", new_col="geo_id")
+                df = geo_mapper.aggregate_by_weighted_sum(df, "geo_id", "val", "timestamp", "weight")
+                df = df.rename(columns={"weighted_val": "val"})
             elif geo == "msa":
                 df = df[["fips", "val", "timestamp"]]
                 # fips -> msa doesn't have a weighted version, so we need to add columns and sum ourselves
@@ -139,6 +140,11 @@ def run_module(params, logger=None):
             else:
                 df = df[df["county"] != "All"]
                 df["geo_id"] = df["fips"]
+
+            not_null_mask = df['val'].notnull()
+            sanity_check = (df.loc[not_null_mask, "val"] <= 100).all() and (df.loc[not_null_mask, "val"] >= 0).all()
+            assert sanity_check
+
             # add se, sample_size, and na codes
             missing_cols = set(CSV_COLS) - set(df.columns)
             df = add_needed_columns(df, col_names=list(missing_cols))

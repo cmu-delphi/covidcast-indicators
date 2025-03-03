@@ -12,8 +12,7 @@ from delphi_nssp.constants import DATASET_ID
 TEST_DIR = Path(__file__).parent
 
 # test data generated with following url with socrata:
-# https://data.cdc.gov/resource/ua7e-t2fy.json?$where=weekendingdate%20between%20%272021-08-19T00:00:00.000%27%20and%20%272021-10-19T00:00:00.000%27%20and%20jurisdiction%20in(%27CO%27,%27USA%27)
-
+# https://data.cdc.gov/resource/rdmq-nq56.json?$where=week_end >= '2022-10-01T00:00:00.000' AND week_end <= '2022-10-20T00:00:00.000'
 
 with open(f"{TEST_DIR}/test_data/page.json", "r") as f:
     TEST_DATA = json.load(f)

@@ -52,7 +52,7 @@ def params_w_patch(params):
     params_copy["patch"] = {
             "patch_dir": f"{TEST_DIR}/patch_dir",
             "source_dir": "test_source_dir",
-            "source_host": "prod.server.edu",
+            "source_host": "host",
             "user": "test_user",
             "start_issue": "2023-01-01",
             "end_issue": "2023-01-03",

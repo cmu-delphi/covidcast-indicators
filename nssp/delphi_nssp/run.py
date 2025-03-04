@@ -117,14 +117,12 @@ def run_module(params, logger=None):
                     lambda x: us.states.lookup(x).abbr.lower() if us.states.lookup(x) else "dc"
                 )
             elif geo == "hrr":
-                df = df[df["county"] != "All"]
                 df = df[["fips", "val", "timestamp"]]
                 df = geo_mapper.add_population_column(df, geocode_type="fips", geocode_col="fips")
                 df = geo_mapper.add_geocode(df, "fips", "hrr", from_col="fips", new_col="geo_id")
                 df = geo_mapper.aggregate_by_weighted_sum(df, "geo_id", "val", "timestamp", "population")
                 df = df.rename(columns={"weighted_val": "val"})
             elif geo == "msa":
-                df = df[df["county"] != "All"]
                 df = df[["fips", "val", "timestamp"]]
                 # fips -> msa doesn't have a weighted version, so we need to add columns and sum ourselves
                 df = geo_mapper.add_population_column(df, geocode_type="fips", geocode_col="fips")
@@ -142,7 +140,6 @@ def run_module(params, logger=None):
             else:
                 df = df[df["county"] != "All"]
                 df["geo_id"] = df["fips"]
-
             # add se, sample_size, and na codes
             missing_cols = set(CSV_COLS) - set(df.columns)
             df = add_needed_columns(df, col_names=list(missing_cols))

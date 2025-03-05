@@ -7,7 +7,7 @@ import time
 from datetime import datetime
 import pdb
 
-import mock
+import unittest.mock as mock
 import pandas as pd
 
 from delphi_nssp.pull import (

@@ -6,6 +6,8 @@ import shutil
 import time
 from datetime import datetime
 import pdb
+
+import mock
 import pandas as pd
 
 from delphi_nssp.pull import (
@@ -29,12 +31,20 @@ class TestPullNSSPData:
         mock_sftp = MagicMock()
         mock_sftp.stat = MagicMock()
         mock_ssh.open_sftp.return_value = mock_sftp
+
+        source_path = params_w_patch["common"]["backup_dir"]
+        dest_path = params_w_patch["patch"]["source_dir"]
+
+        dates = pd.date_range(params_w_patch["patch"]["start_issue"], params_w_patch["patch"]["end_issue"])
+        files = [f"{date.strftime('%Y%m%d')}.csv.gz" for date in dates]
+
         with patch("paramiko.SSHClient", return_value=mock_ssh):
-            get_source_data(params, logger)
+            get_source_data(params_w_patch, logger)
 
-        mock_sftp.chdir.assert_called_once_with("/test_backup_dir")
-        assert mock_sftp.get.call_count == 3
+        mock_sftp.chdir.assert_called_once_with(source_path)
 
+        for file in files:
+            mock_sftp.get.has_calls(file, f"{dest_path}/{file}", mock.ANY)
     @patch("delphi_nssp.pull.Socrata")
     def test_normal_pull_nssp_data(self, mock_socrata, params, caplog):
         today = pd.Timestamp.today().strftime("%Y%m%d")

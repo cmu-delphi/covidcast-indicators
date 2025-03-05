@@ -75,7 +75,7 @@ class TestRun:
         for file in backup_dir:
             os.remove(file)
 
-    def test_valid_hrr(self, params):
+    def test_valid_hrr(self, run_as_module_hrr, params):
         export_dir = params["common"]["export_dir"]
         csv_files = [f for f in Path(export_dir).glob("*.csv")]
 

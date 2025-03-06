@@ -79,6 +79,7 @@ class TestRun:
         export_dir = params["common"]["export_dir"]
         csv_files = [f for f in Path(export_dir).glob("*.csv")]
 
+        # If summed normally, will give a huge number, If summed weighted, will give 100%
         for f in csv_files:
             df = pd.read_csv(f)
             assert (df.val == 100).all()

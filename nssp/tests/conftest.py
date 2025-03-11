@@ -62,6 +62,12 @@ def params_w_patch(params):
 
 @pytest.fixture(scope="function")
 def run_as_module(params):
+    """
+    Fixture to use TEST_DATA when testing run_module.
+
+    This fixture patches Socrara to return the predefined test data
+    """
+
     with patch('sodapy.Socrata.get') as mock_get:
         def side_effect(*args, **kwargs):
             if kwargs['offset'] == 0:
@@ -76,6 +82,12 @@ def run_as_module(params):
 
 @pytest.fixture(scope="function")
 def run_as_module_hrr(params):
+    """
+    Fixture to use HRR_TEST_DATA when testing run_module.
+
+    This fixture patches socrara to return the predefined test data for HRR region.
+    """
+
     with patch('sodapy.Socrata.get') as mock_get, \
          patch('delphi_nssp.run.GEOS', ["hrr"]):
         def side_effect(*args, **kwargs):

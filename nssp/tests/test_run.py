@@ -58,6 +58,7 @@ class TestRun:
 
         assert set(csv_files) == set(expected_files)
 
+        # Verify that all generated file have correct columns.
         for geo in GEOS:
             df = pd.read_csv(
                 f"{export_dir}/weekly_{date_prefix[2]}_{geo}_{metrics[0]}.csv")

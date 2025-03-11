@@ -13,7 +13,7 @@ import paramiko
 from delphi_utils import create_backup_csv
 from sodapy import Socrata
 
-from .constants import NEWLINE, SIGNALS, SIGNALS_MAP, TYPE_DICT
+from .constants import DATASET_ID, NEWLINE, SIGNALS, SIGNALS_MAP, TYPE_DICT
 
 
 def print_callback(remote_file_name, logger, bytes_so_far, bytes_total, progress_chunks):
@@ -148,7 +148,7 @@ def pull_nssp_data(
         Dataframe as described above.
     """
     if not custom_run:
-        socrata_results = pull_with_socrata_api(socrata_token, "rdmq-nq56")
+        socrata_results = pull_with_socrata_api(socrata_token, DATASET_ID)
         df_ervisits = pd.DataFrame.from_records(socrata_results)
         create_backup_csv(df_ervisits, backup_dir, custom_run, logger=logger)
         logger.info("Number of records grabbed", num_records=len(df_ervisits), source="Socrata API")

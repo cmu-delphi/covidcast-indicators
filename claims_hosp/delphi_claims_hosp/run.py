@@ -5,25 +5,27 @@ This module should contain a function called `run_module`, that is executed
 when the module is run with `python -m delphi_claims_hosp`.
 """
 
+import os
+
 # standard packages
 import time
-import os
 from datetime import datetime, timedelta
 from pathlib import Path
 
 # third party
 from delphi_utils import get_structured_logger
 
+from .backfill import merge_backfill_file, merge_existing_backfill_files, store_backfill_file
+
 # first party
 from .config import Config
 from .download_claims_ftp_files import download
-from .modify_claims_drops import modify_and_write
 from .get_latest_claims_name import get_latest_filename
+from .modify_claims_drops import modify_and_write
 from .update_indicator import ClaimsHospIndicatorUpdater
-from .backfill import (store_backfill_file, merge_backfill_file)
 
 
-def run_module(params):
+def run_module(params, logger=None):
     """
     Generate updated claims-based hospitalization indicator values.
 
@@ -54,19 +56,25 @@ def run_module(params):
                 adjustments (False).
     """
     start_time = time.time()
-    logger = get_structured_logger(
-        __name__, filename=params["common"].get("log_filename"),
-        log_exceptions=params["common"].get("log_exceptions", True))
+    # safety check for patch parameters exists in file, but not running custom runs/patches
+    custom_run_flag = False if not params["common"].get("custom_run", False) else params["common"]["custom_run"]
+    issue_date_str = params.get("patch", {}).get("current_issue", None)
+    issue_date = datetime.strptime(issue_date_str + " 23:59:00", "%Y-%m-%d %H:%M:%S") if issue_date_str else None
+    if not logger:
+        logger = get_structured_logger(
+            __name__,
+            filename=params["common"].get("log_filename"),
+            log_exceptions=params["common"].get("log_exceptions", True),
+        )
 
     # pull latest data
-    download(params["indicator"]["ftp_credentials"],
-             params["indicator"]["input_dir"], logger)
+    download(params["indicator"]["ftp_credentials"], params["indicator"]["input_dir"], logger, issue_date=issue_date)
 
     # aggregate data
     modify_and_write(params["indicator"]["input_dir"], logger)
 
     # find the latest files (these have timestamps)
-    claims_file = get_latest_filename(params["indicator"]["input_dir"], logger)
+    claims_file = get_latest_filename(params["indicator"]["input_dir"], logger, issue_date=issue_date)
 
     # handle range of estimates to produce
     # filename expected to have format: EDI_AGG_INPATIENT_DDMMYYYY_HHMM{timezone}.csv.gz
@@ -94,8 +102,13 @@ def run_module(params):
     if params["indicator"].get("generate_backfill_files", True):
         backfill_dir = params["indicator"]["backfill_dir"]
         backfill_merge_day = params["indicator"]["backfill_merge_day"]
-        merge_backfill_file(backfill_dir, backfill_merge_day, datetime.today())
-        store_backfill_file(claims_file, dropdate_dt, backfill_dir)
+        if custom_run_flag:
+            backfilled_filepath = store_backfill_file(claims_file, dropdate_dt, backfill_dir, logger)
+            merge_existing_backfill_files(backfill_dir, backfilled_filepath, issue_date, logger)
+
+        else:
+            merge_backfill_file(backfill_dir, backfill_merge_day, datetime.today(), logger)
+            store_backfill_file(claims_file, dropdate_dt, backfill_dir, logger)
 
     # print out information
     logger.info("Loaded params",

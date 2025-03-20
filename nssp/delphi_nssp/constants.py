@@ -1,5 +1,7 @@
 """Registry for variations."""
 
+DATASET_ID = "rdmq-nq56"
+
 GEOS = [
     "hrr",
     "msa",

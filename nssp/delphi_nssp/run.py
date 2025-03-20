@@ -118,9 +118,10 @@ def run_module(params, logger=None):
                 )
             elif geo == "hrr":
                 df = df[["fips", "val", "timestamp"]]
-                # fips -> hrr has a weighted version
-                df = geo_mapper.replace_geocode(df, "fips", "hrr")
-                df = df.rename(columns={"hrr": "geo_id"})
+                df = geo_mapper.add_population_column(df, geocode_type="fips", geocode_col="fips")
+                df = geo_mapper.add_geocode(df, "fips", "hrr", from_col="fips", new_col="geo_id")
+                df = geo_mapper.aggregate_by_weighted_sum(df, "geo_id", "val", "timestamp", "population")
+                df = df.rename(columns={"weighted_val": "val"})
             elif geo == "msa":
                 df = df[["fips", "val", "timestamp"]]
                 # fips -> msa doesn't have a weighted version, so we need to add columns and sum ourselves

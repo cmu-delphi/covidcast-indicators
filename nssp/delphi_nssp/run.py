@@ -150,7 +150,7 @@ def run_module(params, logger=None):
             if df_csv.empty:
                 logger.warning("No data for signal and geo combination", signal=signal, geo=geo)
                 continue
-            
+
             # actual export
             dates = create_export_csv(
                 df_csv,

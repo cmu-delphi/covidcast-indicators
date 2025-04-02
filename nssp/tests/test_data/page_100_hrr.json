@@ -196,5 +196,41 @@
         "fips": "8101",
         "trend_source": "HSA",
         "buildnumber": "2025-02-28"
+    },
+    {
+        "_comment":"This record is for testing the case where all signals data is NA for a county",
+        "week_end":"2022-10-15T00:00:00.000",
+        "geography":"Colorado",
+        "county":"Chaffee",
+        "ed_trends_covid":"Data Unavailable",
+        "ed_trends_influenza":"Data Unavailable",
+        "ed_trends_rsv":"Data Unavailable",
+        "hsa":"Chaffee, CO - Lake, CO",
+        "hsa_counties":"Chaffee, Lake",
+        "hsa_nci_id":"786",
+        "fips":"8015",
+        "trend_source":"HSA",
+        "buildnumber":"2025-02-28"
+    },
+    {
+        "_comment":"This record is for testing the case where some signal data (combined signals) is NA for a county",
+        "week_end":"2022-10-15T00:00:00.000",
+        "geography":"Colorado",
+        "county":"Arapahoe",
+        "percent_visits_covid": "100",
+        "percent_visits_influenza": "100",
+        "percent_visits_rsv": "100",
+        "percent_visits_smoothed_covid": "100",
+        "percent_visits_smoothed_1": "100",
+        "percent_visits_smoothed_rsv": "100",
+        "ed_trends_covid":"Decreasing",
+        "ed_trends_influenza":"Decreasing",
+        "ed_trends_rsv":"Decreasing",
+        "hsa":"Denver (Denver), CO - Jefferson, CO",
+        "hsa_counties":"Adams, Arapahoe, Clear Creek, Denver, Douglas, Elbert, Gilpin, Grand, Jefferson, Park, Summit",
+        "hsa_nci_id":"688",
+        "fips":"8005",
+        "trend_source":"HSA",
+        "buildnumber":"2025-03-28"
     }
 ]

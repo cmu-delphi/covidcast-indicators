@@ -68,6 +68,9 @@ class TestRun:
             ]
             assert set(expected_columns).issubset(set(df.columns.values))
 
+            #Verify that there's no NA/empty values in the val columns
+            assert not df["val"].isnull().any()
+
         for file in Path(export_dir).glob("*.csv"):
             os.remove(file)
 

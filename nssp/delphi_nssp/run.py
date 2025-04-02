@@ -107,7 +107,6 @@ def run_module(params, logger=None):
         for geo in GEOS:
             df = df_pull.copy(deep=True)
             df["val"] = df[signal]
-            df = df.dropna(subset=["val"])
             logger.info("Generating signal and exporting to CSV", geo_type=geo, signal=signal)
             if geo == "nation":
                 df = df[df["geography"] == "United States"]
@@ -141,13 +140,14 @@ def run_module(params, logger=None):
             else:
                 df = df[df["county"] != "All"]
                 df["geo_id"] = df["fips"]
-            if df.empty:
-                logger.info("No data for this signal and geo type combination", geo_type=geo, signal=signal)
-                continue
             # add se, sample_size, and na codes
             missing_cols = set(CSV_COLS) - set(df.columns)
             df = add_needed_columns(df, col_names=list(missing_cols))
             df_csv = df[CSV_COLS + ["timestamp"]]
+            df_csv = df_csv[df_csv["val"].notnull()]
+            if df_csv.empty:
+                logger.warning("No data for signal and geo combination", signal=signal, geo=geo)
+                continue
             # actual export
             dates = create_export_csv(
                 df_csv,

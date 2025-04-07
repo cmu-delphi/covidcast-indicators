@@ -48,6 +48,7 @@ def check_last_updated(socrata_token, dataset_id, logger):
 
         updated_timestamp = datetime.utcfromtimestamp(int(response["rowsUpdatedAt"]))
         now = datetime.utcnow()
+        # currently set to run twice a week, RECENTLY_UPDATED_DIFF may need adjusting based on the cadence
         recently_updated_source = (now - updated_timestamp) < RECENTLY_UPDATED_DIFF
 
         prelim_prefix = "Preliminary " if dataset_id == PRELIM_DATASET_ID else ""

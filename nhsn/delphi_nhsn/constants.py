@@ -1,5 +1,7 @@
 """Registry for signal names."""
 
+from datetime import timedelta
+
 GEOS = ["state", "nation", "hhs"]
 
 MAIN_DATASET_ID = "ua7e-t2fy"
@@ -62,3 +64,5 @@ PRELIM_TYPE_DICT = {
     f"{NUM_HOSP_REPORTING_FLU}_prelim": float,
     f"{NUM_HOSP_REPORTING_RSV}_prelim": float,
 }
+
+RECENTLY_UPDATED_DIFF = timedelta(hours=36)

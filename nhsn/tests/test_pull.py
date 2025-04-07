@@ -1,5 +1,6 @@
 import glob
 import time
+from datetime import datetime
 from unittest.mock import patch, MagicMock
 import os
 import pytest
@@ -12,7 +13,7 @@ from delphi_nhsn.pull import (
     pull_data_from_file,
     check_last_updated
 )
-from delphi_nhsn.constants import TYPE_DICT, PRELIM_TYPE_DICT, PRELIM_DATASET_ID, MAIN_DATASET_ID
+from delphi_nhsn.constants import TYPE_DICT, PRELIM_TYPE_DICT, PRELIM_DATASET_ID, MAIN_DATASET_ID, RECENTLY_UPDATED_DIFF
 
 from delphi_utils import get_structured_logger
 from conftest import TEST_DATA, PRELIM_TEST_DATA, TEST_DIR
@@ -158,7 +159,7 @@ class TestPullNHSNData:
 
 
     @pytest.mark.parametrize('dataset', DATASETS, ids=["data", "prelim_data"])
-    @pytest.mark.parametrize("updatedAt", [time.time(), time.time() - 172800], ids=["updated", "stale"])
+    @pytest.mark.parametrize("updatedAt", [time.time(), time.time() - 172800, time.time() - 108000], ids=["updated", "stale", "updated_late"])
     @patch("delphi_nhsn.pull.Socrata")
     def test_check_last_updated(self, mock_socrata, dataset, updatedAt, caplog):
         mock_client = MagicMock()
@@ -169,8 +170,9 @@ class TestPullNHSNData:
         check_last_updated(mock_client, dataset["id"], logger)
 
         # Check that get method was called with correct arguments
-        now = time.time()
-        if now - updatedAt < 60:
+        now_datetime = datetime.utcfromtimestamp(time.time())
+        updatedAt_datetime = datetime.utcfromtimestamp(updatedAt)
+        if now_datetime - updatedAt_datetime < RECENTLY_UPDATED_DIFF:
             assert f"{dataset['msg_prefix']}NHSN data was recently updated; Pulling data" in caplog.text
         else:
             stale_msg = f"{dataset['msg_prefix']}NHSN data is stale; Skipping"

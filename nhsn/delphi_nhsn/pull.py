@@ -4,7 +4,7 @@ import copy
 import logging
 import random
 import time
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
 from typing import Optional
 from urllib.error import HTTPError
@@ -13,7 +13,15 @@ import pandas as pd
 from delphi_utils import create_backup_csv
 from sodapy import Socrata
 
-from .constants import MAIN_DATASET_ID, PRELIM_DATASET_ID, PRELIM_SIGNALS_MAP, PRELIM_TYPE_DICT, SIGNALS_MAP, TYPE_DICT
+from .constants import (
+    MAIN_DATASET_ID,
+    PRELIM_DATASET_ID,
+    PRELIM_SIGNALS_MAP,
+    PRELIM_TYPE_DICT,
+    RECENTLY_UPDATED_DIFF,
+    SIGNALS_MAP,
+    TYPE_DICT,
+)
 
 
 def check_last_updated(socrata_token, dataset_id, logger):
@@ -40,7 +48,7 @@ def check_last_updated(socrata_token, dataset_id, logger):
 
         updated_timestamp = datetime.utcfromtimestamp(int(response["rowsUpdatedAt"]))
         now = datetime.utcnow()
-        recently_updated_source = (now - updated_timestamp) < timedelta(days=1)
+        recently_updated_source = (now - updated_timestamp) < RECENTLY_UPDATED_DIFF
 
         prelim_prefix = "Preliminary " if dataset_id == PRELIM_DATASET_ID else ""
         if recently_updated_source:

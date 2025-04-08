@@ -105,7 +105,7 @@ def run_module(params, logger=None):
             logger.warning("No primary source data pulled", issue_date=issue_date)
             break
         for geo in GEOS:
-            df = df_pull.copy(deep=True)
+            df = df_pull.copy()
             df["val"] = df[signal]
             logger.info("Generating signal and exporting to CSV", geo_type=geo, signal=signal)
             if geo == "nation":

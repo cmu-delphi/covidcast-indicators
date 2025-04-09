@@ -198,7 +198,6 @@
         "buildnumber": "2025-02-28"
     },
     {
-        "_comment":"This record is for testing the case where all signals data is NA for a county",
         "week_end":"2022-10-15T00:00:00.000",
         "geography":"Colorado",
         "county":"Chaffee",
@@ -213,7 +212,6 @@
         "buildnumber":"2025-02-28"
     },
     {
-        "_comment":"This record is for testing the case where some signal data (combined signals) is NA for a county",
         "week_end":"2022-10-15T00:00:00.000",
         "geography":"Colorado",
         "county":"Arapahoe",

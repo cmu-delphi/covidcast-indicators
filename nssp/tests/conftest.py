@@ -1,13 +1,11 @@
 import copy
 import json
-import time
-from unittest.mock import patch, MagicMock
+from pathlib import Path
+from unittest.mock import patch
 
 import pytest
-from pathlib import Path
-
-from delphi_nssp.run import run_module
 from delphi_nssp.constants import DATASET_ID
+from delphi_nssp.run import run_module
 
 TEST_DIR = Path(__file__).parent
 
@@ -19,6 +17,9 @@ with open(f"{TEST_DIR}/test_data/page.json", "r") as f:
 
 with open(f"{TEST_DIR}/test_data/page_100_hrr.json", "r") as f:
     HRR_TEST_DATA = json.load(f)
+
+with open(f"{TEST_DIR}/test_data/page_no_data.json", "r") as f:
+    EMPTY_TEST_DATA = json.load(f)
 
 @pytest.fixture(scope="session")
 def params():
@@ -99,3 +100,26 @@ def run_as_module_hrr(params):
         mock_get.side_effect = side_effect
         run_module(params)
 
+@pytest.fixture(scope="function")
+def run_as_module_empty(params):
+    """
+    Fixture to use EMPTY_TEST_DATA when testing run_module.
+
+    This fixture patches socrara to return the predefined test
+    data where relevent data is empty.
+    """
+
+    def _run_as_module_empty():
+        with patch("sodapy.Socrata.get") as mock_get:
+
+            def side_effect(*args, **kwargs):
+                if kwargs["offset"] == 0:
+                    if DATASET_ID in args[0]:
+                        return EMPTY_TEST_DATA
+                else:
+                    return []
+
+            mock_get.side_effect = side_effect
+            run_module(params)
+
+    return _run_as_module_empty

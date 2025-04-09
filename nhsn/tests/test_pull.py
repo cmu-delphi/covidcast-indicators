@@ -161,6 +161,7 @@ class TestPullNHSNData:
     @pytest.mark.parametrize('dataset', DATASETS, ids=["data", "prelim_data"])
     @pytest.mark.parametrize("updatedAt", [time.time(), time.time() - 172800, time.time() - 108000], ids=["updated", "stale", "updated_late"])
     @patch("delphi_nhsn.pull.Socrata")
+    @patch("delphi_nhsn.pull.Epidata.covidcast_meta", return_value=covidcast_metadata):
     def test_check_last_updated(self, mock_socrata, dataset, updatedAt, caplog):
         mock_client = MagicMock()
         mock_socrata.return_value = mock_client

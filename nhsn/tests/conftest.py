@@ -23,6 +23,11 @@ with open(f"{TEST_DIR}/test_data/page.json", "r") as f:
 with open(f"{TEST_DIR}/test_data/prelim_page.json", "r") as f:
     PRELIM_TEST_DATA = json.load(f)
 
+
+covidcast_metadata = pd.read_csv(f"{TEST_DIR}/test_data/covid_metadata.csv",
+                                     parse_dates=["max_time", "min_time", "max_issue", "last_update"])
+
+
 @pytest.fixture(scope="session")
 def params():
     params = {

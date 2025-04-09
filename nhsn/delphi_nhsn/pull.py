@@ -4,7 +4,7 @@ import copy
 import logging
 import random
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 from urllib.error import HTTPError
@@ -12,6 +12,8 @@ from urllib.error import HTTPError
 import pandas as pd
 from delphi_utils import create_backup_csv
 from sodapy import Socrata
+from delphi_epidata import Epidata
+from epiweeks import Week
 
 from .constants import (
     MAIN_DATASET_ID,
@@ -47,10 +49,17 @@ def check_last_updated(socrata_token, dataset_id, logger):
         response = client.get_metadata(dataset_id)
 
         updated_timestamp = datetime.utcfromtimestamp(int(response["rowsUpdatedAt"]))
-        now = datetime.utcnow()
-        # currently set to run twice a week, RECENTLY_UPDATED_DIFF may need adjusting based on the cadence
-        recently_updated_source = (now - updated_timestamp) < RECENTLY_UPDATED_DIFF
+        cdc_updated_epiweek = Week.fromdate(updated_timestamp)
 
+        meta_df = pd.DataFrame(Epidata.covidcast_meta()["epidata"])
+        signal_suffix = 'prelim' if dataset_id == PRELIM_DATASET_ID else "ew"
+        nhsn_meta_df = meta_df[(meta_df["data_source"] == "nhsn") & (meta_df["signal"].str.endswith(signal_suffix))]
+        last_updated = datetime.utcfromtimestamp(nhsn_meta_df["last_update"].min())
+        covidcast_updated_epiweek = Week.fromdate(last_updated)
+
+        # currently set to run twice a week, RECENTLY_UPDATED_DIFF may need adjusting based on the cadence
+        recently_updated_source = (last_updated - updated_timestamp) > RECENTLY_UPDATED_DIFF
+        print("non")
         prelim_prefix = "Preliminary " if dataset_id == PRELIM_DATASET_ID else ""
         if recently_updated_source:
             logger.info(

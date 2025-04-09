@@ -65,4 +65,4 @@ PRELIM_TYPE_DICT = {
     f"{NUM_HOSP_REPORTING_RSV}_prelim": float,
 }
 
-RECENTLY_UPDATED_DIFF = timedelta(days=2)
+RECENTLY_UPDATED_DIFF = timedelta(days=1)

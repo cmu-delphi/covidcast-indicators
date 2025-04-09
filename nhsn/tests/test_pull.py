@@ -1,6 +1,6 @@
 import glob
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 from unittest.mock import patch, MagicMock
 import os
 import pytest
@@ -16,7 +16,7 @@ from delphi_nhsn.pull import (
 from delphi_nhsn.constants import TYPE_DICT, PRELIM_TYPE_DICT, PRELIM_DATASET_ID, MAIN_DATASET_ID, RECENTLY_UPDATED_DIFF
 
 from delphi_utils import get_structured_logger
-from conftest import TEST_DATA, PRELIM_TEST_DATA, TEST_DIR
+from conftest import TEST_DATA, PRELIM_TEST_DATA, TEST_DIR, COVID_META_DATA
 
 DATASETS = [{"id":MAIN_DATASET_ID,
              "test_data": TEST_DATA,
@@ -159,23 +159,34 @@ class TestPullNHSNData:
 
 
     @pytest.mark.parametrize('dataset', DATASETS, ids=["data", "prelim_data"])
-    @pytest.mark.parametrize("updatedAt", [time.time(), time.time() - 172800, time.time() - 108000], ids=["updated", "stale", "updated_late"])
+    @pytest.mark.parametrize("updatedAt", [datetime(year=2025, month=4, day=4, hour=12, minute=30),
+                                           # called off-cycle (checks for main update on wednesday, but updates on friday)
+                                           datetime(year=2025, month=3, day=28, hour=12, minute=30),
+                                           # called off-cycle (checks for main update on wednesday, but the update got skipped)
+                                           datetime(year=2025, month=4, day=4, hour=13, minute=30),
+                                           ], ids=["updated", "stale", "updated_late"])
     @patch("delphi_nhsn.pull.Socrata")
-    @patch("delphi_nhsn.pull.Epidata.covidcast_meta", return_value=covidcast_metadata):
-    def test_check_last_updated(self, mock_socrata, dataset, updatedAt, caplog):
+    @patch("delphi_nhsn.pull.Epidata.covidcast_meta")
+    def test_check_last_updated(self, mock_covidcast_meta, mock_socrata, dataset, updatedAt, caplog):
         mock_client = MagicMock()
         mock_socrata.return_value = mock_client
-        mock_client.get_metadata.return_value = {"rowsUpdatedAt": updatedAt }
-        logger = get_structured_logger()
+        mock_covidcast_meta.return_value = COVID_META_DATA
 
+        # preliminary data is updated on wednesdays
+        if dataset["prelim_flag"]:
+            updatedAt = updatedAt - timedelta(days=2)
+
+        mock_client.get_metadata.return_value = {"rowsUpdatedAt": updatedAt.timestamp()}
+        logger = get_structured_logger()
         check_last_updated(mock_client, dataset["id"], logger)
 
         # Check that get method was called with correct arguments
-        now_datetime = datetime.utcfromtimestamp(time.time())
-        updatedAt_datetime = datetime.utcfromtimestamp(updatedAt)
-        if now_datetime - updatedAt_datetime < RECENTLY_UPDATED_DIFF:
+        last_updated = datetime(2025, 3, 28, 13, 25, 36)
+        if (updatedAt - last_updated) > RECENTLY_UPDATED_DIFF:
             assert f"{dataset['msg_prefix']}NHSN data was recently updated; Pulling data" in caplog.text
         else:
             stale_msg = f"{dataset['msg_prefix']}NHSN data is stale; Skipping"
             assert stale_msg in caplog.text
+
+
 

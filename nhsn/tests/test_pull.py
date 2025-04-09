@@ -80,14 +80,16 @@ class TestPullNHSNData:
 
     @patch("delphi_nhsn.pull.Socrata")
     @patch("delphi_nhsn.pull.create_backup_csv")
+    @patch("delphi_nhsn.pull.Epidata.covidcast_meta")
     @pytest.mark.parametrize('dataset', DATASETS, ids=["data", "prelim_data"])
-    def test_pull_nhsn_data_output(self, mock_create_backup, mock_socrata, dataset, caplog, params):
+    def test_pull_nhsn_data_output(self, mock_covidcast_meta, mock_create_backup, mock_socrata, dataset, caplog, params):
         now = time.time()
         # Mock Socrata client and its get method
         mock_client = MagicMock()
         mock_socrata.return_value = mock_client
         mock_client.get.side_effect = [dataset["test_data"],[]]
         mock_client.get_metadata.return_value = {"rowsUpdatedAt": now}
+        mock_covidcast_meta.return_value = COVID_META_DATA
 
         backup_dir = params["common"]["backup_dir"]
         test_token = params["indicator"]["socrata_token"]

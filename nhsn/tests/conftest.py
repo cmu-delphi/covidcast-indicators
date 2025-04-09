@@ -67,7 +67,8 @@ def params_w_patch(params):
 @pytest.fixture(scope="function")
 def run_as_module(params):
     with patch('sodapy.Socrata.get') as mock_get, \
-         patch('sodapy.Socrata.get_metadata') as mock_get_metadata:
+         patch('sodapy.Socrata.get_metadata') as mock_get_metadata, \
+         patch('delphi_nhsn.pull.Epidata.covidcast_meta') as mock_covidcast_meta:
         def side_effect(*args, **kwargs):
             if kwargs['offset'] == 0:
                 if "ua7e-t2fy" in args[0]:
@@ -78,5 +79,6 @@ def run_as_module(params):
                 return []
         mock_get.side_effect = side_effect
         mock_get_metadata.return_value = {"rowsUpdatedAt": time.time()}
+        mock_covidcast_meta.return_value = COVID_META_DATA
         run_module(params)
 

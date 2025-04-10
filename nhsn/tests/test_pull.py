@@ -1,5 +1,6 @@
 import glob
 import time
+from datetime import datetime, timedelta
 from unittest.mock import patch, MagicMock
 import os
 import pytest
@@ -12,10 +13,10 @@ from delphi_nhsn.pull import (
     pull_data_from_file,
     check_last_updated
 )
-from delphi_nhsn.constants import TYPE_DICT, PRELIM_TYPE_DICT, PRELIM_DATASET_ID, MAIN_DATASET_ID
+from delphi_nhsn.constants import TYPE_DICT, PRELIM_TYPE_DICT, PRELIM_DATASET_ID, MAIN_DATASET_ID, RECENTLY_UPDATED_DIFF
 
 from delphi_utils import get_structured_logger
-from conftest import TEST_DATA, PRELIM_TEST_DATA, TEST_DIR
+from conftest import TEST_DATA, PRELIM_TEST_DATA, TEST_DIR, COVID_META_DATA
 
 DATASETS = [{"id":MAIN_DATASET_ID,
              "test_data": TEST_DATA,
@@ -79,14 +80,16 @@ class TestPullNHSNData:
 
     @patch("delphi_nhsn.pull.Socrata")
     @patch("delphi_nhsn.pull.create_backup_csv")
+    @patch("delphi_nhsn.pull.Epidata.covidcast_meta")
     @pytest.mark.parametrize('dataset', DATASETS, ids=["data", "prelim_data"])
-    def test_pull_nhsn_data_output(self, mock_create_backup, mock_socrata, dataset, caplog, params):
+    def test_pull_nhsn_data_output(self, mock_covidcast_meta, mock_create_backup, mock_socrata, dataset, caplog, params):
         now = time.time()
         # Mock Socrata client and its get method
         mock_client = MagicMock()
         mock_socrata.return_value = mock_client
         mock_client.get.side_effect = [dataset["test_data"],[]]
         mock_client.get_metadata.return_value = {"rowsUpdatedAt": now}
+        mock_covidcast_meta.return_value = COVID_META_DATA
 
         backup_dir = params["common"]["backup_dir"]
         test_token = params["indicator"]["socrata_token"]
@@ -158,21 +161,34 @@ class TestPullNHSNData:
 
 
     @pytest.mark.parametrize('dataset', DATASETS, ids=["data", "prelim_data"])
-    @pytest.mark.parametrize("updatedAt", [time.time(), time.time() - 172800], ids=["updated", "stale"])
+    @pytest.mark.parametrize("updatedAt", [datetime(year=2025, month=4, day=4, hour=12, minute=30),
+                                           # called off-cycle (checks for main update on wednesday, but updates on friday)
+                                           datetime(year=2025, month=3, day=28, hour=12, minute=30),
+                                           # called off-cycle (checks for main update on wednesday, but the update got skipped)
+                                           datetime(year=2025, month=4, day=4, hour=13, minute=30),
+                                           ], ids=["updated", "stale", "updated_late"])
     @patch("delphi_nhsn.pull.Socrata")
-    def test_check_last_updated(self, mock_socrata, dataset, updatedAt, caplog):
+    @patch("delphi_nhsn.pull.Epidata.covidcast_meta")
+    def test_check_last_updated(self, mock_covidcast_meta, mock_socrata, dataset, updatedAt, caplog):
         mock_client = MagicMock()
         mock_socrata.return_value = mock_client
-        mock_client.get_metadata.return_value = {"rowsUpdatedAt": updatedAt }
-        logger = get_structured_logger()
+        mock_covidcast_meta.return_value = COVID_META_DATA
 
+        # preliminary data is updated on wednesdays
+        if dataset["prelim_flag"]:
+            updatedAt = updatedAt - timedelta(days=2)
+
+        mock_client.get_metadata.return_value = {"rowsUpdatedAt": updatedAt.timestamp()}
+        logger = get_structured_logger()
         check_last_updated(mock_client, dataset["id"], logger)
 
         # Check that get method was called with correct arguments
-        now = time.time()
-        if now - updatedAt < 60:
+        last_updated = datetime(2025, 3, 28, 13, 25, 36)
+        if (updatedAt - last_updated) > RECENTLY_UPDATED_DIFF:
             assert f"{dataset['msg_prefix']}NHSN data was recently updated; Pulling data" in caplog.text
         else:
             stale_msg = f"{dataset['msg_prefix']}NHSN data is stale; Skipping"
             assert stale_msg in caplog.text
+
+
 

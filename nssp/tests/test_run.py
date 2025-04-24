@@ -44,7 +44,7 @@ class TestRun:
         ]
         return date_prefix
 
-    def test_output_files_exist(self, params, run_as_module):
+    def test_output_files(self, params, run_as_module):
         export_dir = params["common"]["export_dir"]
         csv_files = [f.name for f in Path(export_dir).glob("*.csv")]
 
@@ -91,7 +91,6 @@ class TestRun:
         Tests correct handling when there is a geo and signal combination that has no data.
         """
 
-        caplog.set_level(logging.WARNING)
         run_as_module_empty()
         assert "No data for signal and geo combination" in caplog.text
 

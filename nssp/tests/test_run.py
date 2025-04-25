@@ -101,5 +101,6 @@ class TestRun:
         # while the two counties have no numeric fields, 
         # there should be no county, hrr, hhs, or msa files.
         assert not any(geo in f.name for geo in ["county", "hrr", "hhs", "msa"] for f in csv_files)
+        assert all("nation" in f.name for f in csv_files)
 
         remove_backup_and_receiving(params)

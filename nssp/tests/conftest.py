@@ -99,27 +99,3 @@ def run_as_module_hrr(params):
                 return []
         mock_get.side_effect = side_effect
         run_module(params)
-
-@pytest.fixture(scope="function")
-def run_as_module_empty(params):
-    """
-    Fixture to use EMPTY_TEST_DATA when testing run_module.
-
-    This fixture patches socrara to return the predefined test
-    data where relevent data is empty.
-    """
-
-    def _run_as_module_empty():
-        with patch("sodapy.Socrata.get") as mock_get:
-
-            def side_effect(*args, **kwargs):
-                if kwargs["offset"] == 0:
-                    if DATASET_ID in args[0]:
-                        return EMPTY_TEST_DATA
-                else:
-                    return []
-
-            mock_get.side_effect = side_effect
-            run_module(params)
-
-    return _run_as_module_empty

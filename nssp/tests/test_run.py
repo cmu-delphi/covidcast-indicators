@@ -2,13 +2,15 @@ import glob
 import logging
 import os
 from pathlib import Path
-
+import json
+from unittest.mock import patch
 import numpy as np
 import pandas as pd
-from delphi_nssp.constants import GEOS, SIGNALS_MAP
-from delphi_nssp.run import add_needed_columns
+from delphi_nssp.constants import GEOS, SIGNALS_MAP, DATASET_ID
+from delphi_nssp.run import add_needed_columns, run_module
 from epiweeks import Week
 
+TEST_DIR = Path(__file__).parent
 
 def remove_backup_and_receiving(params):
     export_dir = params["common"]["export_dir"]
@@ -86,12 +88,17 @@ class TestRun:
 
         remove_backup_and_receiving(params)
 
-    def test_empty_data(self, run_as_module_empty, params, caplog):
+    @patch("sodapy.Socrata.get")
+    def test_empty_data(self, mock_get, params, caplog):
         """
         Tests correct handling when there is a geo and signal combination that has no data.
         """
 
-        run_as_module_empty()
+        with open(f"{TEST_DIR}/test_data/page_no_data.json", "r") as f:
+            EMPTY_TEST_DATA = json.load(f)
+        mock_get.side_effect = [EMPTY_TEST_DATA, []]
+        run_module(params)
+
         assert "No data for signal and geo combination" in caplog.text
 
         export_dir = params["common"]["export_dir"]

@@ -1,11 +1,13 @@
 import copy
 import json
-from pathlib import Path
-from unittest.mock import patch
+import time
+from unittest.mock import patch, MagicMock
 
 import pytest
-from delphi_nssp.constants import DATASET_ID
+from pathlib import Path
+
 from delphi_nssp.run import run_module
+from delphi_nssp.constants import DATASET_ID
 
 TEST_DIR = Path(__file__).parent
 
@@ -17,9 +19,6 @@ with open(f"{TEST_DIR}/test_data/page.json", "r") as f:
 
 with open(f"{TEST_DIR}/test_data/page_100_hrr.json", "r") as f:
     HRR_TEST_DATA = json.load(f)
-
-with open(f"{TEST_DIR}/test_data/page_no_data.json", "r") as f:
-    EMPTY_TEST_DATA = json.load(f)
 
 @pytest.fixture(scope="session")
 def params():

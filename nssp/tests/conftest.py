@@ -98,3 +98,4 @@ def run_as_module_hrr(params):
                 return []
         mock_get.side_effect = side_effect
         run_module(params)
+

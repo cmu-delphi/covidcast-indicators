@@ -1,0 +1,52 @@
+[
+    {
+        "week_end":"2022-10-15T00:00:00.000",
+        "geography":"United States",
+        "county":"All",
+        "percent_visits_combined":"2.0",
+        "percent_visits_covid":"1.63",
+        "percent_visits_influenza":"0.17",
+        "percent_visits_rsv":"0.21",
+        "percent_visits_smoothed":"1.78",
+        "percent_visits_smoothed_covid":"1.54",
+        "percent_visits_smoothed_1":"0.12",
+        "percent_visits_smoothed_rsv":"0.12",
+        "ed_trends_covid":"Decreasing",
+        "ed_trends_influenza":"No Change",
+        "ed_trends_rsv":"Increasing",
+        "hsa":"All",
+        "hsa_counties":"All",
+        "hsa_nci_id":"All",
+        "fips":"0",
+        "trend_source":"United States",
+        "buildnumber":"2025-02-08"
+    },
+    {
+        "week_end":"2022-10-15T00:00:00.000",
+        "geography":"Colorado",
+        "county":"Chaffee",
+        "ed_trends_covid":"Data Unavailable",
+        "ed_trends_influenza":"Data Unavailable",
+        "ed_trends_rsv":"Data Unavailable",
+        "hsa":"Chaffee, CO - Lake, CO",
+        "hsa_counties":"Chaffee, Lake",
+        "hsa_nci_id":"786",
+        "fips":"8015",
+        "trend_source":"HSA",
+        "buildnumber":"2025-02-28"
+    },
+    {
+        "week_end":"2022-10-15T00:00:00.000",
+        "geography":"Colorado",
+        "county":"Arapahoe",
+        "ed_trends_covid":"Data Unavailable",
+        "ed_trends_influenza":"Data Unavailable",
+        "ed_trends_rsv":"Data Unavailable",
+        "hsa":"Denver (Denver), CO - Jefferson, CO",
+        "hsa_counties":"Adams, Arapahoe, Clear Creek, Denver, Douglas, Elbert, Gilpin, Grand, Jefferson, Park, Summit",
+        "hsa_nci_id":"688",
+        "fips":"8005",
+        "trend_source":"HSA",
+        "buildnumber":"2025-03-28"
+    }
+]

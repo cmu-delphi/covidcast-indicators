@@ -1,22 +1,26 @@
 import glob
-from datetime import datetime, date
-import json
-from pathlib import Path
-from unittest.mock import patch
-import tempfile
+import logging
 import os
-import time
-from datetime import datetime
-
+from pathlib import Path
+import json
+from unittest.mock import patch
 import numpy as np
 import pandas as pd
+from delphi_nssp.constants import GEOS, SIGNALS_MAP, DATASET_ID
+from delphi_nssp.run import add_needed_columns, run_module
 from epiweeks import Week
-from pandas.testing import assert_frame_equal
-from delphi_nssp.constants import GEOS, SIGNALS, SIGNALS_MAP, DATASET_ID
-from delphi_nssp.run import (
-    add_needed_columns
-)
 
+TEST_DIR = Path(__file__).parent
+
+def remove_backup_and_receiving(params):
+    export_dir = params["common"]["export_dir"]
+    for file in Path(export_dir).glob("*.csv"):
+        os.remove(file)
+
+    today = pd.Timestamp.today().strftime("%Y%m%d")
+    backup_dir = glob.glob(f"{Path(params['common']['backup_dir'])}/{today}*")
+    for file in backup_dir:
+        os.remove(file)
 
 class TestRun:
     def test_add_needed_columns(self):
@@ -42,7 +46,7 @@ class TestRun:
         ]
         return date_prefix
 
-    def test_output_files_exist(self, params, run_as_module):
+    def test_output_files(self, params, run_as_module):
         export_dir = params["common"]["export_dir"]
         csv_files = [f.name for f in Path(export_dir).glob("*.csv")]
 
@@ -68,13 +72,10 @@ class TestRun:
             ]
             assert set(expected_columns).issubset(set(df.columns.values))
 
-        for file in Path(export_dir).glob("*.csv"):
-            os.remove(file)
+            # Verify that there's no NA/empty values in the val columns
+            assert not df["val"].isnull().any()
 
-        today = pd.Timestamp.today().strftime("%Y%m%d")
-        backup_dir = glob.glob(f"{Path(params['common']['backup_dir'])}/{today}*")
-        for file in backup_dir:
-            os.remove(file)
+        remove_backup_and_receiving(params)
 
     def test_valid_hrr(self, run_as_module_hrr, params):
         export_dir = params["common"]["export_dir"]
@@ -85,10 +86,28 @@ class TestRun:
             df = pd.read_csv(f)
             assert (df.val == 100).all()
 
-        for file in Path(export_dir).glob("*.csv"):
-            os.remove(file)
+        remove_backup_and_receiving(params)
 
-        today = pd.Timestamp.today().strftime("%Y%m%d")
-        backup_dir = glob.glob(f"{Path(params['common']['backup_dir'])}/{today}*")
-        for file in backup_dir:
-            os.remove(file)
+    @patch("sodapy.Socrata.get")
+    def test_empty_data(self, mock_get, params, caplog):
+        """
+        Tests correct handling when there is a geo and signal combination that has no data.
+        """
+
+        with open(f"{TEST_DIR}/test_data/page_no_data.json", "r") as f:
+            EMPTY_TEST_DATA = json.load(f)
+        mock_get.side_effect = [EMPTY_TEST_DATA, []]
+        run_module(params)
+
+        assert "No data for signal and geo combination" in caplog.text
+
+        export_dir = params["common"]["export_dir"]
+        csv_files = [f for f in Path(export_dir).glob("*.csv")]
+
+        # Since only one national entry in page_no_data.json with numeric data,
+        # while the two counties have no numeric fields, 
+        # there should be no county, hrr, hhs, or msa files.
+        assert not any(geo in f.name for geo in ["county", "hrr", "hhs", "msa"] for f in csv_files)
+        assert all("nation" in f.name for f in csv_files)
+
+        remove_backup_and_receiving(params)

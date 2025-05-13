@@ -90,9 +90,5 @@ class TestPullNSSPData:
         assert result["fips"].notnull().all(), "fips has rogue NaN"
         assert result["fips"].apply(lambda x: isinstance(x, str) and len(x) != 4).all(), "fips formatting should always be 5 digits; include leading zeros if aplicable"
 
-        # Check for each signal in SIGNALS
-        for signal in SIGNALS:
-            assert result[signal].notnull().all(), f"{signal} has rogue NaN"
-
         for file in backup_files:
             os.remove(file)

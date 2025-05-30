@@ -144,6 +144,13 @@ def run_module(params, logger=None):
             missing_cols = set(CSV_COLS) - set(df.columns)
             df = add_needed_columns(df, col_names=list(missing_cols))
             df_csv = df[CSV_COLS + ["timestamp"]]
+
+            # remove rows with missing values
+            df_csv = df_csv[df_csv["val"].notnull()]
+            if df_csv.empty:
+                logger.warning("No data for signal and geo combination", signal=signal, geo=geo)
+                continue
+
             # actual export
             dates = create_export_csv(
                 df_csv,

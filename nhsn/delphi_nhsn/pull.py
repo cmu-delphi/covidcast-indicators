@@ -4,16 +4,25 @@ import copy
 import logging
 import random
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Optional
 from urllib.error import HTTPError
 
 import pandas as pd
+from delphi_epidata import Epidata
 from delphi_utils import create_backup_csv
 from sodapy import Socrata
 
-from .constants import MAIN_DATASET_ID, PRELIM_DATASET_ID, PRELIM_SIGNALS_MAP, PRELIM_TYPE_DICT, SIGNALS_MAP, TYPE_DICT
+from .constants import (
+    MAIN_DATASET_ID,
+    PRELIM_DATASET_ID,
+    PRELIM_SIGNALS_MAP,
+    PRELIM_TYPE_DICT,
+    RECENTLY_UPDATED_DIFF,
+    SIGNALS_MAP,
+    TYPE_DICT,
+)
 
 
 def check_last_updated(socrata_token, dataset_id, logger):
@@ -38,17 +47,31 @@ def check_last_updated(socrata_token, dataset_id, logger):
         client = Socrata("data.cdc.gov", socrata_token)
         response = client.get_metadata(dataset_id)
 
-        updated_timestamp = datetime.utcfromtimestamp(int(response["rowsUpdatedAt"]))
-        now = datetime.utcnow()
-        recently_updated_source = (now - updated_timestamp) < timedelta(days=1)
+        updated_timestamp = datetime.fromtimestamp(int(response["rowsUpdatedAt"]), tz=timezone.utc)
+
+        # pulling last updated from the api
+        meta_df = pd.DataFrame(Epidata.covidcast_meta()["epidata"])
+        signal_suffix = "prelim" if dataset_id == PRELIM_DATASET_ID else "ew"
+        nhsn_meta_df = meta_df[(meta_df["data_source"] == "nhsn") & (meta_df["signal"].str.endswith(signal_suffix))]
+        est = timezone(timedelta(hours=-5))
+        last_updated = datetime.fromtimestamp(nhsn_meta_df["last_update"].min(), tz=est)
+
+        # currently set to run twice a week, RECENTLY_UPDATED_DIFF may need adjusting based on the cadence
+        recently_updated_source = (updated_timestamp - last_updated) > RECENTLY_UPDATED_DIFF
 
         prelim_prefix = "Preliminary " if dataset_id == PRELIM_DATASET_ID else ""
         if recently_updated_source:
             logger.info(
-                f"{prelim_prefix}NHSN data was recently updated; Pulling data", updated_timestamp=updated_timestamp
+                f"{prelim_prefix}NHSN data was recently updated; Pulling data",
+                updated_timestamp=updated_timestamp,
+                metadata_timestamp=last_updated,
             )
         else:
-            logger.info(f"{prelim_prefix}NHSN data is stale; Skipping", updated_timestamp=updated_timestamp)
+            logger.info(
+                f"{prelim_prefix}NHSN data is stale; Skipping",
+                updated_timestamp=updated_timestamp,
+                metadata_timestamp=last_updated,
+            )
     # pylint: disable=W0703
     except Exception as e:
         logger.info("error while processing socrata metadata; treating data as stale", error=str(e))

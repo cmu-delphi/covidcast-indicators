@@ -259,14 +259,14 @@ class TestPatchModule:
 
         # Make sure issue_20210103 has latest weekly data (data from 20210109 instead of 20210108)
         df_20210108 = pd.read_csv('source_dir/20210108.csv.gz')
-        df_20210108_nation_combined = df_20210108['percent_visits_combined'].iloc[0]
+        df_20210108_nation_covid = df_20210108['percent_visits_covid'].iloc[0]
         df_20210109 = pd.read_csv('source_dir/20210109.csv.gz')
-        df_20210109_nation_combined = df_20210109['percent_visits_combined'].iloc[0]
-        assert df_20210108_nation_combined != df_20210109_nation_combined
+        df_20210109_nation_covid = df_20210109['percent_visits_covid'].iloc[0]
+        assert df_20210108_nation_covid != df_20210109_nation_covid
 
-        df_issue_20210103 = pd.read_csv('patch_dir/issue_20210103/nssp/weekly_202040_nation_pct_ed_visits_combined.csv')
-        df_issue_20210103_nation_combined = df_issue_20210103['val'].iloc[0]
-        assert df_20210109_nation_combined == df_issue_20210103_nation_combined
+        df_issue_20210103 = pd.read_csv('patch_dir/issue_20210103/nssp/weekly_202040_nation_pct_ed_visits_covid.csv')
+        df_issue_20210103_nation_covid = df_issue_20210103['val'].iloc[0]
+        assert df_20210109_nation_covid == df_issue_20210103_nation_covid
 
         # Clean up the created directories after the test
         shutil.rmtree(mock_read_params.return_value["patch"]["patch_dir"])

@@ -3,14 +3,14 @@ import pandas as pd
 from delphi_doctor_visits.geo_maps import GeoMaps
 from delphi_doctor_visits.config import Config
 
-CONFIG = Config()
 DATA = pd.read_csv(
     "test_data/SYNEDI_AGG_OUTPATIENT_07022020_1455CDT.csv.gz",
-    usecols=CONFIG.FILT_COLS,
-    dtype=CONFIG.DTYPES,
-    parse_dates=[CONFIG.DATE_COL],
+    dtype=Config.DTYPES,
     nrows=9,
 )
+DATA.rename(columns=Config.DEVIANT_COLS_MAP, inplace=True)
+DATA = DATA[Config.FILT_COLS]
+DATA[Config.DATE_COL] = DATA[Config.DATE_COL].apply(pd.to_datetime)
 
 GM = GeoMaps()
 

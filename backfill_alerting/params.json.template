@@ -1,0 +1,52 @@
+{
+  "common": {
+    "export_dir": "./receiving",
+    "log_exceptions": false
+  },
+  "indicator": {
+    "input_cache_dir": "./cache/input",
+    "result_cache_dir": "./cache/results",
+    "data_cache_dir": "./cache/data",
+    "training_mode": false,
+    "start_date": null,
+    "end_date": null,
+    "drop_date": null,
+    "n_backfill_days": 180,
+    "se": false,
+    "parallel": false,
+    "geos": ["state", "county"],
+    "types": ["covid", "total"],
+    "wip_signal": "",
+    "ftp_conn": {
+      "host": "",
+      "user": "",
+      "pass": "",
+      "port": 0
+    }
+  },
+  "validation": {
+    "common": {
+      "data_source": "chng",
+      "span_length": 14,
+      "min_expected_lag": {"all": "4"},
+      "max_expected_lag": {"all": "6"},
+      "dry_run": true,
+      "suppressed_errors": [
+      ]
+    },
+    "static": {
+      "minimum_sample_size": 0,
+      "missing_se_allowed": true,
+      "missing_sample_size_allowed": true
+    },
+    "dynamic": {
+      "ref_window_size": 7,
+      "smoothed_signals": [
+        "smoothed_adj_outpatient_cli",
+        "smoothed_adj_outpatient_covid",
+        "smoothed_outpatient_cli",
+        "smoothed_outpatient_covid"
+      ]
+    }
+  }
+}

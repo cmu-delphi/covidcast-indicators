@@ -23,6 +23,11 @@ with open(f"{TEST_DIR}/test_data/page.json", "r") as f:
 with open(f"{TEST_DIR}/test_data/prelim_page.json", "r") as f:
     PRELIM_TEST_DATA = json.load(f)
 
+# filtered metadata (just includes nhsn meta)
+with open(f"{TEST_DIR}/test_data/covidcast_meta.json", "r") as f:
+    COVID_META_DATA = json.load(f)
+
+
 @pytest.fixture(scope="session")
 def params():
     params = {
@@ -62,7 +67,8 @@ def params_w_patch(params):
 @pytest.fixture(scope="function")
 def run_as_module(params):
     with patch('sodapy.Socrata.get') as mock_get, \
-         patch('sodapy.Socrata.get_metadata') as mock_get_metadata:
+         patch('sodapy.Socrata.get_metadata') as mock_get_metadata, \
+         patch('delphi_nhsn.pull.Epidata.covidcast_meta') as mock_covidcast_meta:
         def side_effect(*args, **kwargs):
             if kwargs['offset'] == 0:
                 if "ua7e-t2fy" in args[0]:
@@ -73,5 +79,6 @@ def run_as_module(params):
                 return []
         mock_get.side_effect = side_effect
         mock_get_metadata.return_value = {"rowsUpdatedAt": time.time()}
+        mock_covidcast_meta.return_value = COVID_META_DATA
         run_module(params)
 

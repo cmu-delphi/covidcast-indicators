@@ -86,7 +86,7 @@ class TestPullNHSNData:
         mock_client = MagicMock()
         mock_socrata.return_value = mock_client
         mock_client.get.side_effect = [dataset["test_data"],[]]
-        mock_client.get_metadata.return_value = {"rowsUpdatedAt": now}
+        mock_client.get_metadata.return_value = {"viewLastModified": now}
 
         backup_dir = params["common"]["backup_dir"]
         test_token = params["indicator"]["socrata_token"]

@@ -38,7 +38,7 @@ def check_last_updated(socrata_token, dataset_id, logger):
         client = Socrata("data.cdc.gov", socrata_token)
         response = client.get_metadata(dataset_id)
 
-        updated_timestamp = datetime.utcfromtimestamp(int(response["rowsUpdatedAt"]))
+        updated_timestamp = datetime.utcfromtimestamp(int(response["viewLastModified"]))
         now = datetime.utcnow()
         recently_updated_source = (now - updated_timestamp) < timedelta(days=1)
 

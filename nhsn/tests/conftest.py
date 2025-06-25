@@ -72,6 +72,6 @@ def run_as_module(params):
             else:
                 return []
         mock_get.side_effect = side_effect
-        mock_get_metadata.return_value = {"rowsUpdatedAt": time.time()}
+        mock_get_metadata.return_value = {"viewLastModified": time.time()}
         run_module(params)
 

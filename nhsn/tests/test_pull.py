@@ -176,3 +176,18 @@ class TestPullNHSNData:
             stale_msg = f"{dataset['msg_prefix']}NHSN data is stale; Skipping"
             assert stale_msg in caplog.text
 
+
+
+    @patch("delphi_nhsn.pull.Socrata")
+    @pytest.mark.parametrize('dataset', DATASETS, ids=["data", "prelim_data"])
+    def test_check_last_updated_error(self, mock_socrata, dataset, caplog):
+        mock_client = MagicMock()
+        mock_socrata.return_value = mock_client
+        updatedAt = time.time()
+        mock_client.get_metadata.return_value = {"rowsUpdatedAt": updatedAt }
+        logger = get_structured_logger()
+
+        with pytest.raises(KeyError):
+            check_last_updated(mock_client, dataset["id"], logger)
+            assert "error while processing socrata metadata" in caplog.text
+

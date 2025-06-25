@@ -33,7 +33,6 @@ def check_last_updated(socrata_token, dataset_id, logger):
     -------
 
     """
-    recently_updated_source = True
     try:
         client = Socrata("data.cdc.gov", socrata_token)
         response = client.get_metadata(dataset_id)
@@ -49,10 +48,12 @@ def check_last_updated(socrata_token, dataset_id, logger):
             )
         else:
             logger.info(f"{prelim_prefix}NHSN data is stale; Skipping", updated_timestamp=updated_timestamp)
+        return recently_updated_source
     # pylint: disable=W0703
     except Exception as e:
-        logger.info("error while processing socrata metadata; treating data as stale", error=str(e))
-    return recently_updated_source
+        logger.info("error while processing socrata metadata", error=str(e))
+        raise e
+
 
 
 def pull_data(socrata_token: str, dataset_id: str, backup_dir: str, logger):

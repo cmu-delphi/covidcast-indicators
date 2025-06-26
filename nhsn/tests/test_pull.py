@@ -86,7 +86,7 @@ class TestPullNHSNData:
         mock_client = MagicMock()
         mock_socrata.return_value = mock_client
         mock_client.get.side_effect = [dataset["test_data"],[]]
-        mock_client.get_metadata.return_value = {"rowsUpdatedAt": now}
+        mock_client.get_metadata.return_value = {"viewLastModified": now}
 
         backup_dir = params["common"]["backup_dir"]
         test_token = params["indicator"]["socrata_token"]
@@ -123,7 +123,7 @@ class TestPullNHSNData:
         mock_socrata.return_value = mock_client
         mock_client.get.side_effect = [dataset["test_data"], []]
 
-        mock_client.get_metadata.return_value = {"rowsUpdatedAt": now}
+        mock_client.get_metadata.return_value = {"viewLastModified": now}
 
         today = pd.Timestamp.today().strftime("%Y%m%d")
         backup_dir = params["common"]["backup_dir"]
@@ -163,7 +163,7 @@ class TestPullNHSNData:
     def test_check_last_updated(self, mock_socrata, dataset, updatedAt, caplog):
         mock_client = MagicMock()
         mock_socrata.return_value = mock_client
-        mock_client.get_metadata.return_value = {"rowsUpdatedAt": updatedAt }
+        mock_client.get_metadata.return_value = {"viewLastModified": updatedAt }
         logger = get_structured_logger()
 
         check_last_updated(mock_client, dataset["id"], logger)

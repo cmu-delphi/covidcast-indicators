@@ -51,9 +51,8 @@ def check_last_updated(socrata_token, dataset_id, logger):
         return recently_updated_source
     # pylint: disable=W0703
     except Exception as e:
-        logger.info("error while processing socrata metadata", error=str(e))
-        raise e
-
+        logger.error("error while processing socrata metadata", error=str(e))
+        raise
 
 
 def pull_data(socrata_token: str, dataset_id: str, backup_dir: str, logger):

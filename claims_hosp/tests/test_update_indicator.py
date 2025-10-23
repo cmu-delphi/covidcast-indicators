@@ -52,6 +52,7 @@ class TestClaimsHospIndicatorUpdater:
             self.weekday,
             self.write_se,
             Config.signal_name,
+            "Covid_like",
             TEST_LOGGER
         )
         ## Test init
@@ -74,6 +75,7 @@ class TestClaimsHospIndicatorUpdater:
             self.weekday,
             self.write_se,
             Config.signal_name,
+            "Covid_like",
             TEST_LOGGER
         )
         updater.shift_dates()
@@ -93,6 +95,7 @@ class TestClaimsHospIndicatorUpdater:
                 self.weekday,
                 self.write_se,
                 Config.signal_name,
+                "Covid_like",
                 TEST_LOGGER
             )
 
@@ -115,6 +118,7 @@ class TestClaimsHospIndicatorUpdater:
             self.weekday,
             self.write_se,
             Config.signal_name,
+            "Covid_like",
             TEST_LOGGER
         )
 
@@ -186,7 +190,7 @@ class TestClaimsHospIndicatorUpdater:
 
     def test_write_to_csv_with_se_results(self):
         obfuscated_name = PARAMS["indicator"]["obfuscated_prefix"]
-        signal_name = obfuscated_name + "_" + Config.signal_weekday_name
+        signal_name = obfuscated_name + "_" + Config.signal_weekday_name["Covid_like"]
         updater = ClaimsHospIndicatorUpdater(
             "02-01-2020",
             "06-01-2020",
@@ -196,6 +200,7 @@ class TestClaimsHospIndicatorUpdater:
             True,
             True,
             signal_name,
+            "Covid_like",
             TEST_LOGGER
         )
 
@@ -248,6 +253,7 @@ class TestClaimsHospIndicatorUpdater:
             self.weekday,
             self.write_se,
             Config.signal_name,
+            "Covid_like",
             TEST_LOGGER
         )
 

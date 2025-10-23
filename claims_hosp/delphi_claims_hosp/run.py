@@ -123,7 +123,10 @@ def run_module(params):
 
             for numerator_name in ["Covid_like"]:#^H^H^H, "Flu1"]:
 
-                signal_name = Config.signal_weekday_name[numerator_name] if weekday else Config.signal_name[numerator_name]
+                signal_name = (
+                    Config.signal_weekday_name[numerator_name] if weekday
+                    else Config.signal_name[numerator_name]
+                )
                 if params["indicator"]["write_se"]:
                     assert params["indicator"]["obfuscated_prefix"] is not None, \
                         "supply obfuscated prefix in params.json"

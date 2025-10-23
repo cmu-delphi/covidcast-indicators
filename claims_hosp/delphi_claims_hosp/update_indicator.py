@@ -27,7 +27,8 @@ class ClaimsHospIndicatorUpdater:
     # pylint: disable=too-many-instance-attributes, too-many-arguments
     # all variables are used
 
-    def __init__(self, startdate, enddate, dropdate, geo, parallel, weekday, write_se, signal_name, numerator_name, logger):
+    def __init__(self, startdate, enddate, dropdate, geo, parallel, weekday, write_se,
+                 signal_name, numerator_name, logger):
         """
         Initialize updater for the claims-based hospitalization indicator.
 

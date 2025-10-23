@@ -37,7 +37,7 @@ class TestLoadData:
         assert "timestamp" in self.hrr_claims_data.index.names
         assert "timestamp" in self.fips_claims_data.index.names
 
-        expected_claims_columns = ["Denominator", "Covid_like"]
+        expected_claims_columns = ["Denominator", "Covid_like", "Flu1"]
         for col in expected_claims_columns:
             assert col in self.fips_claims_data.columns
             assert col in self.hrr_claims_data.columns

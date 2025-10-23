@@ -52,6 +52,7 @@ class TestClaimsHospIndicatorUpdater:
             self.weekday,
             self.write_se,
             Config.signal_name,
+            "Covid_like",
             TEST_LOGGER
         )
         ## Test init
@@ -74,6 +75,7 @@ class TestClaimsHospIndicatorUpdater:
             self.weekday,
             self.write_se,
             Config.signal_name,
+            "Covid_like",
             TEST_LOGGER
         )
         updater.shift_dates()
@@ -93,6 +95,7 @@ class TestClaimsHospIndicatorUpdater:
                 self.weekday,
                 self.write_se,
                 Config.signal_name,
+                "Covid_like",
                 TEST_LOGGER
             )
 
@@ -115,6 +118,7 @@ class TestClaimsHospIndicatorUpdater:
             self.weekday,
             self.write_se,
             Config.signal_name,
+            "Covid_like",
             TEST_LOGGER
         )
 
@@ -196,6 +200,7 @@ class TestClaimsHospIndicatorUpdater:
             True,
             True,
             signal_name,
+            "Covid_like",
             TEST_LOGGER
         )
 
@@ -248,6 +253,7 @@ class TestClaimsHospIndicatorUpdater:
             self.weekday,
             self.write_se,
             Config.signal_name,
+            "Covid_like",
             TEST_LOGGER
         )
 

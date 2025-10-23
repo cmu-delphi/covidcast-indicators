@@ -21,15 +21,15 @@ DROP_DATE = pd.to_datetime(PARAMS["indicator"]["drop_date"])
 class TestLoadData:
     fips_claims_data = load_claims_data(DATA_FILEPATH, DROP_DATE, "fips")
     hrr_claims_data = load_claims_data(DATA_FILEPATH, DROP_DATE, "hrr")
-    fips_data = load_data(DATA_FILEPATH, DROP_DATE, "fips")
-    hrr_data = load_data(DATA_FILEPATH, DROP_DATE, "hrr")
+    fips_data = load_data(DATA_FILEPATH, DROP_DATE, "fips", "Covid_like")
+    hrr_data = load_data(DATA_FILEPATH, DROP_DATE, "hrr", "Covid_like")
 
     def test_base_unit(self):
         with pytest.raises(AssertionError):
             load_claims_data(DATA_FILEPATH, DROP_DATE, "foo")
 
         with pytest.raises(AssertionError):
-            load_data(DATA_FILEPATH, DROP_DATE, "foo")
+            load_data(DATA_FILEPATH, DROP_DATE, "foo", "Covid_like")
 
     def test_claims_columns(self):
         assert "hrr" in self.hrr_claims_data.index.names

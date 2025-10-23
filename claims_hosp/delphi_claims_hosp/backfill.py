@@ -39,7 +39,8 @@ def store_backfill_file(claims_filepath, _end_date, backfill_dir):
     backfilldata.rename({"ServiceDate": "time_value",
                          "PatCountyFIPS": "fips",
                          "Denominator": "den",
-                         "Covid_like": "num"},
+                         "Covid_like": "num",
+                         "Flu1": "num_flu"},
                         axis=1, inplace=True)
     backfilldata = gmpr.add_geocode(backfilldata, from_code="fips", new_code="state_id",
                            from_col="fips", new_col="state_id")
@@ -49,7 +50,7 @@ def store_backfill_file(claims_filepath, _end_date, backfill_dir):
     else:
         _start_date = _end_date.replace(year=_end_date.year-1)
     selected_columns = ['time_value', 'fips', 'state_id',
-                        'den', 'num']
+                        'den', 'num', 'num_flu']
     backfilldata = backfilldata.loc[(backfilldata["time_value"] >= _start_date)
                                     & (~backfilldata["fips"].isnull()),
                                     selected_columns]

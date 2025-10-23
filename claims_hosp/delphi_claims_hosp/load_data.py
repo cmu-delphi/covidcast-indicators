@@ -52,7 +52,7 @@ def load_claims_data(claims_filepath, dropdate, base_geo):
 
     return claims_data
 
-def load_data(input_filepath, dropdate, base_geo):
+def load_data(input_filepath, dropdate, base_geo, numerator_name):
     """
     Load in claims data, and combine them.
 
@@ -71,7 +71,7 @@ def load_data(input_filepath, dropdate, base_geo):
 
     # rename numerator and denominator
     data.fillna(0, inplace=True)
-    data["num"] = data["Covid_like"]
+    data["num"] = data[numerator_name]
     data["den"] = data["Denominator"]
     data = data[['num', 'den']]
     data.reset_index(inplace=True)

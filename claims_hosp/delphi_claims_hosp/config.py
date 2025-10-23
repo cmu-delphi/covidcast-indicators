@@ -13,8 +13,14 @@ from datetime import datetime, timedelta
 class Config:
     """Static configuration variables."""
 
-    signal_name = "smoothed_covid19_from_claims"
-    signal_weekday_name = "smoothed_adj_covid19_from_claims"
+    signal_name = {
+        "Covid_like": "smoothed_covid19_from_claims",
+        "Flu1": "smoothed_flu_from_claims",
+    }
+    signal_weekday_name = {
+        "Covid_like": "smoothed_adj_covid19_from_claims",
+        "Flu1": "smoothed_adj_flu_from_claims",
+    }
 
     # max number of CPUs available for pool
     MAX_CPU_POOL = 10
@@ -30,7 +36,7 @@ class Config:
     DAY_SHIFT = timedelta(days=0)
 
     # data columns
-    CLAIMS_COUNT_COLS = ["Denominator", "Covid_like"]
+    CLAIMS_COUNT_COLS = ["Denominator", "Covid_like", "Flu1"]
     CLAIMS_DATE_COL = "ServiceDate"
     FIPS_COL = "fips"
     DATE_COL = "timestamp"
@@ -44,6 +50,7 @@ class Config:
         "PatCountyFIPS": str,
         "Denominator": float,
         "Covid_like": float,
+        "Flu1": float,
         "PatAgeGroup": str,
         "Pat HRR ID": str,
     }

@@ -28,7 +28,7 @@ class ClaimsHospIndicatorUpdater:
     # all variables are used
 
     def __init__(
-            self, startdate, enddate, dropdate, geo, parallel, weekday, write_se, signal_name, numerator_name, logger
+        self, startdate, enddate, dropdate, geo, parallel, weekday, write_se, signal_name, numerator_name, logger
     ):
         """
         Initialize updater for the claims-based hospitalization indicator.
@@ -53,7 +53,7 @@ class ClaimsHospIndicatorUpdater:
             weekday,
             write_se,
             signal_name,
-            numerator_name
+            numerator_name,
         )
 
         # init in shift_dates, declared here for pylint

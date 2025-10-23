@@ -121,15 +121,15 @@ def run_module(params):
                 logger.info("Starting no weekday adj", geo_type=geo)
 
 
-            for numerator_name in ["Covid_like"]:#^H^H^H, "Flu1"]:
+            for numerator_name in ["Covid_like"]:  # ^H^H^H^H^H^H, "Flu1"]:
 
                 signal_name = (
-                    Config.signal_weekday_name[numerator_name] if weekday
-                    else Config.signal_name[numerator_name]
+                    Config.signal_weekday_name[numerator_name] if weekday else Config.signal_name[numerator_name]
                 )
                 if params["indicator"]["write_se"]:
-                    assert params["indicator"]["obfuscated_prefix"] is not None, \
-                        "supply obfuscated prefix in params.json"
+                    assert (
+                        params["indicator"]["obfuscated_prefix"] is not None
+                    ), "supply obfuscated prefix in params.json"
                     signal_name = params["indicator"]["obfuscated_prefix"] + "_" + signal_name
 
                 logger.info("Updating signal name", signal=signal_name)

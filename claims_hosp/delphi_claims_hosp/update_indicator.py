@@ -27,8 +27,9 @@ class ClaimsHospIndicatorUpdater:
     # pylint: disable=too-many-instance-attributes, too-many-arguments
     # all variables are used
 
-    def __init__(self, startdate, enddate, dropdate, geo, parallel, weekday, write_se,
-                 signal_name, numerator_name, logger):
+    def __init__(
+            self, startdate, enddate, dropdate, geo, parallel, weekday, write_se, signal_name, numerator_name, logger
+    ):
         """
         Initialize updater for the claims-based hospitalization indicator.
 
@@ -46,8 +47,14 @@ class ClaimsHospIndicatorUpdater:
         self.startdate, self.enddate, self.dropdate = [pd.to_datetime(t) for t in
                                                        (startdate, enddate, dropdate)]
 
-        self.geo, self.parallel, self.weekday, self.write_se, self.signal_name, self.numerator_name = \
-            geo.lower(), parallel, weekday, write_se, signal_name, numerator_name
+        self.geo, self.parallel, self.weekday, self.write_se, self.signal_name, self.numerator_name = (
+            geo.lower(),
+            parallel,
+            weekday,
+            write_se,
+            signal_name,
+            numerator_name
+        )
 
         # init in shift_dates, declared here for pylint
         self.burnindate, self.fit_dates, self.burn_in_dates, self.output_dates = \

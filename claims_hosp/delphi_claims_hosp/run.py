@@ -121,7 +121,7 @@ def run_module(params):
                 logger.info("Starting no weekday adj", geo_type=geo)
 
 
-            for numerator_name in ["Covid_like"]:  # ^H^H^H^H^H^H, "Flu1"]:
+            for numerator_name in ["Covid_like", "Flu1"]:
 
                 signal_name = (
                     Config.signal_weekday_name[numerator_name] if weekday else Config.signal_name[numerator_name]

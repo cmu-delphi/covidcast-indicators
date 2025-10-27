@@ -120,30 +120,37 @@ def run_module(params):
             else:
                 logger.info("Starting no weekday adj", geo_type=geo)
 
-            signal_name = Config.signal_weekday_name if weekday else Config.signal_name
-            if params["indicator"]["write_se"]:
-                assert params["indicator"]["obfuscated_prefix"] is not None, \
-                    "supply obfuscated prefix in params.json"
-                signal_name = params["indicator"]["obfuscated_prefix"] + "_" + signal_name
 
-            logger.info("Updating signal name", signal=signal_name)
-            updater = ClaimsHospIndicatorUpdater(
-                startdate,
-                enddate,
-                dropdate,
-                geo,
-                params["indicator"]["parallel"],
-                weekday,
-                params["indicator"]["write_se"],
-                signal_name,
-                logger,
-            )
-            updater.update_indicator(
-                claims_file,
-                params["common"]["export_dir"],
-            )
-            max_dates.append(updater.output_dates[-1])
-            n_csv_export.append(len(updater.output_dates))
+            for numerator_name in ["Covid_like", "Flu1"]:
+
+                signal_name = (
+                    Config.signal_weekday_name[numerator_name] if weekday else Config.signal_name[numerator_name]
+                )
+                if params["indicator"]["write_se"]:
+                    assert (
+                        params["indicator"]["obfuscated_prefix"] is not None
+                    ), "supply obfuscated prefix in params.json"
+                    signal_name = params["indicator"]["obfuscated_prefix"] + "_" + signal_name
+
+                logger.info("Updating signal name", signal=signal_name)
+                updater = ClaimsHospIndicatorUpdater(
+                    startdate,
+                    enddate,
+                    dropdate,
+                    geo,
+                    params["indicator"]["parallel"],
+                    weekday,
+                    params["indicator"]["write_se"],
+                    signal_name,
+                    numerator_name,
+                    logger,
+                )
+                updater.update_indicator(
+                    claims_file,
+                    params["common"]["export_dir"],
+                )
+                max_dates.append(updater.output_dates[-1])
+                n_csv_export.append(len(updater.output_dates))
         logger.info("Finished updating", geo_type=geo)
 
     # Remove all the raw files

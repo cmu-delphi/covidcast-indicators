@@ -45,6 +45,7 @@ def add_needed_columns(df, col_names=None):
     df = add_default_nancodes(df)
     return df
 
+
 def logging(start_time, run_stats, logger):
     """Boilerplate making logs."""
     elapsed_time_in_seconds = round(time.time() - start_time, 2)
@@ -140,7 +141,7 @@ def run_module(params, logger=None):
             elif geo == "hsanci":
                 df = df[["hsa_nci_id", "val", "timestamp"]]
                 df = df[df["hsa_nci_id"] != "All"]
-                df = df.groupby(["hsa_nci_id", "timestamp"])['val'].min().reset_index()
+                df = df.groupby(["hsa_nci_id", "timestamp"])["val"].min().reset_index()
                 df = df.rename(columns={"hsa_nci_id": "geo_id"})
             else:
                 df = df[df["county"] != "All"]

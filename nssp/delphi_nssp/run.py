@@ -45,6 +45,7 @@ def add_needed_columns(df, col_names=None):
     df = add_default_nancodes(df)
     return df
 
+
 def logging(start_time, run_stats, logger):
     """Boilerplate making logs."""
     elapsed_time_in_seconds = round(time.time() - start_time, 2)

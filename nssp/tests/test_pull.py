@@ -78,7 +78,7 @@ class TestPullNSSPData:
             pd.testing.assert_frame_equal(expected_data, actual_data)
 
         # Check that Socrata client was initialized with correct arguments
-        mock_socrata.assert_called_once_with("data.cdc.gov", test_token)
+        mock_socrata.assert_called_once_with("data.cdc.gov", test_token, timeout=50)
 
         # Check that get method was called with correct arguments
         mock_client.get.assert_any_call("rdmq-nq56", limit=50000, offset=0)

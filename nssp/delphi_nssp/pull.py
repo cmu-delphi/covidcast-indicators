@@ -113,7 +113,7 @@ def pull_with_socrata_api(socrata_token: str, dataset_id: str):
     -------
     list of dictionaries, each representing a row in the dataset
     """
-    client = Socrata("data.cdc.gov", socrata_token)
+    client = Socrata("data.cdc.gov", socrata_token, timeout=50)  # set timeout to avoid read timed out error
     results = []
     offset = 0
     limit = 50000  # maximum limit allowed by SODA 2.0
@@ -177,5 +177,5 @@ def pull_nssp_data(
     # Format county fips to all be 5 digits with leading zeros
     df_ervisits["fips"] = df_ervisits["fips"].apply(lambda x: str(x).zfill(5) if str(x) != "0" else "0")
 
-    keep_columns = ["timestamp", "geography", "county", "fips"]
+    keep_columns = ["timestamp", "geography", "county", "fips", "hsa_nci_id"]
     return df_ervisits[SIGNALS + keep_columns]

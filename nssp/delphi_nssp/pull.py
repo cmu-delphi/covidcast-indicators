@@ -113,7 +113,7 @@ def pull_with_socrata_api(socrata_token: str, dataset_id: str):
     -------
     list of dictionaries, each representing a row in the dataset
     """
-    client = Socrata("data.cdc.gov", socrata_token)
+    client = Socrata("data.cdc.gov", socrata_token, timeout=50)  # set timeout to avoid read timed out error
     results = []
     offset = 0
     limit = 50000  # maximum limit allowed by SODA 2.0

@@ -141,10 +141,10 @@ def run_module(params, logger=None):
             elif geo == "hsa-nci":
                 df = df[["hsa_nci_id", "val", "timestamp"]]
                 df = df[df["hsa_nci_id"] != "All"]
-                # We use min() below just to pick a representative value, since all
-                # the values in a given HSA-NCI level are the same (the data is
-                # reported at the HSA-NCI level).
-                df = df.groupby(["hsa_nci_id", "timestamp"])["val"].min().reset_index()
+                # We use drop_duplicates below just to pick a representative value,
+                # since all the values in a given HSA-NCI level are the same
+                # (the data is reported at the HSA-NCI level).
+                df.drop_duplicates(["hsa_nci_id", "timestamp", "val"], inplace=True)
                 df = df.rename(columns={"hsa_nci_id": "geo_id"})
             else:
                 df = df[df["county"] != "All"]

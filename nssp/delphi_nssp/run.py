@@ -45,6 +45,7 @@ def add_needed_columns(df, col_names=None):
     df = add_default_nancodes(df)
     return df
 
+
 def logging(start_time, run_stats, logger):
     """Boilerplate making logs."""
     elapsed_time_in_seconds = round(time.time() - start_time, 2)
@@ -137,6 +138,14 @@ def run_module(params, logger=None):
                 df = geo_mapper.add_geocode(df, "state_code", "hhs", from_col="state_code", new_col="geo_id")
                 df = geo_mapper.aggregate_by_weighted_sum(df, "geo_id", "val", "timestamp", "population")
                 df = df.rename(columns={"weighted_val": "val"})
+            elif geo == "hsa_nci":
+                df = df[["hsa_nci_id", "val", "timestamp"]]
+                df = df[df["hsa_nci_id"] != "All"]
+                # We use drop_duplicates below just to pick a representative value,
+                # since all the values in a given HSA-NCI level are the same
+                # (the data is reported at the HSA-NCI level).
+                df.drop_duplicates(["hsa_nci_id", "timestamp", "val"], inplace=True)
+                df = df.rename(columns={"hsa_nci_id": "geo_id"})
             else:
                 df = df[df["county"] != "All"]
                 df["geo_id"] = df["fips"]

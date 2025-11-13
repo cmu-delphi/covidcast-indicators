@@ -9,6 +9,7 @@ GEOS = [
     "state",
     "county",
     "hhs",
+    "hsa_nci",
 ]
 
 SIGNALS_MAP = {

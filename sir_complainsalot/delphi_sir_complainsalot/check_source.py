@@ -8,6 +8,7 @@ import covidcast
 import pandas as pd
 
 covidcast.covidcast._ASYNC_CALL = True  # pylint: disable=protected-access
+covidcast.covidcast.VALID_GEO_TYPES.add("hsa_nci")  # workaround to use new geo_type w/ legacy client
 
 @dataclass
 class Complaint:

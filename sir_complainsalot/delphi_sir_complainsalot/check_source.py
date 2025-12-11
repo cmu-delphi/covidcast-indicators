@@ -73,7 +73,7 @@ def check_source(data_source, meta, params, grace, logger):  # pylint: disable=t
             end_day=datetime.now().strftime("%Y-%m-%d"),
             geo_type=row["geo_type"])
 
-        latest_data = covidcast.signal(
+        latest_data = covidcast.covidcast.signal(
             data_source, row["signal"],
             start_day=datetime.now() - timedelta(days = 14),
             end_day=datetime.now(),

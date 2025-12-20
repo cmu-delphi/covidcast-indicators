@@ -7,9 +7,8 @@ Modified:
  - 2020-04-30: Aaron Rumack (add megacounty code)
  - 2020-05-06: Aaron and Maria (weekday effects/other adjustments)
 """
-
 # standard packages
-from datetime import timedelta
+from datetime import datetime, timedelta
 from multiprocessing import Pool, cpu_count
 
 # third party
@@ -24,57 +23,21 @@ from .geo_maps import GeoMaps
 from .sensor import DoctorVisitsSensor
 
 
-def write_to_csv(output_df: pd.DataFrame, geo_level, se, out_name, logger, output_path="."):
-    """Write sensor values to csv.
-
-    Args:
-      output_dict: dictionary containing sensor rates, se, unique dates, and unique geo_id
-      se: boolean to write out standard errors, if true, use an obfuscated name
-      out_name: name of the output file
-      output_path: outfile path to write the csv (default is current directory)
-    """
-    if se:
-        logger.info("WARNING: WRITING SEs", filename=out_name)
-
-    out_n = 0
-    for d in set(output_df["date"]):
-        filename = "%s/%s_%s_%s.csv" % (output_path,
-                                        (d + Config.DAY_SHIFT).strftime("%Y%m%d"),
-                                        geo_level,
-                                        out_name)
-        single_date_df = output_df[output_df["date"] == d]
-        with open(filename, "w") as outfile:
-            outfile.write("geo_id,val,se,direction,sample_size\n")
-
-            for line in single_date_df.itertuples():
-                geo_id = line.geo_id
-                sensor = 100 * line.val # report percentages
-                se_val = 100 * line.se
-                assert not np.isnan(sensor), "sensor value is nan, check pipeline"
-                assert sensor < 90, f"strangely high percentage {geo_id, sensor}"
-                if not np.isnan(se_val):
-                    assert se_val < 5, f"standard error suspiciously high! investigate {geo_id}"
-
-                if se:
-                    assert sensor > 0 and se_val > 0, "p=0, std_err=0 invalid"
-                    outfile.write(
-                        "%s,%f,%s,%s,%s\n" % (geo_id, sensor, se_val, "NA", "NA"))
-                else:
-                    # for privacy reasons we will not report the standard error
-                    outfile.write(
-                        "%s,%f,%s,%s,%s\n" % (geo_id, sensor, "NA", "NA", "NA"))
-                out_n += 1
-    logger.debug("Wrote rows", num_rows=out_n, geo_type=geo_level)
-
-
 def update_sensor(
-        filepath, startdate, enddate, dropdate, geo, parallel,
-        weekday, se, logger
+    data: pd.DataFrame,
+    startdate: datetime,
+    enddate: datetime,
+    dropdate: datetime,
+    geo: str,
+    parallel: bool,
+    weekday: bool,
+    se: bool,
+    logger,
 ):
     """Generate sensor values.
 
     Args:
-      filepath: path to the aggregated doctor-visits data
+      data: dataframe of the cleaned claims file
       startdate: first sensor date (YYYY-mm-dd)
       enddate: last sensor date (YYYY-mm-dd)
       dropdate: data drop date (YYYY-mm-dd)
@@ -84,41 +47,9 @@ def update_sensor(
       se: boolean to write out standard errors, if true, use an obfuscated name
       logger: the structured logger
     """
-    # as of 2020-05-11, input file expected to have 10 columns
-    # id cols: ServiceDate, PatCountyFIPS, PatAgeGroup, Pat HRR ID/Pat HRR Name
-    # value cols: Denominator, Covid_like, Flu_like, Flu1, Mixed
-    data = pd.read_csv(
-        filepath,
-        usecols=Config.FILT_COLS,
-        dtype=Config.DTYPES,
-        parse_dates=[Config.DATE_COL],
-    )
-    assert (
-            np.sum(data.duplicated(subset=Config.ID_COLS)) == 0
-    ), "Duplicated data! Check the input file"
-
-    # drop HRR columns - unused for now since we assign HRRs by FIPS
-    data.drop(columns=Config.HRR_COLS, inplace=True)
-    data.dropna(inplace=True)  # drop rows with any missing entries
-
-    # aggregate age groups (so data is unique by service date and FIPS)
-    data = data.groupby([Config.DATE_COL, Config.GEO_COL]).sum(numeric_only=True).reset_index()
-    assert np.sum(data.duplicated()) == 0, "Duplicates after age group aggregation"
-    assert (data[Config.COUNT_COLS] >= 0).all().all(), "Counts must be nonnegative"
-
-    ## collect dates
-    # restrict to training start and end date
     drange = lambda s, e: np.array([s + timedelta(days=x) for x in range((e - s).days)])
-    startdate = pd.to_datetime(startdate) - Config.DAY_SHIFT
-    burnindate = startdate - Config.DAY_SHIFT
-    enddate = pd.to_datetime(enddate)
-    dropdate = pd.to_datetime(dropdate)
-    assert startdate > Config.FIRST_DATA_DATE, "Start date <= first day of data"
-    assert startdate < enddate, "Start date >= end date"
-    assert enddate <= dropdate, "End date > drop date"
-    data = data[(data[Config.DATE_COL] >= Config.FIRST_DATA_DATE) & \
-                (data[Config.DATE_COL] < dropdate)]
     fit_dates = drange(Config.FIRST_DATA_DATE, dropdate)
+    burnindate = startdate - Config.DAY_SHIFT
     burn_in_dates = drange(burnindate, dropdate)
     sensor_dates = drange(startdate, enddate)
     # The ordering of sensor dates corresponds to the order of burn-in dates

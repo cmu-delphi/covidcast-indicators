@@ -3,6 +3,7 @@ from setuptools import find_packages
 
 required = [
     "numpy",
+    "osqp==1.1.0",
     "pandas",
     "pydocstyle",
     "pytest",

@@ -273,12 +273,12 @@ E.g. which geo values are allowed, should every valid date be present in some wa
 
 In an ideal case, the data exists at one of our [already covered geos](https://cmu-delphi.github.io/delphi-epidata/api/covidcast_geography.html):
 
-* Zip code
+* Zip code (often zip5 or zip3.  Zip codes are optimized for mail delivery, not epidemic or jurisfictional boundaries.  But unlike counties, zip3 tends to be somewhat proportional to population sizes).
 * FIPS (state+county codes, string leftpadded to 5 digits with 0)
-* MSA (metro statistical area, int)
-* HRR (hospital referral region, int)
+* MSA (metro statistical area, a cluster of counties.  int)
+* HRR (hospital referral region, a cluster of counties.  int)
 * State: state_code (string, leftpadded to 2 digits with 0) or state_id (string)
-* HHS ([Department of Health and Human Services-defined regions](https://www.hhs.gov/about/agencies/iea/regional-offices/index.html))
+* HHS ([Department of Health and Human Services-defined regions](https://www.hhs.gov/about/agencies/iea/regional-offices/index.html)) (this is referred to in many places in our system as "HHS", but ought be called "HHS Regions").
 * Nation
 
 If you want to map from one of these to a higher level, the [`delphi_utils.geomapper`](https://github.com/cmu-delphi/covidcast-indicators/blob/6912077acba97e835aff7d0cd3d64309a1a9241d/_delphi_utils_python/delphi_utils/geomap.py) utility covers most cases.

@@ -9,6 +9,7 @@ required = [
     "imap-tools",
     "numpy",
     "openpyxl",
+    "osqp==1.1.0",
     "pandas",
     "pyarrow",
     "pydocstyle",

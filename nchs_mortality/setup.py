@@ -9,6 +9,7 @@ required = [
     "freezegun",
     "moto~=4.2.14",
     "numpy",
+    "osqp==1.1.0",
     "pandas",
     "pydocstyle",
     "pylint==2.8.3",

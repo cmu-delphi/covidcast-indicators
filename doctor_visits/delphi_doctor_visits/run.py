@@ -13,11 +13,12 @@ from pathlib import Path
 
 from delphi_utils import get_structured_logger
 
-# first party
-from .update_sensor import update_sensor, write_to_csv
 from .download_claims_ftp_files import download
-from .modify_claims_drops import modify_and_write
 from .get_latest_claims_name import get_latest_filename
+from .process_data import csv_to_df, write_to_csv
+
+# first party
+from .update_sensor import update_sensor
 
 
 def run_module(params, logger=None):  # pylint: disable=too-many-statements
@@ -63,9 +64,6 @@ def run_module(params, logger=None):  # pylint: disable=too-many-statements
     # find the latest files (these have timestamps)
     claims_file = get_latest_filename(params["indicator"]["input_dir"], logger, issue_date=issue_date)
 
-    # modify data
-    modify_and_write(claims_file, logger)
-
     ## get end date from input file
     # the filename is expected to be in the format:
     # "EDI_AGG_OUTPATIENT_DDMMYYYY_HHMM{timezone}.csv.gz"
@@ -106,6 +104,15 @@ def run_module(params, logger=None):  # pylint: disable=too-many-statements
     ## geographies
     geos = ["state", "msa", "hrr", "county", "hhs", "nation"]
 
+    claims_df = csv_to_df(claims_file, startdate_dt, enddate_dt, dropdate_dt, logger)
+
+    ## print out other vars
+    logger.info("outpath:\t\t%s", export_dir)
+    logger.info("parallel:\t\t%s", params["indicator"]["parallel"])
+    logger.info("weekday:\t\t%s", params["indicator"]["weekday"])
+    logger.info("write se:\t\t%s", se)
+    logger.info("obfuscated prefix:\t%s", prefix)
+
     max_dates = []
     n_csv_export = []
     ## start generating
@@ -116,10 +123,10 @@ def run_module(params, logger=None):  # pylint: disable=too-many-statements
             else:
                 logger.info("Starting with no adj", geo_type=geo)
             sensor = update_sensor(
-                filepath=claims_file,
-                startdate=startdate,
-                enddate=enddate,
-                dropdate=dropdate,
+                data=claims_df,
+                startdate=startdate_dt,
+                enddate=enddate_dt,
+                dropdate=dropdate_dt,
                 geo=geo,
                 parallel=params["indicator"]["parallel"],
                 weekday=weekday,
@@ -129,13 +136,8 @@ def run_module(params, logger=None):  # pylint: disable=too-many-statements
             if sensor is None:
                 logger.error("No sensors calculated, no output will be produced")
                 continue
-            # write out results
-            out_name = "smoothed_adj_cli" if weekday else "smoothed_cli"
-            if params["indicator"]["se"]:
-                assert prefix is not None, "template has no obfuscated prefix"
-                out_name = prefix + "_" + out_name
 
-            write_to_csv(sensor, geo, se, out_name, logger, export_dir)
+            write_to_csv(sensor, prefix, geo, weekday, se, logger, export_dir)
             max_dates.append(sensor.date.max())
             n_csv_export.append(sensor.date.unique().shape[0])
             logger.debug("Wrote files", export_dir=export_dir)

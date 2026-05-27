@@ -72,8 +72,8 @@ jobs:
           base: prod
           title: Release covidcast-indicators ${{ steps.indicators.outputs.version }}
           labels: chore
-          reviewers: aysim319
-          assignees: aysim319
+          reviewers: ''
+          assignees: ''
           body: |
             Releasing:
             * covidcast-indicators ${{ steps.indicators.outputs.version }}

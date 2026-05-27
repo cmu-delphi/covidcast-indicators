@@ -1,4 +1,5 @@
 # third party
+import gzip
 import pandas as pd
 import pytest
 
@@ -79,3 +80,37 @@ class TestLoadData:
         assert self.fips_data.isna().sum().sum() == 0
         assert self.fips_data["num"].sum() == self.fips_claims_data["Covid_like"].sum()
         assert self.fips_data["den"].sum() == self.fips_claims_data["Denominator"].sum()
+
+
+class TestLoadDataDropsEmptyGeo:
+    def test_drops_empty_fips(self, tmp_path):
+        src = "test_data/SYNEDI_AGG_INPATIENT_11062020_1451CDT.csv.gz"
+        data = pd.read_csv(src, dtype=Config.CLAIMS_DTYPES)
+
+        empty_rows = data.head(3).copy()
+        empty_rows["PatCountyFIPS"] = ""
+        empty_rows["Pat HRR ID"] = ""
+        augmented = pd.concat([data, empty_rows], ignore_index=True)
+
+        out_path = tmp_path / "augmented.csv.gz"
+        with gzip.open(out_path, "wt") as fh:
+            augmented.to_csv(fh, index=False)
+
+        result = load_claims_data(str(out_path), pd.to_datetime("2020-06-11"), "fips")
+        assert "" not in result.index.get_level_values("fips")
+
+    def test_drops_empty_hrr(self, tmp_path):
+        src = "test_data/SYNEDI_AGG_INPATIENT_11062020_1451CDT.csv.gz"
+        data = pd.read_csv(src, dtype=Config.CLAIMS_DTYPES)
+
+        empty_rows = data.head(3).copy()
+        empty_rows["PatCountyFIPS"] = ""
+        empty_rows["Pat HRR ID"] = ""
+        augmented = pd.concat([data, empty_rows], ignore_index=True)
+
+        out_path = tmp_path / "augmented.csv.gz"
+        with gzip.open(out_path, "wt") as fh:
+            augmented.to_csv(fh, index=False)
+
+        result = load_claims_data(str(out_path), pd.to_datetime("2020-06-11"), "hrr")
+        assert "" not in result.index.get_level_values("hrr")

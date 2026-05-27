@@ -100,6 +100,7 @@ def update_sensor(
     # drop HRR columns - unused for now since we assign HRRs by FIPS
     data.drop(columns=Config.HRR_COLS, inplace=True)
     data.dropna(inplace=True)  # drop rows with any missing entries
+    data = data[data[Config.GEO_COL] != ""]  # drop rows with no location info
 
     # aggregate age groups (so data is unique by service date and FIPS)
     data = data.groupby([Config.DATE_COL, Config.GEO_COL]).sum(numeric_only=True).reset_index()

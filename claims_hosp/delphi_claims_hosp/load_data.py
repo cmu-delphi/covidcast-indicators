@@ -42,6 +42,8 @@ def load_claims_data(claims_filepath, dropdate, base_geo):
         (claims_data[Config.DATE_COL] < dropdate)
         ]
 
+    claims_data = claims_data[claims_data[base_geo] != ""]  # drop rows with no location info
+
     assert (
         (claims_data[Config.CLAIMS_COUNT_COLS] >= 0).all().all()
     ), "Claims counts must be nonnegative"

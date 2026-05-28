@@ -37,6 +37,18 @@
         "pct_ed_visits_combined",
         "smoothed_pct_ed_visits_combined"
       ]
+    },
+    "beta_nssp": {
+      "max_age":19,
+      "maintainers": []
+    },
+    "beta_health_system_partners": {
+      "max_age":5,
+      "maintainers": []
+    },
+    "beta_nssp_github": {
+      "max_age":5,
+      "maintainers": []
     }
   }
 }

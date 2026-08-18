@@ -17,3 +17,11 @@ class TestGetLatestFileName:
         
         with pytest.raises(AssertionError):
             get_latest_filename(dir_path, self.logger)
+
+    def test_get_latest_claims_name_skips_misnamed(self, tmp_path):
+        # a drop misnamed by the old MMDDYYYY flip shouldn't take down the run;
+        # reaching the "no drop for today" assert means it was skipped
+        (tmp_path / "EDI_AGG_INPATIENT_26200807_1415CDT.csv.gz").touch()
+
+        with pytest.raises(AssertionError):
+            get_latest_filename(str(tmp_path), self.logger)

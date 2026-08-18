@@ -20,3 +20,11 @@ class TestGetLatestFileName:
     def test_get_latest_claims_name_with_issue_date(self):
         result = get_latest_filename(self.dir_path, self.logger, issue_date="2020-02-07")
         assert str(result) == f"{self.dir_path}/SYNEDI_AGG_OUTPATIENT_07022020_1455CDT.csv.gz"
+
+    def test_get_latest_claims_name_skips_misnamed(self, tmp_path):
+        # a drop misnamed by the old MMDDYYYY flip shouldn't take down the run;
+        # reaching the "no drop for" assert means it was skipped
+        (tmp_path / "EDI_AGG_OUTPATIENT_26200807_1415CDT.csv.gz").touch()
+
+        with pytest.raises(AssertionError):
+            get_latest_filename(str(tmp_path), self.logger)

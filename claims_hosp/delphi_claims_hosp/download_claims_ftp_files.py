@@ -27,15 +27,14 @@ def print_callback(filename, logger, bytes_so_far, bytes_total, progress_chunks)
         # Remove progress chunk, so it is not logged again
         progress_chunks.remove(rough_percent_transferred)
 
-OLD_FILENAME_TIMESTAMP = re.compile(
-    r".*EDI_AGG_INPATIENT_[0-9]_(?P<ymd>[0-9]*)_(?P<hm>[0-9]*)[^0-9]*")
-NEW_FILENAME_TIMESTAMP = re.compile(r".*EDI_AGG_INPATIENT_(?P<ymd>[0-9]*)_(?P<hm>[0-9]*)[^0-9]*")
+# the chunk number (old style drops) and the underscore between the date and
+# the time (e.g. EDI_AGG_INPATIENT_060620260000CDT.csv.gz) are both optional
+FILENAME_TIMESTAMP = re.compile(
+    r".*EDI_AGG_INPATIENT_(?:[0-9]_)?(?P<ymd>[0-9]{8})_?(?P<hm>[0-9]{4})[^0-9]*")
+
 def get_timestamp(name):
     """Get the reference date in datetime format."""
-    if len(name.split("_")) > 5:
-        m = OLD_FILENAME_TIMESTAMP.match(name)
-    else:
-        m = NEW_FILENAME_TIMESTAMP.match(name)
+    m = FILENAME_TIMESTAMP.match(name)
     if not m:
         return datetime.datetime(1900, 1, 1)
     try:
@@ -44,13 +43,30 @@ def get_timestamp(name):
         return datetime.datetime.strptime(''.join(m.groups()), "%m%d%Y%H%M")
 
 def change_date_format(name):
-    """Flip date from YYYYMMDD to MMDDYYYY."""
+    """Flip the date in a raw filename to DDMMYYYY, separating the date and the time.
+
+    Drops carry the date as either YYYYMMDD or MMDDYYYY, and may omit the
+    underscore between the date and the time, e.g.
+    EDI_AGG_INPATIENT_060620260000CDT.csv.gz. Downloaded files are always named
+    EDI_AGG_INPATIENT_DDMMYYYY_HHMM{timezone}.csv.gz.
+    """
     split_name = name.split("_")
     date = split_name[3]
-    flip_date = date[6:] + date[4:6] + date[:4]
+    # chunked drops carry the chunk number in this field instead of the date;
+    # as before, those names are left alone
+    if len(date) < 8 or not date[:8].isdigit():
+        return name
+    # MMDD read as a year is always before 1241
+    if int(date[:4]) > 1240:
+        flip_date = date[6:8] + date[4:6] + date[:4]
+    else:
+        flip_date = date[2:4] + date[:2] + date[4:8]
     split_name[3] = flip_date
-    name = '_'.join(split_name)
-    return name
+    time_and_suffix = date[8:]
+    if time_and_suffix:
+        # the date and the time were not separated
+        split_name.insert(4, time_and_suffix)
+    return "_".join(split_name)
 
 
 def download(ftp_credentials, out_path, logger):

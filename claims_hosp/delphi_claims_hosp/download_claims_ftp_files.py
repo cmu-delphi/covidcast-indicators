@@ -27,30 +27,40 @@ def print_callback(filename, logger, bytes_so_far, bytes_total, progress_chunks)
         # Remove progress chunk, so it is not logged again
         progress_chunks.remove(rough_percent_transferred)
 
-OLD_FILENAME_TIMESTAMP = re.compile(
-    r".*EDI_AGG_INPATIENT_[0-9]_(?P<ymd>[0-9]*)_(?P<hm>[0-9]*)[^0-9]*")
-NEW_FILENAME_TIMESTAMP = re.compile(r".*EDI_AGG_INPATIENT_(?P<ymd>[0-9]*)_?(?P<hm>[0-9]*)[^0-9]*")
+EPOCH = datetime.datetime(1900, 1, 1)
+
+# a drop filename is <source>_AGG_INPATIENT_[<chunk>_]<date>[_]<time><tz><ext>, where:
+# - the chunk number is only present on chunked drops
+# - the date is 8 digits, either YYYYMMDD or MMDDYYYY depending on the drop
+# - the separator between date and time is optional (dropped by the source in 2026)
+FILENAME_TIMESTAMP = re.compile(
+    r"^(?P<prefix>.*EDI_AGG_INPATIENT)_(?P<chunk>[0-9]_)?"
+    r"(?P<ymd>[0-9]{8})_?(?P<hm>[0-9]{4})(?P<suffix>[^0-9].*)?$")
+
 def get_timestamp(name):
     """Get the reference date in datetime format."""
-    if len(name.split("_")) > 5:
-        m = OLD_FILENAME_TIMESTAMP.match(name)
-    else:
-        m = NEW_FILENAME_TIMESTAMP.match(name)
+    m = FILENAME_TIMESTAMP.match(name)
     if not m:
-        return datetime.datetime(1900, 1, 1)
-    try:
-        return datetime.datetime.strptime(''.join(m.groups()), "%Y%m%d%H%M")
-    except ValueError:
-        return datetime.datetime.strptime(''.join(m.groups()), "%m%d%Y%H%M")
+        return EPOCH
+    stamp = m.group("ymd") + m.group("hm")
+    # MMDD as a year is always before 1231, so YYYYMMDD is the only reading that can parse
+    for date_format in ("%Y%m%d%H%M", "%m%d%Y%H%M"):
+        try:
+            return datetime.datetime.strptime(stamp, date_format)
+        except ValueError:
+            continue
+    return EPOCH
 
 def change_date_format(name):
-    """Flip date from YYYYMMDD to MMDDYYYY."""
-    split_name = name.split("_")
-    date = split_name[3]
-    flip_date = date[6:] + date[4:6] + date[:4]
-    split_name[3] = flip_date
-    name = '_'.join(split_name)
-    return name
+    """Rewrite the date field to DDMMYYYY, the layout get_latest_filename expects."""
+    m = FILENAME_TIMESTAMP.match(name)
+    timestamp = get_timestamp(name)
+    if m is None or timestamp == EPOCH:
+        return name
+    prefix = m.group("prefix")
+    chunk = m.group("chunk") or ""
+    suffix = m.group("suffix") or ""
+    return f"{prefix}_{chunk}{timestamp:%d%m%Y}_{timestamp:%H%M}{suffix}"
 
 
 def download(ftp_credentials, out_path, logger):

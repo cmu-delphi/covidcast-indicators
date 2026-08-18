@@ -29,7 +29,7 @@ def print_callback(filename, logger, bytes_so_far, bytes_total, progress_chunks)
 
 OLD_FILENAME_TIMESTAMP = re.compile(
     r".*EDI_AGG_INPATIENT_[0-9]_(?P<ymd>[0-9]*)_(?P<hm>[0-9]*)[^0-9]*")
-NEW_FILENAME_TIMESTAMP = re.compile(r".*EDI_AGG_INPATIENT_(?P<ymd>[0-9]*)_(?P<hm>[0-9]*)[^0-9]*")
+NEW_FILENAME_TIMESTAMP = re.compile(r".*EDI_AGG_INPATIENT_(?P<ymd>[0-9]*)_?(?P<hm>[0-9]*)[^0-9]*")
 def get_timestamp(name):
     """Get the reference date in datetime format."""
     if len(name.split("_")) > 5:

@@ -18,12 +18,10 @@ def get_latest_filename(dir_path, logger):
             ddmmyyyy = split_name[3]
             hhmm = ''.join(filter(str.isdigit, split_name[4]))
             try:
-                timestamp = datetime.datetime.strptime(''.join([ddmmyyyy, hhmm]),
-                                                       "%d%m%Y%H%M")
+                timestamp = datetime.datetime.strptime("".join([ddmmyyyy, hhmm]), "%d%m%Y%H%M")
             except ValueError:
                 # a misnamed drop shouldn't take down the whole run
-                logger.warning("Skipping file with unparseable timestamp",
-                               filename=file.name)
+                logger.warning("Skipping file with unparseable timestamp", filename=file.name)
                 continue
             if timestamp > latest_timestamp:
                 if timestamp <= current_date:

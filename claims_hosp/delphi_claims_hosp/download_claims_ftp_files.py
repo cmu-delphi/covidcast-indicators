@@ -27,10 +27,11 @@ def print_callback(filename, logger, bytes_so_far, bytes_total, progress_chunks)
         # Remove progress chunk, so it is not logged again
         progress_chunks.remove(rough_percent_transferred)
 
+
 # the chunk number (old style drops) and the underscore between the date and
 # the time (e.g. EDI_AGG_INPATIENT_060620260000CDT.csv.gz) are both optional
-FILENAME_TIMESTAMP = re.compile(
-    r".*EDI_AGG_INPATIENT_(?:[0-9]_)?(?P<ymd>[0-9]{8})_?(?P<hm>[0-9]{4})[^0-9]*")
+FILENAME_TIMESTAMP = re.compile(r".*EDI_AGG_INPATIENT_(?:[0-9]_)?(?P<ymd>[0-9]{8})_?(?P<hm>[0-9]{4})[^0-9]*")
+
 
 def get_timestamp(name):
     """Get the reference date in datetime format."""

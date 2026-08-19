@@ -114,3 +114,19 @@ class TestLoadDataDropsEmptyGeo:
 
         result = load_claims_data(str(out_path), pd.to_datetime("2020-06-11"), "hrr")
         assert "" not in result.index.get_level_values("hrr")
+
+    def test_unusable_service_dates_dropped(self, tmp_path):
+        # drops carry blank service dates, which make read_csv's parse_dates
+        # hand back strings for the whole column instead of dates
+        with gzip.open(DATA_FILEPATH, "rt") as f:
+            header, row = next(f), next(f)
+        date_idx = header.strip().split(",").index(CONFIG.CLAIMS_DATE_COL)
+        blank = row.split(",")
+        blank[date_idx] = ""
+        drop = tmp_path / "SYNEDI_AGG_INPATIENT_11062020_1451CDT.csv.gz"
+        with gzip.open(drop, "wt") as f:
+            f.writelines([header, row, ",".join(blank)])
+
+        data = load_claims_data(str(drop), DROP_DATE, "fips")
+
+        assert data.index.get_level_values(CONFIG.DATE_COL).dtype.kind == "M"

@@ -91,8 +91,16 @@ def update_sensor(
         filepath,
         usecols=Config.FILT_COLS,
         dtype=Config.DTYPES,
-        parse_dates=[Config.DATE_COL],
     )
+    # Drops carry blank service dates and sentinels outside the datetime64 range
+    # (e.g. 1753-01-01), which make read_csv's parse_dates give up and hand back
+    # the raw strings for the whole column. Parse it ourselves so those rows turn
+    # into NaT and get dropped, instead of comparing str to datetime below.
+    data[Config.DATE_COL] = pd.to_datetime(data[Config.DATE_COL], errors="coerce")
+    unusable = data[Config.DATE_COL].isna().sum()
+    if unusable:
+        logger.info("Dropping rows with unusable service date", num_rows=int(unusable))
+        data = data.dropna(subset=[Config.DATE_COL])
     assert (
             np.sum(data.duplicated(subset=Config.ID_COLS)) == 0
     ), "Duplicated data! Check the input file"

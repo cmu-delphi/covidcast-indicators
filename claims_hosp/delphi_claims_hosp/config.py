@@ -38,6 +38,7 @@ class Config:
     # data columns
     CLAIMS_COUNT_COLS = ["Denominator", "Covid_like", "Flu1"]
     CLAIMS_DATE_COL = "ServiceDate"
+    CLAIMS_DATE_FORMAT = "%Y-%m-%d"  # drops carry ISO service dates
     FIPS_COL = "fips"
     DATE_COL = "timestamp"
     AGE_COL = "age_group"

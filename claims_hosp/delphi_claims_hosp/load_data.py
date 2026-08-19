@@ -34,8 +34,12 @@ def load_claims_data(claims_filepath, dropdate, base_geo):
     # Drops carry blank service dates and sentinels outside the datetime64 range
     # (e.g. 1753-01-01), which make read_csv's parse_dates give up and hand back
     # the raw strings for the whole column. Parse it ourselves so those rows turn
-    # into NaT and are dropped by the date range filter below.
-    claims_data[Config.CLAIMS_DATE_COL] = pd.to_datetime(claims_data[Config.CLAIMS_DATE_COL], errors="coerce")
+    # into NaT and are dropped by the date range filter below. The format is
+    # pinned so an unexpected one costs a column of NaT rather than silently
+    # falling back to per-element dateutil parsing over the whole drop.
+    claims_data[Config.CLAIMS_DATE_COL] = pd.to_datetime(
+        claims_data[Config.CLAIMS_DATE_COL], format=Config.CLAIMS_DATE_FORMAT, errors="coerce"
+    )
 
     # standardize naming
     claims_data.rename(columns=Config.CLAIMS_RENAME_COLS, inplace=True)

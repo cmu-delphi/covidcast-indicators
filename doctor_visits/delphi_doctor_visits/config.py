@@ -21,6 +21,7 @@ class Config:
     FLU1_COL = ["Flu1"]
     COUNT_COLS = CLI_COLS + FLU1_COL + ["Denominator"]
     DATE_COL = "ServiceDate"
+    DATE_FORMAT = "%Y-%m-%d"  # drops carry ISO service dates
     GEO_COL = "PatCountyFIPS"
     AGE_COL = "PatAgeGroup"
     HRR_COLS = ["Pat HRR Name", "Pat HRR ID"]

@@ -1,10 +1,12 @@
 import os
 import shutil
+from datetime import datetime
 from unittest.mock import MagicMock, patch as mock_patch
 
 import pytest
 
-from delphi_claims_hosp.patch import good_patch_config, patch
+from delphi_claims_hosp.patch import (good_patch_config, log_patch_size,
+                                      output_dates_per_issue, patch)
 
 from conftest import TEST_DIR
 
@@ -37,6 +39,35 @@ class TestGoodPatchConfig:
     def test_start_issue_after_end_issue(self, params_w_patch):
         params_w_patch["patch"]["end_issue"] = "2020-06-10"
         assert not good_patch_config(params_w_patch, MagicMock())
+
+
+class TestPatchSize:
+
+    def test_window_from_n_backfill_days(self, params_w_patch):
+        # start_date null, so the window is n_backfill_days deep
+        assert output_dates_per_issue(params_w_patch, datetime(2026, 9, 8)) == 70
+
+    def test_start_date_overrides_the_window(self, params_w_patch):
+        # what the prod template sets; run.py applies it after n_backfill_days
+        params_w_patch["indicator"]["start_date"] = "2020-02-01"
+        assert output_dates_per_issue(params_w_patch, datetime(2026, 9, 8)) == 2408
+
+    def test_reports_size_without_warning(self, params_w_patch):
+        logger = MagicMock()
+        log_patch_size(params_w_patch, datetime(2026, 9, 8), datetime(2026, 9, 10), logger)
+
+        # 1 geo x 1 weekday setting x 2 numerators x 70 dates x 3 issues
+        assert logger.info.call_args.kwargs == {
+            "issue_count": 3, "dates_per_issue": 70, "estimated_csv_count": 420}
+        logger.warning.assert_not_called()
+
+    def test_warns_when_start_date_widens_the_window(self, params_w_patch):
+        params_w_patch["indicator"]["start_date"] = "2020-02-01"
+        logger = MagicMock()
+        log_patch_size(params_w_patch, datetime(2026, 9, 8), datetime(2026, 9, 10), logger)
+
+        logger.warning.assert_called_once()
+        assert logger.warning.call_args.kwargs["estimated_csv_count"] > 14000
 
 
 class TestPatchModule:

@@ -107,6 +107,63 @@ def good_patch_config(params, logger):
     return False
 
 
+def output_dates_per_issue(params, issue_date):
+    """
+    Count the time_values one issue will emit, mirroring run.py's window arithmetic.
+
+    run.py derives the window from n_backfill_days, then replaces its start with
+    indicator.start_date whenever that is non-null. A drop arrives on its issue
+    date, so dropdate is the issue date here.
+
+    params: Dict[str, Any]
+    issue_date: datetime
+    """
+    enddate = issue_date - timedelta(days=params["indicator"]["n_waiting_days"])
+    start_date = params["indicator"].get("start_date")
+    if start_date is not None:
+        startdate = datetime.strptime(start_date, "%Y-%m-%d")
+    else:
+        startdate = enddate - timedelta(days=params["indicator"]["n_backfill_days"])
+    return (enddate - startdate).days
+
+
+def log_patch_size(params, start_issue, end_issue, logger):
+    """
+    Report how much output the patch will produce before it starts producing it.
+
+    A patch writes one csv per (time_value, geo, signal) per issue, so a widened
+    output window multiplies across every issue in the range. Warn when
+    indicator.start_date is what widened it, since copying the prod params is
+    the easy way to end up there by accident.
+
+    params: Dict[str, Any]
+    start_issue: datetime
+    end_issue: datetime
+    logger: structlog.BoundLogger
+    """
+    issue_count = (end_issue - start_issue).days + 1
+    first, last = (output_dates_per_issue(params, issue) for issue in (start_issue, end_issue))
+    # run.py generates both numerators for each requested geo and weekday setting
+    signals_per_date = len(params["indicator"]["geos"]) * len(params["indicator"]["weekday"]) * 2
+    csv_count = (first + last) // 2 * signals_per_date * issue_count
+
+    logger.info(
+        "Patch size",
+        issue_count=issue_count,
+        dates_per_issue=first if first == last else f"{first}-{last}",
+        estimated_csv_count=csv_count,
+    )
+
+    if params["indicator"].get("start_date") is not None:
+        logger.warning(
+            "indicator.start_date overrides n_backfill_days, widening every issue's output window",
+            start_date=params["indicator"]["start_date"],
+            n_backfill_days=params["indicator"]["n_backfill_days"],
+            dates_per_issue=first if first == last else f"{first}-{last}",
+            estimated_csv_count=csv_count,
+        )
+
+
 def patch():
     """
     Run the hospital-admissions indicator for a range of issue dates.
@@ -132,6 +189,7 @@ def patch():
         end_issue=end_issue.strftime("%Y-%m-%d"),
     )
 
+    log_patch_size(params, start_issue, end_issue, logger)
     makedirs(params["patch"]["patch_dir"], exist_ok=True)
 
     current_issue = start_issue

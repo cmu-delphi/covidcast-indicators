@@ -49,9 +49,11 @@ env/bin/python -m delphi_claims_hosp.patch
 An issue is a full re-run of the indicator against the drop that arrived that
 day, not one day of data: each issue re-emits the same window of `time_value`s
 the daily run would have. That window is `n_backfill_days` deep unless
-`indicator.start_date` is set, which overrides it and can make it much deeper —
-check what your `params.json` uses before patching a wide range, since the CSV
-count per issue scales with it.
+`indicator.start_date` is set, which overrides it and can make it much deeper.
+The CSV count per issue scales with that window, so before the run starts the
+patch logs the issue count, the dates per issue and the estimated CSV count, and
+warns when `start_date` is what widened the window. Read that line before
+walking away from a wide patch.
 
 Each issue pulls the drop that arrived on its issue date from the ftp server, so
 patching needs working ftp credentials. How far back the server keeps drops is a

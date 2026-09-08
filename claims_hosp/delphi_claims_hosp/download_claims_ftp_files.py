@@ -70,9 +70,12 @@ def change_date_format(name):
     return "_".join(split_name)
 
 
-def download(ftp_credentials, out_path, logger):
+def download(ftp_credentials, out_path, logger, issue_date=None):
     """Pull the latest raw files."""
-    current_time = datetime.datetime.now()
+    if issue_date:
+        current_time = datetime.datetime.strptime(issue_date, "%Y-%m-%d").replace(hour=23, minute=59, second=59)
+    else:
+        current_time = datetime.datetime.now()
     seconds_in_day = 24 * 60 * 60
     logger.info("Starting download")
 

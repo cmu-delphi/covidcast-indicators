@@ -20,10 +20,11 @@ from .download_claims_ftp_files import download
 from .modify_claims_drops import modify_and_write
 from .get_latest_claims_name import get_latest_filename
 from .update_indicator import ClaimsHospIndicatorUpdater
-from .backfill import (store_backfill_file, merge_backfill_file)
+from .backfill import (store_backfill_file, merge_backfill_file,
+                       merge_existing_backfill_files)
 
 
-def run_module(params):
+def run_module(params, logger=None):
     """
     Generate updated claims-based hospitalization indicator values.
 
@@ -52,21 +53,36 @@ def run_module(params):
             - "weekday": list of bool, which weekday adjustments to perform. For each value in the
                 list, signals will be generated with weekday adjustments (True) or without
                 adjustments (False).
+        - "patch": Only used for patching data, remove if not patching.
+                   Check out patch.py and README for more details on how to run patches.
+            - "start_issue": str, YYYY-MM-DD format, first issue date
+            - "end_issue": str, YYYY-MM-DD format, last issue date
+            - "patch_dir": str, directory to write all issues output
     """
     start_time = time.time()
-    logger = get_structured_logger(
-        __name__, filename=params["common"].get("log_filename"),
-        log_exceptions=params["common"].get("log_exceptions", True))
+    custom_run = params["common"].get("custom_run", False)
+    issue_date = params.get("patch", {}).get("current_issue", None)
+    if not logger:
+        logger = get_structured_logger(
+            __name__, filename=params["common"].get("log_filename"),
+            log_exceptions=params["common"].get("log_exceptions", True))
 
-    # pull latest data
+    # pull latest data; a patch pulls the drop that arrived on the issue date.
+    # Drops already staged in input_dir are skipped by the downloader.
     download(params["indicator"]["ftp_credentials"],
-             params["indicator"]["input_dir"], logger)
+             params["indicator"]["input_dir"], logger, issue_date=issue_date)
 
-    # aggregate data
-    modify_and_write(params["indicator"]["input_dir"], logger)
+    if custom_run and issue_date:
+        # find this issue's drop and aggregate only that one; a patch leaves
+        # earlier issues' drops in input_dir, and they don't need redoing
+        claims_file = get_latest_filename(params["indicator"]["input_dir"], logger, issue_date=issue_date)
+        modify_and_write(params["indicator"]["input_dir"], logger, filepaths=[claims_file])
+    else:
+        # aggregate data
+        modify_and_write(params["indicator"]["input_dir"], logger)
 
-    # find the latest files (these have timestamps)
-    claims_file = get_latest_filename(params["indicator"]["input_dir"], logger)
+        # find the latest files (these have timestamps)
+        claims_file = get_latest_filename(params["indicator"]["input_dir"], logger)
 
     # handle range of estimates to produce
     # filename expected to have format: EDI_AGG_INPATIENT_DDMMYYYY_HHMM{timezone}.csv.gz
@@ -94,8 +110,15 @@ def run_module(params):
     if params["indicator"].get("generate_backfill_files", True):
         backfill_dir = params["indicator"]["backfill_dir"]
         backfill_merge_day = params["indicator"]["backfill_merge_day"]
-        merge_backfill_file(backfill_dir, backfill_merge_day, datetime.today())
-        store_backfill_file(claims_file, dropdate_dt, backfill_dir)
+        if custom_run and issue_date:
+            # the days around this issue are usually merged already, so fold the
+            # patched issue back into the merged file instead of waiting for the
+            # next scheduled merge
+            backfill_file = store_backfill_file(claims_file, dropdate_dt, backfill_dir, logger)
+            merge_existing_backfill_files(backfill_dir, backfill_file, dropdate_dt, logger)
+        else:
+            merge_backfill_file(backfill_dir, backfill_merge_day, datetime.today(), logger)
+            store_backfill_file(claims_file, dropdate_dt, backfill_dir, logger)
 
     # print out information
     logger.info("Loaded params",
@@ -153,11 +176,15 @@ def run_module(params):
                 n_csv_export.append(len(updater.output_dates))
         logger.info("Finished updating", geo_type=geo)
 
-    # Remove all the raw files
-    for fn in os.listdir(params["indicator"]["input_dir"]):
-        if ".csv.gz" in fn:
-            os.remove(f'{params["indicator"]["input_dir"]}/{fn}')
-    logger.info('Remove all the raw files.')
+    # Remove all the raw files. A patch run reads its drops out of the archive in
+    # input_dir and still needs them for the remaining issues, so leave them alone.
+    if custom_run and issue_date:
+        logger.info("Patch run, keeping the raw files")
+    else:
+        for fn in os.listdir(params["indicator"]["input_dir"]):
+            if ".csv.gz" in fn:
+                os.remove(f'{params["indicator"]["input_dir"]}/{fn}')
+        logger.info('Remove all the raw files.')
 
     elapsed_time_in_seconds = round(time.time() - start_time, 2)
     min_max_date = min(max_dates)

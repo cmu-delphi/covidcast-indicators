@@ -5,23 +5,24 @@ This module should contain a function called `run_module`, that is executed
 when the module is run with `python -m delphi_claims_hosp`.
 """
 
+import os
+
 # standard packages
 import time
-import os
 from datetime import datetime, timedelta
 from pathlib import Path
 
 # third party
 from delphi_utils import get_structured_logger
 
+from .backfill import merge_backfill_file, merge_existing_backfill_files, store_backfill_file
+
 # first party
 from .config import Config
 from .download_claims_ftp_files import download
-from .modify_claims_drops import modify_and_write
 from .get_latest_claims_name import get_latest_filename
+from .modify_claims_drops import modify_and_write
 from .update_indicator import ClaimsHospIndicatorUpdater
-from .backfill import (store_backfill_file, merge_backfill_file,
-                       merge_existing_backfill_files)
 
 
 def run_module(params, logger=None):
@@ -64,13 +65,14 @@ def run_module(params, logger=None):
     issue_date = params.get("patch", {}).get("current_issue", None)
     if not logger:
         logger = get_structured_logger(
-            __name__, filename=params["common"].get("log_filename"),
-            log_exceptions=params["common"].get("log_exceptions", True))
+            __name__,
+            filename=params["common"].get("log_filename"),
+            log_exceptions=params["common"].get("log_exceptions", True),
+        )
 
     # pull latest data; a patch pulls the drop that arrived on the issue date.
     # Drops already staged in input_dir are skipped by the downloader.
-    download(params["indicator"]["ftp_credentials"],
-             params["indicator"]["input_dir"], logger, issue_date=issue_date)
+    download(params["indicator"]["ftp_credentials"], params["indicator"]["input_dir"], logger, issue_date=issue_date)
 
     if custom_run and issue_date:
         # find this issue's drop and aggregate only that one; a patch leaves
@@ -184,7 +186,7 @@ def run_module(params, logger=None):
         for fn in os.listdir(params["indicator"]["input_dir"]):
             if ".csv.gz" in fn:
                 os.remove(f'{params["indicator"]["input_dir"]}/{fn}')
-        logger.info('Remove all the raw files.')
+        logger.info("Remove all the raw files.")
 
     elapsed_time_in_seconds = round(time.time() - start_time, 2)
     min_max_date = min(max_dates)

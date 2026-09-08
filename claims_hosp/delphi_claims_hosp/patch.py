@@ -2,8 +2,9 @@
 This module is used for patching data in the delphi_claims_hosp package.
 
 An issue is a whole re-run of the indicator against the drop that arrived that
-day, not one day of data: each issue re-emits n_backfill_days of time_values,
-exactly as the daily run would have.
+day, not one day of data: each issue re-emits the same window of time_values the
+daily run would have. That window is n_backfill_days deep unless
+indicator.start_date is set, which overrides it and can make it much deeper.
 
 Each issue pulls the drop that arrived on its issue date from the ftp server, so
 patching needs working ftp credentials. How far back the server keeps drops is a
@@ -148,9 +149,7 @@ def patch():
             run_module(params, logger)
         except NoDropError:
             # one issue with no drop shouldn't take down the rest of the patch
-            logger.warning(
-                "No drop available for this issue, skipping", issue_date=current_issue.strftime("%Y-%m-%d")
-            )
+            logger.warning("No drop available for this issue, skipping", issue_date=current_issue.strftime("%Y-%m-%d"))
             rmtree(current_issue_dir)
             rmdir(path.dirname(current_issue_dir))
         current_issue += timedelta(days=1)

@@ -5,6 +5,7 @@ Author: Jingjing Tang
 Created: 2022-08-03
 
 """
+
 import glob
 import os
 import re
@@ -14,7 +15,6 @@ from pathlib import Path
 # third party
 import pandas as pd
 from delphi_utils import GeoMapper
-
 
 from .config import Config
 
@@ -84,8 +84,8 @@ def store_backfill_file(claims_filepath, _end_date, backfill_dir, logger):
     logger.info("Stored source data in parquet", filename=path)
     return path
 
-def merge_backfill_file(backfill_dir, backfill_merge_day, today, logger,
-                        test_mode=False, check_nd=25):
+
+def merge_backfill_file(backfill_dir, backfill_merge_day, today, logger, test_mode=False, check_nd=25):
     """
     Merge ~4 weeks' backfill data into one file.
 
@@ -129,14 +129,15 @@ def merge_backfill_file(backfill_dir, backfill_merge_day, today, logger,
         logger.info("Not a merge day, skipping merge")
         return
     if (today - earliest_date).days <= check_nd:
-        logger.info("Not enough unmerged days, skipping merge",
-                    earliest_date=earliest_date.strftime("%Y-%m-%d"))
+        logger.info("Not enough unmerged days, skipping merge", earliest_date=earliest_date.strftime("%Y-%m-%d"))
         return
 
     # Start to merge files
-    logger.info("Merging backfill files",
-                start_date=earliest_date.strftime("%Y-%m-%d"),
-                end_date=latest_date.strftime("%Y-%m-%d"))
+    logger.info(
+        "Merging backfill files",
+        start_date=earliest_date.strftime("%Y-%m-%d"),
+        end_date=latest_date.strftime("%Y-%m-%d"),
+    )
     pdList = []
     for fn in new_files:
         df = pd.read_parquet(fn, engine='pyarrow')
@@ -161,7 +162,8 @@ def merged_filename(start_date, end_date):
     """Build the name of the merged backfill file spanning the given dates."""
     return "claims_hosp_from_%s_to_%s.parquet" % (
         datetime.strftime(start_date, "%Y%m%d"),
-        datetime.strftime(end_date, "%Y%m%d"))
+        datetime.strftime(end_date, "%Y%m%d"),
+    )
 
 
 def get_merged_file_for_date(backfill_dir, issue_date):
@@ -190,9 +192,9 @@ def get_merged_file_for_date(backfill_dir, issue_date):
         match = MERGED_FILENAME.match(filepath.name)
         if not match:
             continue
-        spans.append((filepath,
-                      datetime.strptime(match.group(1), "%Y%m%d"),
-                      datetime.strptime(match.group(2), "%Y%m%d")))
+        spans.append(
+            (filepath, datetime.strptime(match.group(1), "%Y%m%d"), datetime.strptime(match.group(2), "%Y%m%d"))
+        )
 
     for filepath, start_date, end_date in spans:
         if start_date <= issue_date <= end_date:
@@ -233,15 +235,18 @@ def merge_existing_backfill_files(backfill_dir, backfill_file, issue_date, logge
     file_path, new_file_path = get_merged_file_for_date(backfill_dir, issue_date)
 
     if file_path is None:
-        logger.info("No merged backfill file covers this issue date; "
-                    "leaving the daily file for the next scheduled merge",
-                    issue_date=issue_date.strftime("%Y-%m-%d"))
+        logger.info(
+            "No merged backfill file covers this issue date; " "leaving the daily file for the next scheduled merge",
+            issue_date=issue_date.strftime("%Y-%m-%d"),
+        )
         return
 
-    logger.info("Adding patched issue to merged backfill file",
-                issue_date=issue_date.strftime("%Y-%m-%d"),
-                filename=str(backfill_file),
-                merged_filename=str(file_path))
+    logger.info(
+        "Adding patched issue to merged backfill file",
+        issue_date=issue_date.strftime("%Y-%m-%d"),
+        filename=str(backfill_file),
+        merged_filename=str(file_path),
+    )
 
     merge_file = file_path.parent / f"{file_path.stem}_after_merge.parquet"
     try:
@@ -250,15 +255,21 @@ def merge_existing_backfill_files(backfill_dir, backfill_file, issue_date, logge
         issue_str = datetime.strftime(issue_date, "%Y-%m-%d")
         already_present = existing_df["issue_date"] == issue_str
         if already_present.any():
-            logger.info("Replacing rows already present for this issue date",
-                        issue_date=issue_str, row_count=int(already_present.sum()))
+            logger.info(
+                "Replacing rows already present for this issue date",
+                issue_date=issue_str,
+                row_count=int(already_present.sum()),
+            )
             existing_df = existing_df[~already_present]
         merged_df = pd.concat([existing_df, df]).sort_values(["time_value", "fips"])
         merged_df.to_parquet(merge_file, index=False)
     except Exception as e:  # pylint: disable=broad-except
         # leave the daily file in place; the patched data is still recoverable
-        logger.error("Failed to merge patched issue into existing backfill file",
-                     issue_date=issue_date.strftime("%Y-%m-%d"), msg=str(e))
+        logger.error(
+            "Failed to merge patched issue into existing backfill file",
+            issue_date=issue_date.strftime("%Y-%m-%d"),
+            msg=str(e),
+        )
         if os.path.exists(merge_file):
             os.remove(merge_file)
         return

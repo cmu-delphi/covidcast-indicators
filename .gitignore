@@ -135,3 +135,5 @@ vault_backup*
 # testing_utils
 testing_utils/cache
 testing_utils/*.csv
+# Do not commit patch output
+**/patch/issue_*/

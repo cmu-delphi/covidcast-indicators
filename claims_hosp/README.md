@@ -36,6 +36,36 @@ params file with the following:
 make clean
 ```
 
+## Running Patches
+
+To regenerate data for a range of issue dates in batch issue format, turn on the
+`custom_run` flag and add a `patch` section to `params.json` as described in
+`patch.py`, then run
+
+```
+env/bin/python -m delphi_claims_hosp.patch
+```
+
+An issue is a full re-run of the indicator against the drop that arrived that
+day, not one day of data: each issue re-emits the same window of `time_value`s
+the daily run would have. That window is `n_backfill_days` deep unless
+`indicator.start_date` is set, which overrides it and can make it much deeper.
+The CSV count per issue scales with that window, so before the run starts the
+patch logs the issue count, the dates per issue and the estimated CSV count, and
+warns when `start_date` is what widened the window. Read that line before
+walking away from a wide patch.
+
+Each issue pulls the drop that arrived on its issue date from the ftp server, so
+patching needs working ftp credentials. How far back the server keeps drops is a
+property of the server; for older issues, stage the drops in
+`indicator.input_dir` yourself and the downloader will skip over them. Issue
+dates with no drop available are logged and skipped.
+
+A patch leaves `input_dir` populated when it finishes rather than clearing it the
+way a daily run does, since later issues in the range still need the earlier
+drops. Point patches at their own `input_dir` to keep them out of the staging
+directory the daily run uses.
+
 ## Testing the code
 
 To run static tests of the code style, run the following command:
@@ -67,6 +97,10 @@ should not include critical sub-routines.
 ## Code tour
 
 - run.py: reads params.json to generated updated signal, run daily
+- patch.py: runs the indicator over a range of issue dates, for backfilling
+    missed issues
+- backfill.py: stores daily backfill files and merges them; also folds a patched
+    issue back into the merged file that covers its date
 - update_indicator.py: 
     ClaimsHospIndicatorUpdater: reads the data, makes transformations, writes output
 - indicator.py:

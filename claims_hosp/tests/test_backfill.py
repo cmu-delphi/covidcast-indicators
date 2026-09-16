@@ -201,11 +201,32 @@ class TestMergeExistingBackfillFiles:
         merged_fn = self.make_merged_file(datetime(2020, 6, 11), datetime(2020, 6, 14))
 
         issue_date = datetime(2020, 7, 1)
-        backfill_file = store_backfill_file(DATA_FILEPATH, issue_date, backfill_dir, TEST_LOGGER)
-        merge_existing_backfill_files(backfill_dir, backfill_file, issue_date, TEST_LOGGER)
+        logger = Mock()
+        backfill_file = store_backfill_file(DATA_FILEPATH, issue_date, backfill_dir, logger)
+        merge_existing_backfill_files(backfill_dir, backfill_file, issue_date, logger)
 
         # nothing covers this date, so the daily file is left for the weekly merge
         assert os.path.exists(backfill_file)
         assert self.parquet_files() == sorted(
             [merged_fn, "claims_hosp_as_of_20200701.parquet"])
+        # the issue is newer than everything merged, so the next merge is unaffected
+        logger.warning.assert_not_called()
+        self.cleanup()
+
+    def test_merge_existing_backfill_files_warns_on_gap(self):
+        self.cleanup()
+        merged_fn = self.make_merged_file(datetime(2020, 6, 11), datetime(2020, 6, 14))
+
+        # older than everything merged, and not abutting: leaving the daily file here
+        # would drag the next weekly merge's span start back to May
+        issue_date = datetime(2020, 5, 1)
+        logger = Mock()
+        backfill_file = store_backfill_file(DATA_FILEPATH, issue_date, backfill_dir, logger)
+        merge_existing_backfill_files(backfill_dir, backfill_file, issue_date, logger)
+
+        assert os.path.exists(backfill_file)
+        assert self.parquet_files() == sorted(
+            [merged_fn, "claims_hosp_as_of_20200501.parquet"])
+        logger.warning.assert_called_once()
+        assert logger.warning.call_args.kwargs["latest_merged_end"] == "2020-06-14"
         self.cleanup()

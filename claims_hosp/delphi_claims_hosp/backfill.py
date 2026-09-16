@@ -166,6 +166,31 @@ def merged_filename(start_date, end_date):
     )
 
 
+def merged_spans(backfill_dir):
+    """
+    List the issue-date span of every merged backfill file, oldest first.
+
+    Parameters
+    ----------
+    backfill_dir : str
+        specified path to store backfill files.
+
+    Returns
+    -------
+    list of (Path, datetime, datetime): the file, and the first and last issue
+    date it covers.
+    """
+    spans = []
+    for filepath in sorted(Path(backfill_dir).glob("claims_hosp_from_*_to_*.parquet")):
+        match = MERGED_FILENAME.match(filepath.name)
+        if not match:
+            continue
+        spans.append(
+            (filepath, datetime.strptime(match.group(1), "%Y%m%d"), datetime.strptime(match.group(2), "%Y%m%d"))
+        )
+    return spans
+
+
 def get_merged_file_for_date(backfill_dir, issue_date):
     """
     Find the merged backfill file that a patched issue date belongs in.
@@ -187,14 +212,7 @@ def get_merged_file_for_date(backfill_dir, issue_date):
     (Path, Path) of the merged file to update and the name it should carry
     afterwards, or (None, None) if no merged file covers or abuts the date.
     """
-    spans = []
-    for filepath in sorted(Path(backfill_dir).glob("claims_hosp_from_*_to_*.parquet")):
-        match = MERGED_FILENAME.match(filepath.name)
-        if not match:
-            continue
-        spans.append(
-            (filepath, datetime.strptime(match.group(1), "%Y%m%d"), datetime.strptime(match.group(2), "%Y%m%d"))
-        )
+    spans = merged_spans(backfill_dir)
 
     for filepath, start_date, end_date in spans:
         if start_date <= issue_date <= end_date:
@@ -235,10 +253,25 @@ def merge_existing_backfill_files(backfill_dir, backfill_file, issue_date, logge
     file_path, new_file_path = get_merged_file_for_date(backfill_dir, issue_date)
 
     if file_path is None:
-        logger.info(
-            "No merged backfill file covers this issue date; " "leaving the daily file for the next scheduled merge",
-            issue_date=issue_date.strftime("%Y-%m-%d"),
-        )
+        # A daily file left in backfill_dir sets the start of the next weekly merge,
+        # since merge_backfill_file takes the earliest unmerged date as its span start.
+        # That is harmless for a recent issue and wrong for an old one: the merge fires
+        # early and names a span overlapping the merged files already on disk.
+        latest_merged_end = max((end_date for _, _, end_date in merged_spans(backfill_dir)), default=None)
+        if latest_merged_end is not None and issue_date < latest_merged_end:
+            logger.warning(
+                "Patched issue falls in a gap between merged backfill files. Leaving the daily "
+                "file would pull the next weekly merge back to this issue date and produce a "
+                "span overlapping the existing merged files; merge it by hand instead.",
+                issue_date=issue_date.strftime("%Y-%m-%d"),
+                filename=str(backfill_file),
+                latest_merged_end=latest_merged_end.strftime("%Y-%m-%d"),
+            )
+        else:
+            logger.info(
+                "No merged backfill file covers this issue date; leaving the daily file for the next scheduled merge",
+                issue_date=issue_date.strftime("%Y-%m-%d"),
+            )
         return
 
     logger.info(

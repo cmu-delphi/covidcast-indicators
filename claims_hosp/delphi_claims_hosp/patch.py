@@ -53,7 +53,6 @@ its date. See merge_existing_backfill_files in backfill.py.
 import sys
 from datetime import datetime, timedelta
 from os import makedirs, path, rmdir
-from shutil import rmtree
 
 from delphi_utils import get_structured_logger, read_params
 
@@ -208,8 +207,19 @@ def patch():
         except NoDropError:
             # one issue with no drop shouldn't take down the rest of the patch
             logger.warning("No drop available for this issue, skipping", issue_date=current_issue.strftime("%Y-%m-%d"))
-            rmtree(current_issue_dir)
-            rmdir(path.dirname(current_issue_dir))
+            # NoDropError is raised before anything is exported, so this directory
+            # holds either nothing or output from an earlier run of the same issue.
+            # rmdir clears the first case and refuses the second, so a re-run over a
+            # date whose drop has since aged off the server keeps its earlier output.
+            try:
+                rmdir(current_issue_dir)
+                rmdir(path.dirname(current_issue_dir))
+            except OSError:
+                logger.warning(
+                    "Keeping existing output for this issue",
+                    issue_date=current_issue.strftime("%Y-%m-%d"),
+                    issue_dir=current_issue_dir,
+                )
         current_issue += timedelta(days=1)
 
     logger.info("Finished patching")

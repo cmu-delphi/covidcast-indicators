@@ -116,6 +116,34 @@ class TestPatchModule:
 
         shutil.rmtree(params_w_patch["patch"]["patch_dir"])
 
+    def test_patch_keeps_existing_output_when_drop_is_gone(self, params_w_patch):
+        # 06-12 was patched successfully once, but its drop has since aged off
+        # the server, so re-running the same range raises NoDropError for it.
+        # The earlier output is still good and still the only copy, so keep it.
+        params_w_patch["patch"]["start_issue"] = "2020-06-12"
+        params_w_patch["patch"]["end_issue"] = "2020-06-12"
+        issue_dir = f"{TEST_DIR}/patch_dir/issue_20200612/hospital-admissions"
+        os.makedirs(issue_dir, exist_ok=True)
+        earlier_output = f"{issue_dir}/20200609_state_smoothed_covid19_from_claims.csv"
+        with open(earlier_output, "w") as f:
+            f.write("geo_id,val,se,sample_size\n")
+
+        with mock_patch("delphi_claims_hosp.patch.get_structured_logger") as mock_logger, \
+                mock_patch("delphi_claims_hosp.patch.read_params") as mock_read_params, \
+                mock_patch("delphi_claims_hosp.run.download"):
+            mock_read_params.return_value = params_w_patch
+            logger = mock_logger.return_value
+
+            patch()
+
+            assert os.path.exists(earlier_output)
+            assert [call.args[0] for call in logger.warning.call_args_list] == [
+                "No drop available for this issue, skipping",
+                "Keeping existing output for this issue",
+            ]
+
+        shutil.rmtree(params_w_patch["patch"]["patch_dir"])
+
     def test_patch_exits_on_bad_config(self, params):
         with mock_patch("delphi_claims_hosp.patch.get_structured_logger"), \
                 mock_patch("delphi_claims_hosp.patch.read_params") as mock_read_params:

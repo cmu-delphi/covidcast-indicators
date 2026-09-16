@@ -59,12 +59,16 @@ Each issue pulls the drop that arrived on its issue date from the ftp server, so
 patching needs working ftp credentials. How far back the server keeps drops is a
 property of the server; for older issues, stage the drops in
 `indicator.input_dir` yourself and the downloader will skip over them. Issue
-dates with no drop available are logged and skipped.
+dates with no drop available are logged and skipped; issues that fail for any
+other reason are logged and the patch carries on, then exits non-zero with the
+failed dates listed.
 
-A patch leaves `input_dir` populated when it finishes rather than clearing it the
-way a daily run does, since later issues in the range still need the earlier
-drops. Point patches at their own `input_dir` to keep them out of the staging
-directory the daily run uses.
+Give a patch its own `indicator.input_dir`, for two reasons. Aggregating a drop
+rewrites it in place, so pointing `input_dir` at the raw archive edits the
+archive. And a patch leaves `input_dir` populated when it finishes rather than
+clearing it the way a daily run does, since later issues in the range still need
+the earlier drops — so sharing the daily run's staging directory means the next
+daily run deletes them.
 
 ## Testing the code
 

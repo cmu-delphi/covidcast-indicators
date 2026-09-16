@@ -10,9 +10,13 @@ Each issue pulls the drop that arrived on its issue date from the ftp server, so
 patching needs working ftp credentials. How far back the server keeps drops is a
 property of the server; for older issues, stage the drops
 (EDI_AGG_INPATIENT_DDMMYYYY_HHMM{timezone}.csv.gz) in "input_dir" yourself and
-the downloader will skip over them. A patch leaves "input_dir" populated when it
-finishes rather than clearing it the way a daily run does, so give patches their
-own "input_dir" if you don't want the drops mixed in with the daily staging dir.
+the downloader will skip over them.
+
+Give a patch its own "input_dir". Aggregating a drop rewrites it in place, so
+pointing "input_dir" at the raw archive edits the archive; and a patch leaves
+"input_dir" populated when it finishes rather than clearing it the way a daily
+run does, so sharing the daily staging directory means the next daily run
+deletes the drops the rest of the range still needs.
 
 Issue dates with no drop available are logged and skipped.
 
@@ -24,7 +28,7 @@ To use this module, configure params.json like so:
     ...
   },
   "indicator": {
-    "input_dir": "/common/covidcast/archive/hospital-admissions",
+    "input_dir": "/covidcast-indicators/claims_hosp/AprilPatch/retrieve_files",
     ...
   },
   "patch": {

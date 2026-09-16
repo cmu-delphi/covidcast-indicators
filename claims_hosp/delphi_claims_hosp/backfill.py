@@ -274,8 +274,13 @@ def merge_existing_backfill_files(backfill_dir, backfill_file, issue_date, logge
             os.remove(merge_file)
         return
 
-    os.remove(file_path)
+    # Swap the new file in before dropping the old one. os.replace is atomic, so
+    # a crash here leaves a merged file under one name or the other. Removing
+    # first can leave only ..._after_merge.parquet, which MERGED_FILENAME ignores,
+    # losing the span outright.
     os.replace(merge_file, new_file_path)
+    if new_file_path != file_path:
+        os.remove(file_path)
     os.remove(backfill_file)
     logger.info("Merged patched issue into backfill file", merged_filename=str(new_file_path))
     return

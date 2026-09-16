@@ -72,10 +72,8 @@ def change_date_format(name):
 
 def download(ftp_credentials, out_path, logger, issue_date=None):
     """Pull the latest raw files."""
-    if issue_date:
-        current_time = datetime.datetime.strptime(issue_date, "%Y-%m-%d").replace(hour=23, minute=59, second=59)
-    else:
-        current_time = datetime.datetime.now()
+    issue_day = datetime.datetime.strptime(issue_date, "%Y-%m-%d").date() if issue_date else None
+    current_time = datetime.datetime.now()
     seconds_in_day = 24 * 60 * 60
     logger.info("Starting download")
 
@@ -95,8 +93,15 @@ def download(ftp_credentials, out_path, logger, issue_date=None):
     files_to_download = []
     for fileattr in sftp.listdir_attr():
         file_time = get_timestamp(fileattr.filename)
-        time_diff_to_current_time = current_time - file_time
-        if 0 < time_diff_to_current_time.total_seconds() <= seconds_in_day:
+        if issue_day is not None:
+            # a patch wants the drops that arrived on the issue date itself. Say so
+            # directly, rather than leaving it to fall out of a rolling window anchored
+            # at 23:59:59 on that date, which only holds because drop timestamps have
+            # minute precision.
+            wanted = file_time.date() == issue_day
+        else:
+            wanted = 0 < (current_time - file_time).total_seconds() <= seconds_in_day
+        if wanted:
             files_to_download.append(fileattr.filename)
             logger.info("File to download", filename=fileattr.filename)
 

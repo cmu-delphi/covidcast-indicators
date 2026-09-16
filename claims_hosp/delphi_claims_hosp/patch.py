@@ -192,6 +192,8 @@ def patch():
     makedirs(params["patch"]["patch_dir"], exist_ok=True)
 
     current_issue = start_issue
+    skipped_issues = []
+    failed_issues = []
     while current_issue <= end_issue:
         logger.info("Running issue", issue_date=current_issue.strftime("%Y-%m-%d"))
 
@@ -206,6 +208,7 @@ def patch():
             run_module(params, logger)
         except NoDropError:
             # one issue with no drop shouldn't take down the rest of the patch
+            skipped_issues.append(current_issue.strftime("%Y-%m-%d"))
             logger.warning("No drop available for this issue, skipping", issue_date=current_issue.strftime("%Y-%m-%d"))
             # NoDropError is raised before anything is exported, so this directory
             # holds either nothing or output from an earlier run of the same issue.
@@ -220,9 +223,31 @@ def patch():
                     issue_date=current_issue.strftime("%Y-%m-%d"),
                     issue_dir=current_issue_dir,
                 )
+        except Exception as e:  # pylint: disable=broad-except
+            # a duplicated drop or a dropped ftp connection shouldn't cost the whole
+            # range. The output written so far is left in place rather than deleted,
+            # since it may predate this run -- but it is partial, so keep acquisition
+            # away from it until someone has looked.
+            failed_issues.append(current_issue.strftime("%Y-%m-%d"))
+            logger.error(
+                "Issue failed, continuing with the rest of the range. Its output directory may "
+                "hold a partial issue; check it before handing the patch to acquisition.",
+                issue_date=current_issue.strftime("%Y-%m-%d"),
+                issue_dir=current_issue_dir,
+                msg=str(e),
+            )
         current_issue += timedelta(days=1)
 
-    logger.info("Finished patching")
+    logger.info(
+        "Finished patching",
+        issue_count=(end_issue - start_issue).days + 1,
+        skipped_issue_count=len(skipped_issues),
+        failed_issue_count=len(failed_issues),
+        skipped_issues=skipped_issues,
+        failed_issues=failed_issues,
+    )
+    if failed_issues:
+        sys.exit(1)
 
 
 if __name__ == "__main__":

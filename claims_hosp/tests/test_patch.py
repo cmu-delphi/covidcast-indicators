@@ -144,6 +144,37 @@ class TestPatchModule:
 
         shutil.rmtree(params_w_patch["patch"]["patch_dir"])
 
+    def test_patch_continues_past_a_failed_issue(self, params_w_patch):
+        # a duplicated drop or a dropped ftp connection fails one issue; the rest of
+        # the range still runs, and the exit code says something went wrong
+        params_w_patch["patch"]["start_issue"] = "2020-06-11"
+        params_w_patch["patch"]["end_issue"] = "2020-06-13"
+        with mock_patch("delphi_claims_hosp.patch.get_structured_logger") as mock_logger, \
+                mock_patch("delphi_claims_hosp.patch.read_params") as mock_read_params, \
+                mock_patch("delphi_claims_hosp.patch.run_module") as mock_run_module:
+            mock_read_params.return_value = params_w_patch
+            logger = mock_logger.return_value
+            mock_run_module.side_effect = [
+                None,
+                AssertionError("Duplication across drops in EDI_AGG_INPATIENT_12062020_1451CDT.csv.gz!"),
+                None,
+            ]
+
+            with pytest.raises(SystemExit) as excinfo:
+                patch()
+
+            # every issue in the range was attempted, not just the ones before the failure
+            assert mock_run_module.call_count == 3
+            assert excinfo.value.code == 1
+            logger.error.assert_called_once()
+            assert logger.error.call_args.kwargs["issue_date"] == "2020-06-12"
+            summary = logger.info.call_args.kwargs
+            assert summary["failed_issues"] == ["2020-06-12"]
+            assert summary["skipped_issues"] == []
+            assert summary["issue_count"] == 3
+
+        shutil.rmtree(params_w_patch["patch"]["patch_dir"])
+
     def test_patch_exits_on_bad_config(self, params):
         with mock_patch("delphi_claims_hosp.patch.get_structured_logger"), \
                 mock_patch("delphi_claims_hosp.patch.read_params") as mock_read_params:

@@ -17,7 +17,7 @@ import numpy as np
 import pandas as pd
 
 
-def modify_and_write(data_path, logger, test_mode=False):
+def modify_and_write(data_path, logger, test_mode=False, filepaths=None):
     """
     Modify drops given a folder path.
 
@@ -26,10 +26,16 @@ def modify_and_write(data_path, logger, test_mode=False):
 
     Args:
       data_path: path to the folder with duplicated drops.
+      filepaths: optional list of drops to modify. If not given, every drop in
+        data_path is modified. Patch runs pass the single drop for the issue
+        being patched so we don't rewrite the whole raw archive once per issue.
       test_mode: Don't overwrite the drops if test_mode==True
 
     """
-    files = np.array(list(Path(data_path).glob("*.csv.gz")))
+    if filepaths is None:
+        files = np.array(list(Path(data_path).glob("*.csv.gz")))
+    else:
+        files = np.array([Path(f) for f in filepaths])
     dfs_list = []
     for f in files:
         filename = str(f)
@@ -57,5 +63,5 @@ def modify_and_write(data_path, logger, test_mode=False):
             dfs_list.append(dfs)
         else:
             dfs.to_csv(out_path, index=False)
-            logger.info("Wrote modified csv", filename=out_path)
+            logger.info("Wrote modified csv", filename=str(out_path))
     return files, dfs_list

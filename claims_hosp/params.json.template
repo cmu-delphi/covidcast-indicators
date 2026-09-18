@@ -1,7 +1,8 @@
 {
   "common": {
     "export_dir": "./receiving",
-    "log_exceptions": false
+    "log_exceptions": false,
+    "custom_run": false
   },
   "indicator": {
     "input_dir": "./retrieve_files",

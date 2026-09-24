@@ -1,0 +1,27 @@
+{
+  "common": {
+    "export_dir": "./receiving",
+    "log_filename": "cdc_vaccines.log"
+  },
+  "indicator": {
+    "base_url": "https://data.cdc.gov/api/views/8xkx-amqh/rows.csv",
+    "export_start_date": "2020-12-13",
+    "export_end_date": "2020-12-15"
+  },
+  "validation": {
+    "common": {
+      "data_source": "cdc",
+      "span_length": 14,
+      "min_expected_lag": {"all": "1"},
+      "max_expected_lag": {"all": "7"},
+      "dry_run": true,
+      "suppressed_errors": []
+    },
+    "static": {
+      "minimum_sample_size": 0,
+      "missing_se_allowed": true,
+      "missing_sample_size_allowed": true
+    },
+    "dynamic": {}
+  }
+}

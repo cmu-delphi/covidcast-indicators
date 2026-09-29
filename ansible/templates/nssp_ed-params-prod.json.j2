@@ -1,0 +1,34 @@
+{
+  "common": {
+    "backup_dir": "/common/covidcast/source_backup/nssp-ed",
+    "export_dir": "/common/covidcast/receiving/nssp-ed",
+    "log_exceptions": false,
+    "log_filename": "/var/log/indicators/nssp_ed.log"
+  },
+  "indicator": {
+    "export_start_date": "2022-09-25",
+    "socrata_token": "",
+    "wip_signal": true
+  },
+  "validation": {
+    "common": {
+      "api_credentials": "{{ validation_api_key }}",
+      "data_source": "nssp-ed",
+      "dry_run": true,
+      "max_expected_lag": {
+        "all": "14"
+      },
+      "min_expected_lag": {
+        "all": "7"
+      },
+      "span_length": 15,
+      "suppressed_errors": []
+    },
+    "dynamic": {},
+    "static": {
+      "minimum_sample_size": 0,
+      "missing_sample_size_allowed": true,
+      "missing_se_allowed": true
+    }
+  }
+}

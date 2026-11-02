@@ -12,7 +12,7 @@ required = [
     "osqp==1.1.0",
     "pandas",
     "pydocstyle",
-    "pylint==2.8.3",
+    "pylint==4.0.9",
     "pytest-cov",
     "pytest",
     "sodapy",

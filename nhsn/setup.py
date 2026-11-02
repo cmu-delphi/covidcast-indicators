@@ -8,7 +8,7 @@ required = [
     "pydocstyle",
     "pytest",
     "pytest-cov",
-    "pylint==2.8.3",
+    "pylint==4.0.9",
     "delphi-utils",
     "sodapy",
     "epiweeks",
